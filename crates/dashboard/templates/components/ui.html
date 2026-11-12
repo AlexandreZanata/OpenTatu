@@ -1,0 +1,28 @@
+{#- UI component kit — the ONLY place where reusable markup lives.
+    Import it in every page:   {% import "components/ui.html" as ui %}
+    Call a component:          {% call ui::badge(b) %}{% endcall %}
+    Components with content:   {% call ui::card("Título") %} ... {% endcall %}
+    Catalog and rules: crates/dashboard/AGENTS.md. CSS classes: static/app.css (c-*). -#}
+
+{#- card(title): titled section; the content goes between `call` and `endcall`. -#}
+{% macro card(title) %}
+<section class="c-card">
+  <h2 class="c-card__title">{{ title }}</h2>
+  {{ caller() }}
+</section>
+{% endmacro %}
+
+{#- badge(badge): colored label; `badge` is a view::Badge (e.g. view::severity_badge). -#}
+{% macro badge(badge) %}<span class="c-badge c-badge--{{ badge.modifier }}">{{ badge.label }}</span>{% endmacro %}
+
+{#- empty_state(message, hint): placeholder for an empty list. -#}
+{% macro empty_state(message, hint) %}
+<div class="c-empty">
+  <p class="c-empty__message">{{ message }}</p>
+  <p class="c-empty__hint">{{ hint }}</p>
+</div>
+{% endmacro %}
+
+{#- datetime(ts): an opentatu_core::Timestamp shown in pt-BR with machine-readable ISO
+    (spec §B.3). Never format dates in templates any other way. -#}
+{% macro datetime(ts) %}<time datetime="{{ ts.iso() }}">{{ ts.display_pt_br() }}</time>{% endmacro %}

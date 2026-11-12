@@ -1,0 +1,19 @@
+# Build output
+/target/
+
+# Runtime data: SQLite database and per-app artifacts (never commit; spec §B.4)
+/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

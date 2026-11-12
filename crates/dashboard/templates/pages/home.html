@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}Início · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card("Aplicações") %}
+  {% call ui::empty_state("Nenhuma aplicação cadastrada.", "O cadastro de aplicações chega na fase 1 do roadmap.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Sistema") %}
+  <p>
+    Banco de dados:
+    {% if health.database_ok %}OK (schema v{{ health.schema_version }}){% else %}indisponível{% endif %}
+  </p>
+  <p>Verificado em {% call ui::datetime(health.checked_at) %}{% endcall %}</p>
+{% endcall %}
+
+{% call ui::card("Legenda de severidade") %}
+  <p class="c-row">
+    {%- for severity in severities %}
+    {% call ui::badge(severity) %}{% endcall %}
+    {%- endfor %}
+  </p>
+{% endcall %}
+{% endblock %}

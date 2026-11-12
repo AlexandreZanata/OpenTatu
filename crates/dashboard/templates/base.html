@@ -1,0 +1,24 @@
+{#- Layout of every page. Pages extend it and fill `title` and `content`.
+    Every page struct has a `layout: view::Layout` field. Owner-facing text is pt-BR. -#}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}OpenTatu{% endblock %}</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <header class="c-header">
+    <a class="c-header__brand" href="/">OpenTatu</a>
+    <nav class="c-header__nav" aria-label="Principal">
+      <a href="/">Início</a>
+      <a href="/health">Saúde (JSON)</a>
+    </nav>
+  </header>
+  <main class="c-main">
+    {%- block content %}{% endblock %}
+  </main>
+  <footer class="c-footer">OpenTatu {{ layout.version }} · uso local e privado</footer>
+</body>
+</html>

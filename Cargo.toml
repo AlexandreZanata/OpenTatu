@@ -1,0 +1,97 @@
+# OpenTatu workspace.
+#
+# Rules (see docs/CONVENTIONS.md and docs/recipes/add-dependency.md):
+# - Every external dependency is declared ONCE here, in [workspace.dependencies],
+#   with `default-features = false` whenever possible. Crates use `workspace = true`.
+# - Dependencies between internal crates follow architecture.toml
+#   (checked by `cargo xtask check` and by `cargo test --workspace`).
+
+[workspace]
+resolver = "3"
+members = [
+    "apps/opentatu",
+    "crates/context",
+    "crates/core",
+    "crates/dashboard",
+    "crates/db",
+    "crates/investigator",
+    "crates/llm",
+    "crates/mcp",
+    "crates/memory",
+    "crates/reports",
+    "crates/scanners",
+    "crates/services",
+    "crates/worker",
+    "xtask",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+repository = "https://github.com/AlexandreZanata/OpenTatu"
+
+[workspace.dependencies]
+# --- Internal crates (single path declaration; never use `path` inside a crate) ---
+opentatu-context = { path = "crates/context" }
+opentatu-core = { path = "crates/core" }
+opentatu-dashboard = { path = "crates/dashboard" }
+opentatu-db = { path = "crates/db" }
+opentatu-investigator = { path = "crates/investigator" }
+opentatu-llm = { path = "crates/llm" }
+opentatu-mcp = { path = "crates/mcp" }
+opentatu-memory = { path = "crates/memory" }
+opentatu-reports = { path = "crates/reports" }
+opentatu-scanners = { path = "crates/scanners" }
+opentatu-services = { path = "crates/services" }
+opentatu-worker = { path = "crates/worker" }
+
+# --- External crates ---
+anyhow = { version = "1.0.104", default-features = false, features = ["std"] }
+askama = { version = "0.16.1", default-features = false, features = ["derive", "std"] }
+async-trait = { version = "0.1.92", default-features = false }
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "form", "tokio"] }
+clap = { version = "4.6.7", default-features = false, features = ["std", "derive", "help", "usage", "error-context", "env"] }
+dotenvy = { version = "0.15.7", default-features = false }
+jiff = { version = "0.2.43", default-features = false, features = ["std", "tz-system", "tzdb-bundle-always"] }
+serde = { version = "1.0.229", default-features = false, features = ["std", "derive"] }
+serde_json = { version = "1.0.154", default-features = false, features = ["std"] }
+sha2 = { version = "0.11.1", default-features = false }
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite-bundled", "migrate", "macros"] }
+thiserror = { version = "2.0.21", default-features = false, features = ["std"] }
+tokio = { version = "1.54.1", default-features = false, features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
+toml = { version = "1.2.1", default-features = false, features = ["parse", "serde", "std"] }
+tower = { version = "0.5.3", default-features = false, features = ["util"] }
+tracing = { version = "0.1.44", default-features = false, features = ["std", "attributes"] }
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["std", "fmt", "ansi"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+# Robustness: no implicit panics outside tests (clippy.toml allows them in tests).
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+# Terminal output only in the binary (apps/opentatu/src/output.rs) and in xtask.
+print_stdout = "warn"
+print_stderr = "warn"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

@@ -1,0 +1,59 @@
+# Models, provider and budgets (spec §D.2). Parsed by opentatu_llm::ModelsConfig.
+#
+# - NEVER put the API key here: `api_key_env` is only the NAME of the environment variable.
+# - Empty strings and zero limits are placeholders. They MUST be filled from the official
+#   documentation recorded in docs/opencode-go.md (phase 0 research, spec §D.1) — never
+#   from memory or guesses. `opentatu llm ping` refuses to run while placeholders remain.
+# - A test (crates/llm/src/config.rs) keeps this file parseable and complete.
+
+[provider]
+name = "opencode-go"
+base_url = ""                         # PENDING(phase-0): confirmed base URL
+api_key_env = "OPENCODE_GO_API_KEY"
+
+# One entry per AI role (opentatu_core::AiRole). The skeptic should use a model different
+# from the verifier's when the plan offers one (spec §C.4).
+[roles.cartographer]
+model = ""                            # PENDING(phase-0): exact DeepSeek Flash id
+temperature = 0.1
+
+[roles.hunter]
+model = ""                            # PENDING(phase-0)
+temperature = 0.4
+
+[roles.verifier]
+model = ""                            # PENDING(phase-0)
+temperature = 0.0
+
+[roles.skeptic]
+model = ""                            # PENDING(phase-0): a different model, if available
+temperature = 0.2
+
+[roles.planner]
+model = ""                            # PENDING(phase-0)
+temperature = 0.1
+
+[roles.reporter]
+model = ""                            # PENDING(phase-0)
+temperature = 0.3
+
+[budget]
+# OpenTatu may use at most this share of the plan limit: the same key is also used for
+# the owner's own programming work (spec §A.2).
+max_plan_share = 0.60
+
+# Per-audit limits. 0 = not defined yet (PENDING(phase-0): define from the plan limits).
+[budget.per_audit.FULL]
+max_tokens = 0
+max_calls = 0
+max_minutes = 90
+
+[budget.per_audit.INCREMENTAL]
+max_tokens = 0
+max_calls = 0
+max_minutes = 30
+
+[budget.per_audit.REVERIFICATION]
+max_tokens = 0
+max_calls = 0
+max_minutes = 15

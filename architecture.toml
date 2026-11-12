@@ -1,0 +1,114 @@
+# Dependency rules between OpenTatu's internal crates.
+#
+# SINGLE SOURCE OF TRUTH for layering. Enforced automatically by `cargo xtask check`
+# and by `cargo test --workspace` (xtask tests):
+#   1. every workspace member is declared here (and vice versa);
+#   2. each crate depends (dependencies, dev-dependencies, build-dependencies) only on
+#      the internal crates listed in `may_depend_on`;
+#   3. no dependency points to a higher layer (see `order` below);
+#   4. every crate has an AGENTS.md and a CLAUDE.md.
+#
+# Changing a rule? Record why in docs/DECISIONS.md.
+# Creating a crate? Follow docs/recipes/add-crate.md.
+
+[layers]
+# Lowest to highest. A crate may only depend on crates of the same or a lower
+# layer — and only on the crates explicitly listed in `may_depend_on`.
+order = [
+    "domain",         # pure types and rules; zero IO
+    "logic",          # pure transformations over the domain; zero IO
+    "infrastructure", # IO: SQLite, HTTP, processes, filesystem
+    "ai",             # prompts and validation of AI role outputs
+    "application",    # use cases and the audit pipeline
+    "interface",      # web dashboard and MCP server
+    "binary",         # composition root (the single executable)
+    "tooling",        # repository automation (not part of the product)
+]
+
+[crates.opentatu-core]
+path = "crates/core"
+layer = "domain"
+may_depend_on = []
+
+[crates.opentatu-memory]
+path = "crates/memory"
+layer = "logic"
+may_depend_on = ["opentatu-core"]
+
+[crates.opentatu-reports]
+path = "crates/reports"
+layer = "logic"
+may_depend_on = ["opentatu-core"]
+
+[crates.opentatu-db]
+path = "crates/db"
+layer = "infrastructure"
+may_depend_on = ["opentatu-core"]
+
+[crates.opentatu-llm]
+path = "crates/llm"
+layer = "infrastructure"
+may_depend_on = ["opentatu-core"]
+
+[crates.opentatu-scanners]
+path = "crates/scanners"
+layer = "infrastructure"
+may_depend_on = ["opentatu-core"]
+
+[crates.opentatu-context]
+path = "crates/context"
+layer = "infrastructure"
+may_depend_on = ["opentatu-core"]
+
+[crates.opentatu-investigator]
+path = "crates/investigator"
+layer = "ai"
+may_depend_on = ["opentatu-core", "opentatu-llm"]
+
+[crates.opentatu-services]
+path = "crates/services"
+layer = "application"
+may_depend_on = ["opentatu-core", "opentatu-db", "opentatu-memory"]
+
+[crates.opentatu-worker]
+path = "crates/worker"
+layer = "application"
+may_depend_on = [
+    "opentatu-core",
+    "opentatu-db",
+    "opentatu-memory",
+    "opentatu-reports",
+    "opentatu-llm",
+    "opentatu-investigator",
+    "opentatu-scanners",
+    "opentatu-context",
+    "opentatu-services",
+]
+
+[crates.opentatu-dashboard]
+path = "crates/dashboard"
+layer = "interface"
+may_depend_on = ["opentatu-core", "opentatu-services"]
+
+[crates.opentatu-mcp]
+path = "crates/mcp"
+layer = "interface"
+may_depend_on = ["opentatu-core", "opentatu-services"]
+
+[crates.opentatu]
+path = "apps/opentatu"
+layer = "binary"
+may_depend_on = [
+    "opentatu-core",
+    "opentatu-db",
+    "opentatu-llm",
+    "opentatu-services",
+    "opentatu-worker",
+    "opentatu-dashboard",
+    "opentatu-mcp",
+]
+
+[crates.xtask]
+path = "xtask"
+layer = "tooling"
+may_depend_on = []

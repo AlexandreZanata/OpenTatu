@@ -1,0 +1,21 @@
+# Guardrails enforced by clippy (see docs/CONVENTIONS.md).
+# Each legitimate exception uses `#[allow(clippy::disallowed_methods)]` plus a comment
+# explaining why, in the ONE authorized place.
+
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+
+disallowed-methods = [
+    # R03: dates and times ALWAYS come from the injectable clock (opentatu_core::time::Clock).
+    { path = "jiff::Zoned::now", reason = "R03: use opentatu_core::Clock::now()", allow-invalid = true },
+    { path = "jiff::Timestamp::now", reason = "R03: use opentatu_core::Clock::now()", allow-invalid = true },
+    { path = "std::time::SystemTime::now", reason = "R03: use opentatu_core::Clock::now()" },
+    # R12: external processes only in opentatu-scanners (isolated containers) and xtask.
+    { path = "std::process::Command::new", reason = "R12: external processes only in opentatu-scanners" },
+    { path = "tokio::process::Command::new", reason = "R12: external processes only in opentatu-scanners", allow-invalid = true },
+    # R16: environment variables (including the API key) are read only by the binary.
+    { path = "std::env::var", reason = "R16: read config/secrets only in apps/opentatu/src/config.rs" },
+    { path = "std::env::var_os", reason = "R16: read config/secrets only in apps/opentatu/src/config.rs" },
+]
