@@ -21,6 +21,8 @@ Q-001 to Q-010 were answered on 2026-11-12: the owner delegated the decisions ("
 them") and asked for the license; the recommended options were adopted (ADR-0019). Q-011 and
 Q-012 were answered by the owner the same day (ADR-0022); Q-013 was also answered.
 Q-030 (phase 5) is open.
+Sentinel planning adds Q-014 onward below. Answers selecting a planning direction do not
+authorize implementation, deployment or a production action.
 
 ---
 
@@ -122,6 +124,149 @@ Q-030 (phase 5) is open.
 - **Answer:** levels 1, 2 and 3 (owner) — `opentatu_core::APPLICABLE_LEVEL`. The
   cartographer associates the requirements that apply to each entry point and to the app as
   a whole; coverage counts those.
+
+---
+
+## Q-014 — Sentinel deployment target
+- **Status:** answered (2026-11-12) · **Blocks:** nothing yet
+- **Context:** the expansion brief proposes a small VPS; current security guidance separates
+  OpenTatu from production applications. See the [master plan](sentinel/SENTINEL_MASTER_PLAN.md).
+- **Answer:** a separate small Sentinel VPS accessed through a VPN (owner). Actual sizing,
+  credentials, service setup and installation are not authorized by this planning choice.
+
+## Q-015 — Separate expiring telemetry from permanent incident history
+- **Status:** answered (2026-11-12) · **Blocks:** nothing yet
+- **Context:** R04's permanent history conflicts with retaining every raw telemetry payload
+  indefinitely. A change to the data boundary needs an ADR, not weaker triggers.
+- **Answer:** propose separate retention rules and an ADR: permanent minimized incident
+  history, expiring raw telemetry and sensitive evidence (owner). Exact rules are Q-018;
+  proposed ADR-0027 is not yet an implemented amendment to R04.
+
+## Q-016 — First useful Sentinel release
+- **Status:** answered (2026-11-12) · **Blocks:** nothing yet
+- **Context:** the custom Android app and defensive execution could delay useful monitoring.
+- **Answer:** prioritize read-only monitoring and Android alerts through an existing
+  transport; deliver the custom Kotlin Multiplatform application later (owner).
+
+## Q-017 — Expansion entry gate and original phase 10 mapping
+- **Status:** open · **Blocks:** Sentinel S0 kickoff
+- **Context:** “initial phases” does not identify an exact completion gate; original phases
+  8–10 require explicit requests. Planning S phases must not silently advance them.
+- **Options:** accept Audit phases 0–7 first and approve Sentinel S0 separately (recommended);
+  or explicitly select a different gate and the relationship to optional phase 10.
+- **Working interpretation:** the plan uses 0–7 as a conservative prerequisite; no expansion
+  implementation or original optional phase is started.
+
+## Q-018 — Retention classes and exact durations
+- **Status:** open · **Blocks:** Sentinel S1 retention and activation
+- **Context:** Q-015 approves a proposal direction, not payload/evidence durations, replay
+  horizon, backup deletion, legal holds or evidence needed for a retained conclusion.
+- **Options:** approve a field-level minimized ledger plus timed telemetry/evidence classes
+  and backup expiry; or keep additional evidence under an explicit restricted policy.
+- **Working interpretation:** document the classes and expiration events only; no real data
+  collection or deletion policy is enabled. Preserve all current append-only triggers.
+
+## Q-019 — Android transport, fallback and external watchdog
+- **Status:** open · **Blocks:** Sentinel S3
+- **Context:** Q-016 selects an existing transport approach, not a service. Android device
+  services, VPN reachability, notification metadata and independent outage detection matter.
+- **Options:** authenticated existing Android transport such as ntfy, tested on the actual
+  device, plus an approved independent critical channel; or another standard service.
+- **Working interpretation:** compare candidates with synthetic payloads; no account,
+  subscription, external message, watchdog or automation is created during planning.
+
+## Q-020 — Resource envelope, traffic, thresholds and numeric caps
+- **Status:** open · **Blocks:** Sentinel S1–S3 load acceptance
+- **Context:** actual VPS sizing, event volume, disk headroom, source lag, rule thresholds,
+  retention and alert timing targets are unknown. The plan labels numerical examples as
+  engineering hypotheses, not measured capacity or production requirements.
+- **Options:** approve the proposed synthetic benchmark profile and adjust from measurements;
+  or supply a different hardware/workload/cost envelope before acceptance.
+- **Working interpretation:** use synthetic fixtures only; reject unbounded resource growth.
+
+## Q-021 — Source credentials, remote owner access and recovery
+- **Status:** open · **Blocks:** Sentinel S1 authenticated ingress; S7 mobile exposure
+- **Context:** current dashboard authentication is absent; VPN alone is insufficient.
+  Q-005 requires password + TOTP + short sessions before non-loopback owner access.
+- **Options:** scoped revocable source tokens over VPN/TLS and owner password/TOTP sessions
+  with paired devices and offline recovery (recommended design); or a separately reviewed
+  alternative with an ADR explicitly superseding any conflicting existing requirement.
+- **Working interpretation:** keep current loopback-only behavior; no remote bind until
+  relevant authentication, rotation, revocation and recovery tests pass.
+
+## Q-022 — Runtime telemetry and provider eligibility
+- **Status:** open · **Blocks:** Sentinel S5 AI calls; S8 provider selection
+- **Context:** OpenCode Go research covers coding-audit usage; Audit skeptic/reporter
+  training consent does not authorize runtime incidents or new roles/data classes.
+- **Options:** use only purpose-approved non-training runtime providers after current terms,
+  retention and region review; or explicitly approve additional purpose-scoped disclosure.
+- **Working interpretation:** no runtime data is sent to a model. The deterministic MVP
+  works without AI; exact model IDs/URLs/limits remain in reviewed research and config.
+
+## Q-023 — Infrastructure modules and execution boundaries
+- **Status:** open · **Blocks:** Sentinel S1 IO layout, S4 sandbox, S10 executor
+- **Context:** new collection/notification/response IO must respect layers. The Factory and
+  optional CLI runtimes cannot inherit arbitrary process access from scanners/snapshots.
+- **Options:** approve narrow infrastructure ports/crates and checked edges via an ADR;
+  extend an existing owner only where its responsibility genuinely matches. Preserve one
+  product executable and distinct MCP profiles.
+- **Working interpretation:** proposed module maps only; no new crate, edge, process
+  exception, general shell or production credential is added by planning.
+
+## Q-024 — Optional pseudonymous origin correlation
+- **Status:** open · **Blocks:** nothing yet; only a future subject-correlation capability
+- **Context:** Abastevo avoids raw IP, precise location and private identifiers. Exporting
+  existing quota hashes for a new purpose is not automatically authorized.
+- **Options:** omit origin identifiers and use bounded aggregate signals (recommended MVP);
+  or approve a separate keyed, rotating, short-lived pseudonym purpose and privacy review.
+- **Working interpretation:** omit `subject_reference` and raw identifiers from the MVP.
+
+## Q-025 — Defensive allowlist, exact approval and owner override
+- **Status:** open · **Blocks:** Sentinel S9 simulation policy; S10 real response
+- **Context:** playbooks need target scope, TTL, rollback, protected management access,
+  reauthentication and recovery. R20 owner override needs a precise relation to hard
+  capability limits. Credential revocation can be irreversible.
+- **Options:** simulation first, then one explicitly approved reversible playbook with
+  single-use exact-action authorization; preauthorized automation only under a later policy.
+- **Working interpretation:** no production executor or automatic block is enabled;
+  irreversible operations remain deferred and no chat statement creates a permission.
+
+## Q-026 — Incident classification and sufficient compromise evidence
+- **Status:** open · **Blocks:** Sentinel S2 classification policy; S5 verified conclusions
+- **Context:** the Audit vulnerability severity matrix does not define operational incident
+  confidence. High volume, an LLM conclusion or scanner output cannot prove compromise.
+- **Options:** approve rule-specific triage priority and evidence/reviewer standards with
+  separate lifecycle/classification/confidence; require owner confirmation for compromise.
+- **Working interpretation:** preserve suspicious/operational/unknown distinctions; no
+  detector is permitted to invent proof or close an Audit finding.
+
+## Q-027 — Android devices, distribution, assets and iOS preparation
+- **Status:** open · **Blocks:** Sentinel S7 release
+- **Context:** supported devices/SDKs, availability of platform push services, distribution,
+  brand assets, secure cache and eventual Mac/iOS build ownership are not established.
+- **Options:** Android-first signed test distribution on the owner's device with pinned
+  compatible KMP/Compose tooling; shared platform ports and iOS delivery later.
+- **Working interpretation:** the mobile plan proposes modules/wireframes; it does not claim
+  assets or a working app exist. No Android features are added to Abastevo.
+
+## Q-028 — Shared AI budgets and Audit versus Sentinel priorities
+- **Status:** open · **Blocks:** Sentinel S5 model admission; S8 fallback expansion
+- **Context:** existing per-audit accounting lacks concurrent reservations, and the parsed
+  60% shared plan share has no identified runtime enforcement in the inspected baseline.
+- **Options:** preserve Audit reverification priority, allocate explicit incident/app/month
+  caps and reserve before dispatch; or approve an explicit revised priority policy.
+- **Working interpretation:** numerical turn/tool caps are proposals; no unbounded runtime
+  workload is admitted and retries/fallbacks cannot acquire a separate budget.
+
+## Q-029 — Abastevo deployment and source-access confirmation
+- **Status:** open · **Blocks:** Sentinel S1 bridge installation/activation
+- **Context:** source at inspected commit contains Compose/Caddy and dated staging evidence
+  for k3s/nginx; neither establishes today's deployment. Private metrics may be loopback
+  inside a pod/container; generic HTTP logs lack typed auth/abuse outcomes.
+- **Options:** owner confirms current topology and exact read-only observation exports;
+  approve optional narrow emitters in a separate Abastevo task only where necessary.
+- **Working interpretation:** source-shape synthetic fixtures and a disposable lab only;
+  no production logs, admin session, DB credential, Docker socket or kubeconfig access.
 
 ---
 

@@ -478,6 +478,72 @@ Template:
   round; large apps get their riskiest entry points first and report the rest as not
   analyzed.
 
+## ADR-0026 — Sentinel expansion after the Audit foundation
+- **Date:** 2026-11-12 · **Status:** proposed
+- **Context:** the owner requested a complete future expansion plan based on the supplied
+  Sentinel/Abastevo brief, while the current working tree is in Audit phase 4.
+- **Decision proposed:** retain the original phase gates and plan S0–S11 after owner
+  acceptance of Audit phases 0–7. Keep one Rust executable, SQLite and the server-rendered
+  dashboard. The owner selected a separate small VPN-accessed Sentinel VPS and read-only
+  monitoring with existing Android alerts first, followed by the custom KMP client.
+  See the [master plan](sentinel/SENTINEL_MASTER_PLAN.md) for the baseline and requirements.
+- **Alternatives considered:** replace the original roadmap (loses required fix/benchmark
+  foundations); require all teams/mobile/response features for the MVP (delays useful
+  deterministic monitoring); cohost with production (larger shared compromise boundary).
+- **Consequences:** this proposal changes no phase status or runtime guard. Q-017 resolves
+  the exact original-phase mapping before kickoff; each implementation phase still requires
+  owner approval. Optional original phases 8–10 are not started by writing this plan.
+
+## ADR-0027 — Minimized immutable history and expiring Sentinel payloads
+- **Date:** 2026-11-12 · **Status:** proposed
+- **Context:** continuous logs conflict with bounded local storage/privacy if R04 is read as
+  retaining every raw payload forever. Q-015 records owner approval to propose a split.
+- **Decision proposed:** permanent append-only minimized decisions/incidents/provenance;
+  separately classified expiring raw telemetry and sensitive evidence; explicit expiration
+  records and visible evidence availability. Never remove current event-log triggers or
+  retroactively delete existing Audit history. Approve a precise spec clarification,
+  field-level policy, replay horizon and backup expiry before collection/deletion code.
+- **Alternatives considered:** retain all raw logs forever (privacy/storage cost); delete
+  event rows or rewrite history (violates R04); keep sensitive payloads in permanent message
+  bodies while deleting source files (fails effective expiration).
+- **Consequences:** Q-018 must define durations, minimized retained evidence, deletion
+  verification and any holds. A retained conclusion must disclose when its source evidence
+  expired. Digests/pseudonyms may themselves need privacy review. No retention policy is
+  implemented or activated by this ADR draft.
+
+## ADR-0028 — Distinct MCP profiles and typed capability boundaries
+- **Date:** 2026-11-12 · **Status:** proposed
+- **Context:** adapter development, Audit fixing and runtime investigation have different
+  trust and credential needs. Internal AI roles must retain R12 and services-layer rules.
+- **Decision proposed:** distinct Factory, fixing and Investigation MCP tool registries,
+  sessions, credentials and grants in separate invocations of the same executable. Keep
+  stdio initially; remote MCP requires a later transport/auth ADR. Discovery/generation/
+  tests/package/install/activate remain separately authorized. Only deterministic typed
+  executors perform reviewed effects; no generic shell/SQL/HTTP/Docker/filesystem tool.
+- **Alternatives considered:** a shared omnipotent tool catalog (confused-deputy risk);
+  independent mandatory server binaries (unnecessary distribution complexity); allowing
+  manifests or repository text to grant capabilities (untrusted data controls authority).
+- **Consequences:** reuse phase-5 MCP foundations once implemented. New infrastructure
+  crate/edge/process exceptions require their own reviewed layout and accepted decision
+  under Q-023, preserving existing scanner/snapshot guards. This draft adds no edges.
+
+## ADR-0029 — Deterministic monitoring and bounded evidence-based AI
+- **Date:** 2026-11-12 · **Status:** proposed
+- **Context:** Sentinel must keep detecting and alerting during provider outages, without
+  per-log AI cost, uncontrolled conversations or model-generated production authority.
+- **Decision proposed:** deterministic collector/detector/incident/outbox path; admitted
+  event-driven investigation tasks through the existing LLM/role path; persistent identity,
+  scoped evidence, causal conversations, reservations and finite turn/tool/time caps.
+  Source time is untrusted; trusted system times always come from `Clock`. Separate
+  incident classification/lifecycle from Audit finding lifecycle and preserve R06.
+- **Alternatives considered:** LLM per log (availability/cost bottleneck); endless agent
+  chat (unbounded work); reusing Audit finding severity as compromise proof (semantic error);
+  carrying existing Audit training consent into runtime data (unapproved disclosure).
+- **Consequences:** runtime-data/provider eligibility and budget priorities need Q-022/
+  Q-028; raw telemetry never becomes an instruction or grant. The MVP remains useful with
+  every model off. Defensive simulation precedes an individually approved reversible
+  playbook; no production action or provider call is authorized by planning.
+
 
 ## ADR-0030 — Fix trail: planner tasks, MCP through rmcp, agent tokens, reverification
 - **Date:** 2026-11-12 · **Status:** accepted

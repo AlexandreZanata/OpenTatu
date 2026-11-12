@@ -7,6 +7,14 @@ before the next phase. **Phases 8, 9 and 10 only on the owner's explicit request
 
 Status: ✅ done · 🟡 in progress · ⬜ not started
 
+Future expansion planning is recorded in the
+[Sentinel master plan](sentinel/SENTINEL_MASTER_PLAN.md) and its
+[S0–S11 implementation roadmap](sentinel/SENTINEL_IMPLEMENTATION_ROADMAP.md).
+These are proposals after completion and owner acceptance of Audit phases 0–7; they do
+not advance the phase statuses below or authorize optional phases 8–10. The owner selected
+a separate VPN-accessed Sentinel VPS and a read-only monitoring/Android-alert MVP, with
+the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+
 | Phase | Status | Scope | Done when |
 |---|---|---|---|
 | Base | ✅ | Workspace, layered crates, domain core, database foundation (events append-only), dashboard skeleton, prompts, guardrails (`cargo xtask check`), documentation | `cargo xtask check` passes; `opentatu db migrate` and `opentatu dashboard` work |

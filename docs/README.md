@@ -19,6 +19,7 @@ when each document matters.
 | [ROADMAP.md](ROADMAP.md) | You need the current phase and its "done when" criterion |
 | [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) | You hit an ambiguity (check here, then add it if missing) |
 | [opencode-go.md](opencode-go.md) | You work on the LLM provider client (phase 0 research record) |
+| [Sentinel expansion plan](sentinel/SENTINEL_MASTER_PLAN.md) | You review the proposed post-foundation expansion: requirements, adapter contracts, continuous monitoring, MCP, teams, Android client and response gates |
 
 ## Keeping documentation trustworthy
 
