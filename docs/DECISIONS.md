@@ -615,3 +615,26 @@ Template:
   Juice Shop's runtime code names challenges near vulnerable lines) — compare runs, not
   targets. The marker parser is specific to comment-style markers; another app needs its
   own definition and may need another extractor.
+
+## ADR-0032 — An approved fix closes its finding only when it reaches the app's branch (Q-030)
+- **Date:** 2026-11-12 · **Status:** accepted (decided by the owner; implemented in phase 7)
+- **Context:** a fix is reverified on the agent's branch (ADR-0030). If the branch is not
+  merged, the next audit of the app's branch still finds the code and R09 calls the CLOSED
+  finding a regression, although the code never left that branch.
+- **Decision:** "approved" and "closed" are different states. A reverification that passes
+  moves the finding to a new state, *fix approved, awaiting merge* (name fixed in phase 7,
+  e.g. `FIX_APPROVED`), and the task to DONE (the agent's work ends there). The finding
+  becomes CLOSED (`FINDING_CLOSED`) when the fix reaches the app's branch, checked whenever
+  that branch is audited (FULL, and INCREMENTAL on push in phase 7). While the fix is not in
+  the branch, the finding's code there is not a regression. R06 still holds: only
+  OpenTatu's reverification approves; merging alone closes nothing that was not approved.
+- **Alternatives considered:** (a) keep R09 literal — a misleading "regression" and a raised
+  priority until the merge; (b) apply the ancestry rule only to the label — the finding
+  flips between CLOSED and reopened.
+- **Consequences:** spec §A.6 (`FindingState`), the `FINDING_CLOSED` trigger, the dashboard,
+  `MEMORY.md` ("approved, awaiting merge") and R09 detection change in phase 7. To decide
+  then: how "reached the branch" is detected when the merge rewrites the commit (squash or
+  rebase merges never make the approved commit an ancestor) — e.g. the identifying code is
+  gone from the branch head and a short reverification of the original hypothesis there
+  passes.
+

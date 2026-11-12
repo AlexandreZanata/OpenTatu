@@ -20,7 +20,7 @@ Template:
 Q-001 to Q-010 were answered on 2026-11-12: the owner delegated the decisions ("implement
 them") and asked for the license; the recommended options were adopted (ADR-0019). Q-011 and
 Q-012 were answered by the owner the same day (ADR-0022); Q-013 was also answered.
-Q-030 (phase 5) is open; Q-031 (phase 6) was answered.
+Q-030 (phase 5) and Q-031 (phase 6) were answered the same day.
 Sentinel planning adds Q-014 onward below. Answers selecting a planning direction do not
 authorize implementation, deployment or a production action.
 
@@ -271,7 +271,7 @@ authorize implementation, deployment or a production action.
 ---
 
 ## Q-030 — A fix approved on a branch that is never merged
-- **Status:** open · **Blocks:** nothing yet
+- **Status:** answered (2026-11-12) · **Blocks:** phase 7 (implementation)
 - **Context:** R06 closes a finding when OpenTatu approves the REVERIFICATION of the
   submitted commit, which usually lives on a branch. If that branch is never merged, the
   next FULL audit of the app's branch finds the same code and R09 marks the CLOSED finding
@@ -282,8 +282,10 @@ authorize implementation, deployment or a production action.
   (b) use the ancestry rule in FULL audits too and report "fix approved but not merged"
   (finding reopened without the priority raise); (c) close a finding only when its fix
   commit reaches the app's branch ("approved, awaiting merge" until then).
-- **Working interpretation:** (a) in FULL audits (phase 4 behavior unchanged); the ancestry
-  rule applies only inside reverifications.
+- **Answer:** (c) — separate "approved" from "closed". An approved reverification moves the
+  finding to a new state, "fix approved, awaiting merge"; the finding becomes CLOSED only
+  when the fix reaches the app's branch (`main`). Implemented in phase 7 (ADR-0032); until
+  then, the phase 4–5 behavior stays (owner).
 
 ---
 

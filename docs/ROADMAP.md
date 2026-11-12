@@ -25,7 +25,7 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
 | 4 — Hunter, verifier (static) and skeptic | ✅ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage (verified 2026-11-12 on the owner's app Abastevo) |
 | 5 — Fix trail and MCP | ✅ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own (verified 2026-11-12) |
 | 6 — Benchmark | ✅ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
-| 7 — Incremental audit | ⬜ | Diff between commits, trigger by push (webhook or schedule) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed |
+| 7 — Incremental audit | ⬜ | Diff between commits, trigger by push (webhook or schedule); a finding whose approved fix reaches the app's branch becomes CLOSED (Q-030, ADR-0032) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed |
 | 8 — Dynamic lab | ⬜ (on request) | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab |
 | 9 — Host inspection (read-only) | ⬜ (on request) | Restricted SSH user, closed allowlist of commands, every command recorded | — |
 | 10 — Monitoring and defense | ⬜ (on request) | Integration with established sensors (e.g. Wazuh, Falco, osquery, CrowdSec), detection rules from the map, reversible response playbooks with owner approval | — |
@@ -193,7 +193,8 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   reported as 2 suspicious instructions) was rejected; a real fix that undid the IDOR fix
   was rejected as a regression (R09); the final fix was approved. That run exposed a false
   regression on branches cut before another fix — now decided by git ancestry, with a test.
-- Open: Q-030 (an approved fix that is never merged).
+- Q-030 answered by the owner (2026-11-12): option (c) — "fix approved, awaiting merge" is
+  separate from CLOSED; implemented in phase 7 (ADR-0032).
 - The owner approved moving to phase 6 (2026-11-12).
 
 ## Phase 6: what exists
