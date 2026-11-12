@@ -2,7 +2,8 @@
 
 Layer: **application** · May depend on: `opentatu-core`, `opentatu-db`, `opentatu-memory` ·
 Status: health, accounting (phase 0) ✅; apps, audits, timelines (phase 1) ✅; scanner runs
-(phase 2) ✅; maps, coverage, suspicious instructions (phase 3) ✅; investigation (phase 4) ✅
+(phase 2) ✅; maps, coverage, suspicious instructions (phase 3) ✅; investigation (phase 4) ✅;
+fix trail and agents (phase 5) ✅
 
 ## Responsibility
 
@@ -19,15 +20,15 @@ Status: health, accounting (phase 0) ✅; apps, audits, timelines (phase 1) ✅;
 | `src/health.rs` | `health()` → `HealthReport` |
 | `src/usage.rs` | `record_llm_usage`, `llm_usage_this_month`, `llm_usage_of_audit` |
 | `src/apps.rs` | `register_app`, `app`, `apps` |
-| `src/audits.rs` | `NewAudit`, `create_audit`, `start_next_audit`, `record_snapshot`, `set_audit_checkpoint`, `finish_audit`, `fail_audit`, audit queries |
+| `src/audits.rs` | `NewAudit`, `create_audit` (never a REVERIFICATION), crate-private `insert_audit`, `start_next_audit`, `record_snapshot`, `set_audit_checkpoint`, `finish_audit`, `fail_audit`, audit queries |
+| `src/tasks.rs` | `PlannedTask`, `record_tasks`, `claim_task`, `NewFix`, `submit_fix`, `ReverificationOutcome`, `record_reverification` (the only path to CLOSED, R06), `TaskStatus`, task queries, agents (`register_agent`, `revoke_agent`, `authenticate_agent`, `agents`), `record_mcp_call` |
 | `src/timeline.rs` | `app_timeline`, `app_history`, `audit_events`, `now` |
 | `src/investigation.rs` | `NewHypothesis`, `record_hypothesis` (memory decisions), `record_verification` (evidence ids, finding creation), `record_review`, `record_hunt_round`, `record_report`, `record_budget_exhausted`, queries, `comparison_of_audit`, coverage requirement sets |
 | `src/maps.rs` | `NewMap`, `Reporter`, `record_map`, `record_suspicious_instructions`, `current_map`, `map_of_audit`, `map`, `coverage_of_audit` |
 | `src/scanners.rs` | `record_scanner_run`, `record_scanner_failure`, `scanner_results`, `scanner_runs` → `ScannerRunSummary` / `ScannerOutcome` (derived from events) |
 | `src/error.rs` | `Error` (wraps db and domain errors) |
 
-Planned modules (one per aggregate): `findings.rs`, `decisions.rs` (phase 4), `tasks.rs`
-(phase 5).
+Planned modules (one per aggregate): `decisions.rs` (owner decisions, R20).
 
 ## Local rules
 

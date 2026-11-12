@@ -79,6 +79,11 @@ crate::text_enum! {
         AuditFailed => "AUDIT_FAILED",
         /// The owner overrode a decision, with justification (R20).
         OwnerDecision => "OWNER_DECISION",
+        /// The owner registered a fixing agent and its MCP token (ADR-0026). Data:
+        /// `{ "agent": "agent:<name>" }` — never the token.
+        AgentRegistered => "AGENT_REGISTERED",
+        /// The owner revoked a fixing agent's MCP token. Data: `{ "agent": "agent:<name>" }`.
+        AgentRevoked => "AGENT_REVOKED",
         /// A fixing agent called a read-only MCP tool (Q-007). State-changing tools record
         /// their domain event instead (`TASK_CLAIMED`, `FIX_SUBMITTED`), so every call
         /// produces exactly one event. `app` may be empty (e.g. listing apps).
@@ -259,9 +264,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn spec_b6_lists_33_event_kinds() {
-        // 32 from spec §B.6 + MCP_TOOL_CALLED (Q-007).
-        assert_eq!(EventKind::ALL.len(), 33);
+    fn spec_b6_lists_35_event_kinds() {
+        // 32 from spec §B.6 + MCP_TOOL_CALLED (Q-007) + AGENT_REGISTERED/REVOKED (ADR-0026).
+        assert_eq!(EventKind::ALL.len(), 35);
     }
 
     #[test]

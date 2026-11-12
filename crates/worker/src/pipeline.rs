@@ -1,12 +1,18 @@
 //! The audit pipeline (spec §C.7). One function per step; each completed step updates the
-//! checkpoint so a paused audit can resume (phase 4 adds pausing on budget).
+//! checkpoint so a paused audit can resume (phase 4 adds pausing on budget). A
+//! REVERIFICATION audit takes its own short path (`reverification.rs`).
+//!
+//! An audit is `COMPLETED` only when its steps produced no limitation; otherwise it is
+//! `PARTIAL` with the limitations listed (R13, R14).
 
 use std::path::{Path, PathBuf};
 
-use opentatu_core::{Audit, AuditStatus, ScannerKind};
+use opentatu_core::{Audit, AuditKind, AuditStatus, ScannerKind};
 
 use crate::ai_run::AiRun;
-use crate::{Error, Worker, artifacts, cartography, hunt, reporting, verification};
+use crate::{
+    Error, Worker, artifacts, cartography, hunt, planning, reporting, reverification, verification,
+};
 
 opentatu_core::text_enum! {
     /// Pipeline steps recorded as the audit checkpoint.
@@ -21,6 +27,10 @@ opentatu_core::text_enum! {
         Hunt => "HUNT",
         /// §C.7 steps 9–11: verifier, skeptic, finding ids.
         Verify => "VERIFY",
+        /// §C.7 step 12: planner tasks (or limitations).
+        Plan => "PLAN",
+        /// REVERIFICATION: the fix was decided (R06).
+        Reverify => "REVERIFY",
         /// §C.7 step 14: report text recorded.
         Report => "REPORT",
         /// §C.7 step 15: artifacts written.
@@ -28,16 +38,16 @@ opentatu_core::text_enum! {
     }
 }
 
-/// Owner-facing (pt-BR) limitations of every audit while steps of spec §C.7 do not exist.
-/// Each later phase removes the sentence of the step it implements.
-pub const PENDING_STEPS: &[&str] = &[
-    "Tarefas de correção não geradas: o planejador e o servidor MCP chegam na fase 5.",
-    "Testes dinâmicos não executados (sem laboratório).",
-];
+/// Owner-facing (pt-BR) limitations of every FULL audit while parts of spec §C.7 do not
+/// exist. The dynamic lab is phase 8 (on request); it removes this sentence.
+pub const PENDING_STEPS: &[&str] = &["Testes dinâmicos não executados (sem laboratório)."];
 
 /// Runs every implemented step for a `RUNNING` audit and returns the finished audit.
 pub async fn run(worker: &Worker, audit: Audit) -> Result<Audit, Error> {
     let source = snapshot(worker, &audit).await?;
+    if audit.kind == AuditKind::Reverification {
+        return reverify(worker, &audit, &source).await;
+    }
     let mut limitations = scanners(worker, &audit, &source).await?;
     let ai = AiRun::start(worker, &audit, &source).await?;
     match &ai {
@@ -49,18 +59,39 @@ pub async fn run(worker: &Worker, audit: Audit) -> Result<Audit, Error> {
             checkpoint(worker, &audit, Step::Hunt).await?;
             limitations.extend(verification::run(run).await?);
             checkpoint(worker, &audit, Step::Verify).await?;
+            limitations.extend(planning::run(run).await?);
+            checkpoint(worker, &audit, Step::Plan).await?;
             limitations.extend(run.budget.limitation());
         }
     }
     limitations.extend(PENDING_STEPS.iter().map(|s| (*s).to_owned()));
     limitations.extend(reporting::run(worker, ai.as_ref(), &audit, &limitations).await?);
     checkpoint(worker, &audit, Step::Report).await?;
+    finish(worker, &audit, &limitations).await
+}
+
+/// A REVERIFICATION audit: the fix commit is already checked out at `source`.
+async fn reverify(worker: &Worker, audit: &Audit, source: &Path) -> Result<Audit, Error> {
+    let ai = AiRun::start(worker, audit, source).await?;
+    let mut limitations = reverification::run(worker, ai.as_ref(), audit).await?;
+    limitations.extend(ai.as_ref().and_then(|run| run.budget.limitation()));
+    checkpoint(worker, audit, Step::Reverify).await?;
+    finish(worker, audit, &limitations).await
+}
+
+/// Ends the audit (`COMPLETED` without limitations, else `PARTIAL`) and writes artifacts.
+async fn finish(worker: &Worker, audit: &Audit, limitations: &[String]) -> Result<Audit, Error> {
+    let status = if limitations.is_empty() {
+        AuditStatus::Completed
+    } else {
+        AuditStatus::Partial
+    };
     let finished = worker
         .services
-        .finish_audit(&audit.id, AuditStatus::Partial, &limitations)
+        .finish_audit(&audit.id, status, limitations)
         .await?;
     artifacts::write_all(worker, &finished).await?;
-    checkpoint(worker, &audit, Step::Artifacts).await?;
+    checkpoint(worker, audit, Step::Artifacts).await?;
     Ok(finished)
 }
 

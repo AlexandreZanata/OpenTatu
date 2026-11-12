@@ -10,6 +10,7 @@
 
 mod macros;
 
+pub mod agent;
 pub mod app;
 pub mod asvs;
 pub mod audit;
@@ -29,9 +30,11 @@ pub mod scanner;
 pub mod secrets;
 pub mod severity;
 pub mod suspicious;
+pub mod task;
 pub mod time;
 pub mod usage;
 
+pub use agent::{Agent, AgentToken};
 pub use app::{App, NewApp};
 pub use asvs::{APPLICABLE_LEVEL, ASVS_VERSION, AsvsCatalog, AsvsLevel, AsvsRequirement};
 pub use audit::{Audit, AuditKind, AuditStatus};
@@ -61,6 +64,9 @@ pub use scanner::{ScannerKind, ScannerResult, ScannerRun};
 pub use secrets::{Secret, mask_secret};
 pub use severity::{Severity, SeverityAdjustments};
 pub use suspicious::SuspiciousInstruction;
+pub use task::{
+    FixSubmission, Rejection, Reverification, ReverificationResult, Task, TaskContent, TaskState,
+};
 pub use time::{Clock, FixedClock, SystemClock, Timestamp, duration_label};
 pub use usage::{LlmUsage, RecordedLlmUsage, UsageTotals};
 

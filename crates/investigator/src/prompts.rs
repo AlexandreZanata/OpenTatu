@@ -234,6 +234,6 @@ mod tests {
     fn system_template_joins_base_and_role() {
         let (template, tags) = system_template(AiRole::Verifier).unwrap();
         assert!(template.contains("{{audit_id}}"));
-        assert_eq!(tags, ["base@1.1.0", "verifier@1.1.0"]);
+        assert_eq!(tags, ["base@1.1.0", "verifier@1.2.0"]);
     }
 }

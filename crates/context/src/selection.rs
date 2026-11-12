@@ -240,13 +240,9 @@ const SERVER_PATH_WORDS: &[&str] = &[
 /// Path segments of developer tooling (build, packaging, asset scripts): ranked lower.
 const TOOLING_SEGMENTS: &[&str] = &["scripts", "tools", "tooling", "devtools", "ci"];
 
-/// Path segments of code that rarely holds production entry points.
+/// Path segments of code that rarely holds production entry points (tests are detected by
+/// `files::is_test_path`).
 const LOW_VALUE_SEGMENTS: &[&str] = &[
-    "test",
-    "tests",
-    "__tests__",
-    "spec",
-    "specs",
     "examples",
     "example",
     "benches",
@@ -362,13 +358,11 @@ fn config_score(path: &str) -> u32 {
 pub(crate) fn is_low_value(path: &str) -> bool {
     let name = path.rsplit('/').next().unwrap_or(path);
     let stem = name.split('.').next().unwrap_or(name);
-    path.split('/')
-        .any(|segment| LOW_VALUE_SEGMENTS.contains(&segment))
+    crate::files::is_test_path(path)
+        || path
+            .split('/')
+            .any(|segment| LOW_VALUE_SEGMENTS.contains(&segment))
         || LOW_VALUE_SEGMENTS.contains(&stem)
-        || name.starts_with("test_")
-        || name.contains("_test.")
-        || name.contains(".test.")
-        || name.contains(".spec.")
         || name.contains(".min.")
 }
 

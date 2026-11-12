@@ -17,7 +17,7 @@ in backticks in the second column.
 | **Audit** | Auditoria (`auditoria`, `auditorias`) | One investigation run with ID, kind, status, budget and cost | `AuditId`, `audits` table |
 | **Audit kind** | tipos (`completa`) | `FULL`, `INCREMENTAL`, `REVERIFICATION`, `PR` (§A.5) | `AuditKind` |
 | **Audit status** | status (`criada`, `pausada`, `parcial`, `concluida`, `falhou`) | `CREATED`, `RUNNING`, `PAUSED`, `PARTIAL`, `COMPLETED`, `FAILED` (Q-002) | `AuditStatus` |
-| **Reverification** | Reverificação (`reverificacao`) | Audit kind that checks a submitted fix | `AuditKind::Reverification` |
+| **Reverification** | Reverificação (`reverificacao`) | Audit kind that checks a submitted fix; its decision is the only way a finding closes (R06) | `AuditKind::Reverification`, `Reverification` |
 | **Security map** | Mapa (`mapa`, `mapas`) | Versioned security model of an app: components, entry points, boundaries | `SecurityMap`, `MapId`; `maps` table |
 | **Entry point** | Ponto de entrada (`ponto`, `pontos`) | Route, handler, job or webhook receiving external input; ids `EP-001` | map key `entry_points` |
 | **Trust boundary** | Fronteira de confiança (`fronteira`, `fronteiras`) | Where external data enters the app | map key `trust_boundaries` |
@@ -27,7 +27,7 @@ in backticks in the second column.
 | **Finding** | Achado (`achado`, `achados`) | Hypothesis confirmed with evidence (R05) | `FindingId` |
 | **Finding state** | estados (`descartada`, `inconclusiva`, `rebaixado`, `mantido`, `reprovada`, `fechado`) | `HYPOTHESIS` … `CLOSED`, `RISK_ACCEPTED`, `REGRESSION` (§A.6) | `FindingState` |
 | **Evidence** | Evidência (`evidencia`, `evidencias`) | Proof supporting a finding (§C.9) | `EvidenceId` |
-| **Task** | Tarefa (`tarefa`, `tarefas`) | Unit of fix work for a fixing agent | `TaskId` |
+| **Task** | Tarefa (`tarefa`, `tarefas`) | Unit of fix work for a fixing agent (OPEN → CLAIMED → FIX_SUBMITTED → DONE) | `Task`, `TaskId`, `TaskState` |
 | **Verification** | Verificação (`verificacao`, `verificacoes`) | OpenTatu's check of a fix | `verifications` table (phase 5) |
 | **Decision** | Decisão (`decisao`, `decisoes`) | Owner act: accepted risk, false positive, override (R20) | `OWNER_DECISION` |
 | **Accepted risk** | Risco aceito (`risco`, `riscos`) | Owner decision with justification and expiry (R07) | `FindingState::RiskAccepted` |
@@ -44,7 +44,7 @@ in backticks in the second column.
 | **Skeptic** | Revisor cético (`cetico`) | Role that tries to refute findings, final severity (§C.4) | `AiRole::Skeptic` |
 | **Planner** | Planejador (`planejador`) | Role that writes fix tasks (§C.5) | `AiRole::Planner` |
 | **Reporter** | Relator (`relator`) | Role that writes the audit report (§C.6) | `AiRole::Reporter` |
-| **Fixing agent** | Agente corretor (`corretor`, `corretores`) | External coding agent using MCP; never closes findings | `Actor::ExternalAgent` |
+| **Fixing agent** | Agente corretor (`corretor`, `corretores`) | External coding agent using MCP with its own token; never closes findings | `Agent`, `AgentToken`, `Actor::ExternalAgent` |
 | **Scanner** | Executor determinístico | Semgrep, Gitleaks, Trivy, OSV-Scanner (later ZAP) in containers | `ScannerKind`, `ScannerSuite`, `opentatu-scanners` |
 | **Severity** | Severidade (`severidade`) | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO` (§C.8, R18) | `Severity` |
 | **Fingerprint** | Fingerprint | `sha256:` identity of a finding across audits (§B.8) | `Fingerprint` |

@@ -64,6 +64,15 @@ pub enum Error {
     #[error("invalid app profile: {0}")]
     InvalidApp(String),
 
+    /// A task state change not allowed by its lifecycle (R06).
+    #[error("invalid task state transition: {from} -> {to} (see TaskState::allowed_transitions)")]
+    InvalidTaskTransition {
+        /// Current state.
+        from: crate::TaskState,
+        /// Requested state.
+        to: crate::TaskState,
+    },
+
     /// The embedded ASVS catalog could not be read.
     #[error("invalid ASVS catalog: {0}")]
     InvalidCatalog(String),

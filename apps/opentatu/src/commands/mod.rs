@@ -1,12 +1,14 @@
 //! Command dispatch: one module per command, each a thin adapter over the library crates.
 
+mod agent;
 mod app;
 mod audit;
 mod dashboard;
 mod db;
 mod llm;
-mod pending;
+mod mcp;
 mod scanners;
+mod task;
 mod worker;
 
 use std::path::Path;
@@ -16,7 +18,10 @@ use opentatu_core::{DataLayout, SystemClock};
 use opentatu_db::Database;
 use opentatu_services::Services;
 
-use crate::cli::{AppCommand, AuditCommand, Cli, Command, DbCommand, LlmCommand, ScannersCommand};
+use crate::cli::{
+    AgentCommand, AppCommand, AuditCommand, Cli, Command, DbCommand, LlmCommand, ScannersCommand,
+    TaskCommand,
+};
 
 /// Runs the parsed command.
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
@@ -46,7 +51,12 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
             audit::list(data_dir, app.as_deref(), limit).await
         }
         Command::Db(DbCommand::Migrate) => db::migrate(data_dir).await,
-        Command::Mcp => pending::not_implemented("opentatu mcp", 5),
+        Command::Mcp => mcp::run(data_dir).await,
+        Command::Agent(AgentCommand::Add { name }) => agent::add(data_dir, &name).await,
+        Command::Agent(AgentCommand::List) => agent::list(data_dir).await,
+        Command::Agent(AgentCommand::Revoke { name }) => agent::revoke(data_dir, &name).await,
+        Command::Task(TaskCommand::List { app, state }) => task::list(data_dir, &app, state).await,
+        Command::Task(TaskCommand::Show { task_id }) => task::show(data_dir, &task_id).await,
         Command::Llm(LlmCommand::Ping { model }) => {
             llm::ping(data_dir, &cli.models_config, model).await
         }

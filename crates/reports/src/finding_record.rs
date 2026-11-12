@@ -1,7 +1,7 @@
 //! `findings/<ID>.json` — the live record of a finding (spec §B.7), with its evidence ids
 //! and its timeline from the event log.
 
-use opentatu_core::{Event, EvidenceId, Finding, Timestamp};
+use opentatu_core::{Event, EvidenceId, Finding, TaskId, Timestamp};
 use serde::Serialize;
 
 /// One line of a finding's timeline.
@@ -21,19 +21,24 @@ pub struct FindingRecord {
     pub finding: Finding,
     /// Evidence of its confirmations.
     pub evidence: Vec<EvidenceId>,
-    /// Fix tasks (phase 5).
-    pub tasks: Vec<String>,
+    /// Fix tasks, oldest first.
+    pub tasks: Vec<TaskId>,
     /// Its events, oldest first.
     pub timeline: Vec<TimelineItem>,
 }
 
 impl FindingRecord {
-    /// Record of `finding` with its evidence and events.
-    pub fn new(finding: Finding, evidence: Vec<EvidenceId>, events: &[Event]) -> Self {
+    /// Record of `finding` with its evidence, tasks and events.
+    pub fn new(
+        finding: Finding,
+        evidence: Vec<EvidenceId>,
+        tasks: Vec<TaskId>,
+        events: &[Event],
+    ) -> Self {
         Self {
             finding,
             evidence,
-            tasks: Vec::new(),
+            tasks,
             timeline: events
                 .iter()
                 .map(|e| TimelineItem {

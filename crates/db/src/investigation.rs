@@ -6,24 +6,10 @@ use opentatu_core::{
     AuditId, EventId, Finding, FindingId, HuntRound, Hypothesis, HypothesisId, NewEvent,
     ReportText, Slug,
 };
-use serde::Serialize;
-use serde::de::DeserializeOwned;
 use sqlx::SqliteConnection;
-use sqlx::sqlite::SqliteRow;
 
 use crate::Error;
-use crate::rows::json;
-
-fn to_json(column: &'static str, value: &impl Serialize) -> Result<String, Error> {
-    serde_json::to_string(value).map_err(|source| Error::InvalidJson { column, source })
-}
-
-fn from_json<T: DeserializeOwned>(row: &SqliteRow) -> Result<T, Error> {
-    serde_json::from_value(json(row, "content")?).map_err(|source| Error::InvalidJson {
-        column: "content",
-        source,
-    })
-}
+use crate::rows::{content as from_json, to_json};
 
 // --- hypotheses -----------------------------------------------------------------------
 
@@ -199,6 +185,16 @@ pub async fn update_finding(
     finding: &Finding,
     event: &NewEvent,
 ) -> Result<EventId, Error> {
+    write_finding(conn, finding).await?;
+    crate::events::append(conn, event).await
+}
+
+/// Replaces a finding's live record; only for repository functions that append the
+/// event justifying the change themselves (e.g. `tasks::update_task`).
+pub(crate) async fn write_finding(
+    conn: &mut SqliteConnection,
+    finding: &Finding,
+) -> Result<(), Error> {
     let result = sqlx::query(
         "UPDATE findings SET state = ?, severity = ?, fingerprint = ?, last_audit_id = ?, \
                              content = ? WHERE finding_id = ?",
@@ -214,7 +210,7 @@ pub async fn update_finding(
     if result.rows_affected() != 1 {
         return Err(Error::NotFound(finding.finding_id.to_string()));
     }
-    crate::events::append(conn, event).await
+    Ok(())
 }
 
 /// The finding with this id.

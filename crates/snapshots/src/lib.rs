@@ -93,6 +93,29 @@ impl Snapshots {
             .map_err(|_| Error::UnknownRevision(revision.to_owned()))
     }
 
+    /// Whether `ancestor` is in the history of `descendant` (both in the mirror). Used by
+    /// reverifications: a closed finding's code in a commit that does not contain its fix
+    /// is not a regression of that commit (R09).
+    pub async fn is_ancestor(
+        &self,
+        slug: &Slug,
+        ancestor: &CommitHash,
+        descendant: &CommitHash,
+    ) -> Result<bool, Error> {
+        Git::in_repo(&self.layout.mirror_dir(slug))
+            .check(
+                "check ancestry",
+                &[
+                    "merge-base",
+                    "--is-ancestor",
+                    "--end-of-options",
+                    ancestor.as_str(),
+                    descendant.as_str(),
+                ],
+            )
+            .await
+    }
+
     /// Checks `commit` out into its snapshot directory. Reuses a complete snapshot of the
     /// same commit; rebuilds an incomplete one.
     pub async fn capture(&self, slug: &Slug, commit: &CommitHash) -> Result<Snapshot, Error> {
@@ -218,6 +241,24 @@ mod tests {
             snapshots.resolve(&slug, commit.as_str()).await.unwrap(),
             commit
         );
+    }
+
+    #[tokio::test]
+    async fn ancestry_follows_the_history_of_the_mirror() {
+        let source = tempfile::tempdir().unwrap();
+        let data = tempfile::tempdir().unwrap();
+        let url = source_repo(source.path());
+        let snapshots = Snapshots::new(DataLayout::new(data.path()));
+        let slug = Slug::new("demo").unwrap();
+        snapshots.refresh_mirror(&slug, &url).await.unwrap();
+        let first = snapshots.resolve(&slug, "main").await.unwrap();
+        testing::commit_files(source.path(), &[("route.ts", "fixed\n")], "fix");
+        snapshots.refresh_mirror(&slug, &url).await.unwrap();
+        let second = snapshots.resolve(&slug, "main").await.unwrap();
+        assert!(snapshots.is_ancestor(&slug, &first, &second).await.unwrap());
+        assert!(!snapshots.is_ancestor(&slug, &second, &first).await.unwrap());
+        let ghost: CommitHash = "0000000000000000000000000000000000000001".parse().unwrap();
+        assert!(snapshots.is_ancestor(&slug, &ghost, &second).await.is_err());
     }
 
     #[tokio::test]

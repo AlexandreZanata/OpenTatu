@@ -2,10 +2,9 @@
 
 use opentatu_core::{AuditId, EventId, MapId, NewEvent, SecurityMap, Slug};
 use sqlx::SqliteConnection;
-use sqlx::sqlite::SqliteRow;
 
 use crate::Error;
-use crate::rows::json;
+use crate::rows::{content as from_row, to_json};
 
 /// Stores a map version and appends its `MAP_UPDATED` event (ADR-0006).
 pub async fn insert(
@@ -13,10 +12,7 @@ pub async fn insert(
     map: &SecurityMap,
     event: &NewEvent,
 ) -> Result<EventId, Error> {
-    let content = serde_json::to_string(map).map_err(|source| Error::InvalidJson {
-        column: "content",
-        source,
-    })?;
+    let content = to_json("content", map)?;
     sqlx::query(
         "INSERT INTO maps (map_id, app, audit_id, commit_hash, created_at, content) \
          VALUES (?, ?, ?, ?, ?, ?)",
@@ -63,14 +59,6 @@ pub async fn latest_by_app(
         .fetch_optional(&mut *conn)
         .await?;
     row.as_ref().map(from_row).transpose()
-}
-
-fn from_row(row: &SqliteRow) -> Result<SecurityMap, Error> {
-    let value = json(row, "content")?;
-    serde_json::from_value(value).map_err(|source| Error::InvalidJson {
-        column: "content",
-        source,
-    })
 }
 
 #[cfg(test)]

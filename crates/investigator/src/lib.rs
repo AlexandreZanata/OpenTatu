@@ -11,14 +11,14 @@
 //!   [`run::MAX_RETRIES`] times ([`run_role`]).
 //! - [`variables`]: base-prompt values of the running audit ([`RunContext`]).
 //! - [`cartographer`]: the cartographer's inputs and output ([`CartographerOutput`]).
-//! - [`roles`]: outputs of the hunter, verifier, skeptic and reporter, and input formats.
+//! - [`roles`]: outputs of the hunter, verifier, skeptic, planner and reporter, and input
+//!   formats.
 //!
 //! Message layout of every role call: the **system** message is `base.md` + `<role>.md`
 //! rendered with [`prompts::VARIABLES`]; the **user** message holds the role inputs, each
 //! one fenced with [`fence::fence`].
 //!
 //! Role output types are serde types: deserialization is the schema check (ADR-0024).
-//! The planner (phase 5) is the only role without an output type yet.
 
 mod error;
 
@@ -38,8 +38,8 @@ pub use outputs::{CommonFields, SuspiciousInstruction};
 pub use prompts::Prompt;
 pub use render::render;
 pub use roles::{
-    HunterOutput, ReporterOutput, SkepticOutput, VerifierOutput, finding_lines, hypothesis_lines,
-    map_excerpt, scanner_lines,
+    HunterOutput, PlannerOutput, PlannerTask, ReporterOutput, SkepticOutput, VerifierOutput,
+    finding_lines, hypothesis_lines, map_excerpt, scanner_lines,
 };
 pub use run::{RoleAnswer, RoleCall, RoleOutput, run_role};
 pub use variables::RunContext;

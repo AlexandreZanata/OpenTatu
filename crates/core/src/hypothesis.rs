@@ -193,8 +193,9 @@ pub struct Verification {
 }
 
 impl Verification {
-    /// R05 / §C.9: a confirmation needs at least one evidence step citing a file of the
-    /// commit with a line inside it. Returns the owner-facing reason when it does not.
+    /// R05 / §C.9: a confirmation (and, in a reverification, a refutation — R06) needs at
+    /// least one evidence step citing a file of the commit with a line inside it. Returns
+    /// the owner-facing reason when it does not.
     pub fn evidence_problem(&self, files: &dyn FileIndex) -> Option<String> {
         let cited = self.evidence.iter().flat_map(|e| &e.steps).any(|step| {
             let location = CodeLocation {
@@ -210,7 +211,7 @@ impl Verification {
             files.contains(&location.file) && files.line_count(&location.file).is_some_and(within)
         });
         (!cited).then(|| {
-            "Confirmação rebaixada para inconclusiva: nenhuma evidência cita arquivo e linha existentes no commit (padrão mínimo, §C.9).".to_owned()
+            format!("Veredito \"{}\" rebaixado para inconclusivo: nenhuma evidência cita arquivo e linha existentes no commit (padrão mínimo, §C.9).", self.verdict)
         })
     }
 }

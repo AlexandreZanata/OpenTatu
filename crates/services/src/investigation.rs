@@ -348,13 +348,19 @@ impl Services {
             .ok_or_else(|| Error::UnknownFinding(id.clone()))
     }
 
-    /// Events about a finding (its timeline, §B.7), oldest first.
+    /// Events about a finding and its tasks (its timeline, §B.7), oldest first.
     pub async fn finding_timeline(&self, id: &FindingId) -> Result<Vec<Event>, Error> {
         let target = id.to_string();
+        let task_prefix = format!("{id}-T");
         let events = self.app_history(id.slug()).await?;
         Ok(events
             .into_iter()
-            .filter(|e| e.content.target.as_deref() == Some(target.as_str()))
+            .filter(|e| {
+                e.content
+                    .target
+                    .as_deref()
+                    .is_some_and(|t| t == target || t.starts_with(&task_prefix))
+            })
             .collect())
     }
 
@@ -458,7 +464,7 @@ fn state_after(current: FindingState, next: FindingState) -> Result<FindingState
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use opentatu_core::{
         AuditKind, AuditStatus, CodeLocation, Confidence, EvidenceItem, EvidenceStep,
         FingerprintInput, RequirementStatus, ScannerTriage, Severity, SeverityAdjustments, Verdict,
@@ -493,7 +499,7 @@ mod tests {
         }
     }
 
-    fn new_hypothesis(snippet: &str, asvs: &str) -> NewHypothesis {
+    pub(crate) fn new_hypothesis(snippet: &str, asvs: &str) -> NewHypothesis {
         NewHypothesis {
             content: content(asvs),
             fingerprint: Fingerprint::compute(&FingerprintInput {
@@ -508,7 +514,7 @@ mod tests {
         }
     }
 
-    fn verification(verdict: Verdict) -> Verification {
+    pub(crate) fn verification(verdict: Verdict) -> Verification {
         Verification {
             verdict,
             justification: "x".into(),
@@ -531,7 +537,7 @@ mod tests {
         }
     }
 
-    async fn running_audit(services: &Services) -> Audit {
+    pub(crate) async fn running_audit(services: &Services) -> Audit {
         services
             .create_audit(NewAudit {
                 app: Slug::new("abastevo").unwrap(),
@@ -545,7 +551,7 @@ mod tests {
         services.start_next_audit().await.unwrap().unwrap()
     }
 
-    async fn classify_for(
+    pub(crate) async fn classify_for(
         services: &Services,
         audit: &Audit,
         input: &NewHypothesis,

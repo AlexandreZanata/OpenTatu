@@ -15,7 +15,7 @@ configuration, cartographer selection); per-entry-point selection (phase 4) ✅;
 
 | File | Contents |
 |---|---|
-| `src/files.rs` | `SnapshotFiles` (safe walk, `read_text`, `FileIndex`), `classify`, `FileKind`, ignored directories, secret file patterns |
+| `src/files.rs` | `SnapshotFiles` (safe walk, `read_text`, `FileIndex`), `classify`, `FileKind`, `is_test_path`, ignored directories, secret file patterns |
 | `src/tree.rs` | `render_tree` — `<structure>` (code/config listed, the rest summarized per directory) |
 | `src/selection.rs` | `ContextBudget`, `Selection`, `Excerpt`, `cartographer_code`, `cartographer_config` (ranking signals, packing, excerpts of large files) |
 | `src/related.rs` | `Seed`, `entry_point_code` — handler files + imports/same package up to depth 2 (Go, Rust, JS/TS, Python) |

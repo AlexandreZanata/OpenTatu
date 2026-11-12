@@ -1,14 +1,14 @@
 //! Files of the data directory (spec §B.4), written where `DataLayout` says. Each file is
 //! written to a temporary sibling and renamed, so readers never see half a file.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use opentatu_core::{App, Audit, Finding, Severity, UsageTotals};
+use opentatu_core::{App, Audit, AuditId, Finding, FindingId, Severity, UsageTotals};
 use opentatu_memory::{MemoryInput, render_history, render_memory};
 use opentatu_reports::{
-    AuditRecord, AuditResults, FindingRecord, ReportHeader, fallback_body, findings_sarif,
-    render_report,
+    AuditRecord, AuditResults, FindingRecord, ReportHeader, TaskManifest, fallback_body,
+    findings_sarif, render_report, render_task,
 };
 use opentatu_services::ScannerOutcome;
 
@@ -19,8 +19,9 @@ const MEMORY_AUDITS: u32 = 200;
 
 /// Writes `app.json`, the audit's map version, `coverage.json`, `llm_usage.jsonl`, the
 /// investigation files (`hypotheses.json`, `evidence/`, `findings.json`, `findings.sarif`,
-/// `findings/<ID>.json`), `report.md` and `audit.json`, then `history.jsonl` and
-/// `MEMORY.md`.
+/// `findings/<ID>.json`), the fix tasks (`tasks/MANIFEST.json`, `tasks/<TASK>.md` — also
+/// rewritten in the planning audit when a reverification changes a task), `report.md` and
+/// `audit.json`, then `history.jsonl` and `MEMORY.md`.
 pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Error> {
     let layout = &worker.layout;
     let services = &worker.services;
@@ -136,11 +137,32 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
         )
         .await?;
     }
-    for finding in &detected {
-        let evidence = services.evidence_of_finding(&finding.finding_id).await?;
-        let timeline = services.finding_timeline(&finding.finding_id).await?;
-        let record = FindingRecord::new(finding.clone(), evidence, &timeline).to_json()?;
-        write_atomic(&layout.finding_file(&finding.finding_id), &record).await?;
+    let mut touched: BTreeSet<FindingId> = detected.iter().map(|f| f.finding_id.clone()).collect();
+    let mut planning_audits = BTreeSet::new();
+    let planned = services.tasks_of_audit(&audit.id).await?;
+    if !planned.is_empty() {
+        planning_audits.insert(audit.id.clone());
+        touched.extend(planned.iter().map(|t| t.task_id.finding().clone()));
+    }
+    if let Some(reverification) = services.reverification_of_audit(&audit.id).await? {
+        planning_audits.insert(services.task(&reverification.task_id).await?.audit_id);
+        touched.insert(reverification.finding_id);
+    }
+    for planning in &planning_audits {
+        write_tasks(worker, planning).await?;
+    }
+    for id in &touched {
+        let finding = services.finding(id).await?;
+        let evidence = services.evidence_of_finding(id).await?;
+        let tasks = services
+            .tasks_of_finding(id)
+            .await?
+            .into_iter()
+            .map(|t| t.task_id)
+            .collect();
+        let timeline = services.finding_timeline(id).await?;
+        let record = FindingRecord::new(finding, evidence, tasks, &timeline).to_json()?;
+        write_atomic(&layout.finding_file(id), &record).await?;
     }
 
     let data = reporting::report_data(worker, audit, &audit.limitations).await?;
@@ -202,6 +224,25 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
 
     let memory = memory_text(worker, &app).await?;
     write_atomic(&layout.memory_file(app.slug()), &memory).await
+}
+
+/// `tasks/MANIFEST.json` and one `tasks/<TASK>.md` per task planned in `planning`, with
+/// their current state.
+async fn write_tasks(worker: &Worker, planning: &AuditId) -> Result<(), Error> {
+    let services = &worker.services;
+    let tasks = services.tasks_of_audit(planning).await?;
+    let commit = services.audit(planning).await?.commit;
+    let manifest = TaskManifest::new(planning.clone(), commit.clone(), services.now(), &tasks);
+    write_atomic(
+        &worker.layout.task_manifest_file(planning),
+        &manifest.to_json()?,
+    )
+    .await?;
+    for task in &tasks {
+        let path = worker.layout.task_file(planning, &task.task_id);
+        write_atomic(&path, &render_task(task, &commit)).await?;
+    }
+    Ok(())
 }
 
 /// `MEMORY.md` of `app` from the current state (spec §B.9): written at the end of every

@@ -1,5 +1,6 @@
 //! `GET /findings/{id}` — the live record of a finding (spec §B.7): details, the skeptic's
-//! review, the evidence of its confirmations and its timeline.
+//! review, the evidence of its confirmations, its fix tasks with their reverifications and
+//! its timeline.
 
 use askama::Template;
 use axum::extract::{Path, State};
@@ -10,8 +11,8 @@ use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    FindingRow, Item, KeyValue, Layout, TimelineEntry, finding_row, finding_state_badge,
-    timeline_entry,
+    FindingRow, Item, KeyValue, Layout, TaskRow, TimelineEntry, finding_row, finding_state_badge,
+    reverification_item, task_row, timeline_entry,
 };
 
 /// Template data of the finding page.
@@ -23,6 +24,8 @@ struct FindingPage {
     details: Vec<KeyValue>,
     review: Vec<String>,
     evidence: Vec<Item>,
+    tasks: Vec<TaskRow>,
+    reverifications: Vec<Item>,
     timeline: Vec<TimelineEntry>,
 }
 
@@ -110,6 +113,12 @@ pub async fn page(
             });
         }
     }
+    let tasks = services.tasks_of_finding(&id).await?;
+    let mut reverifications = Vec::new();
+    for task in &tasks {
+        let status = services.task_status(&task.task_id).await?;
+        reverifications.extend(status.reverifications.iter().map(reverification_item));
+    }
     let mut events = services.finding_timeline(&id).await?;
     events.reverse();
     render(&FindingPage {
@@ -118,6 +127,8 @@ pub async fn page(
         details,
         review,
         evidence,
+        tasks: tasks.iter().map(task_row).collect(),
+        reverifications,
         timeline: events.iter().map(timeline_entry).collect(),
     })
 }

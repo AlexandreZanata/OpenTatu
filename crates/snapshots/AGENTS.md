@@ -1,6 +1,6 @@
 # opentatu-snapshots — the exact code an audit analyzes
 
-Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 1 ✅
+Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 1 ✅; ancestry check (phase 5) ✅
 
 ## Responsibility
 
@@ -14,8 +14,8 @@ Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 1 �
 
 | File | Contents |
 |---|---|
-| `src/lib.rs` | `Snapshots` (`refresh_mirror`, `resolve`, `capture`), `Snapshot`; tests against a real temp repo |
-| `src/git.rs` | `Git` — the single hardened git invocation; `redact_credentials` |
+| `src/lib.rs` | `Snapshots` (`refresh_mirror`, `resolve`, `capture`, `is_ancestor`), `Snapshot`; tests against a real temp repo |
+| `src/git.rs` | `Git` — the single hardened git invocation (`run` → stdout, `check` → yes/no exit status); `redact_credentials` |
 | `src/testing.rs` | `create_repo`, `commit_files` (feature `test-support`) — the only test-repo helper |
 | `src/error.rs` | `Error` |
 
@@ -24,7 +24,7 @@ Paths: `DataLayout::mirror_dir` (`<data>/repos/<slug>.git`) and `DataLayout::sna
 
 ## Local rules
 
-- All git calls go through `git::Git::run`: hardening options (no hooks, no `ext::`, no
+- All git calls go through `git::Git` (`run` or `check`): hardening options (no hooks, no `ext::`, no
   prompts), `--` / `--end-of-options` before user values, credentials redacted from errors.
 - Reject values starting with `-` or containing `ext::` before they reach git.
 - A snapshot is complete only when its marker file exists; never read a `.partial` directory.

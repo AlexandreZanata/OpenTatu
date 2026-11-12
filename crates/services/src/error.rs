@@ -1,6 +1,6 @@
 //! Use case errors.
 
-use opentatu_core::{AuditId, FindingId, HypothesisId, MapId, Slug};
+use opentatu_core::{AuditId, FindingId, HypothesisId, MapId, Slug, TaskId};
 
 /// Errors of `opentatu-services`.
 #[derive(Debug, thiserror::Error)]
@@ -32,6 +32,14 @@ pub enum Error {
     /// No finding with this ID.
     #[error("finding `{0}` does not exist")]
     UnknownFinding(FindingId),
+
+    /// No task with this ID.
+    #[error("task `{0}` does not exist")]
+    UnknownTask(TaskId),
+
+    /// The agent token is unknown or revoked (R16: the token itself is never shown).
+    #[error("unknown or revoked agent token (ask the owner: `opentatu agent add`)")]
+    Unauthorized,
 
     /// No map version with this ID.
     #[error("map `{0}` does not exist")]

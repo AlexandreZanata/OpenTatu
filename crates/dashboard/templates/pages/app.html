@@ -26,6 +26,10 @@
   {% call ui::findings_table(findings, "Nenhum achado aberto.") %}{% endcall %}
 {% endcall %}
 
+{% call ui::card("Tarefas de correção pendentes") %}
+  {% call ui::tasks_table(tasks, "Nenhuma tarefa pendente.") %}{% endcall %}
+{% endcall %}
+
 {% call ui::card("Auditorias") %}
   {% call ui::audits_table(audits) %}{% endcall %}
 {% endcall %}

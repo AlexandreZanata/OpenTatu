@@ -40,6 +40,10 @@ opentatu_core::text_enum! {
         Hypotheses => "hypotheses",
         /// One confirmed finding with its verification (skeptic).
         Finding => "finding",
+        /// Upheld findings to plan, with their verification (planner).
+        Findings => "findings",
+        /// A fix submitted by a programming agent (verifier, reverification).
+        Fix => "fix",
     }
 }
 

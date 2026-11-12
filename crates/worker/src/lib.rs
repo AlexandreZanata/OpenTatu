@@ -2,16 +2,17 @@
 //!
 //! Runs queued audits one at a time (no parallelism, spec §E.1) following the orchestrator
 //! flow of spec §C.7. The audits table is the queue (ADR-0021): [`Worker::run_once`] claims
-//! the oldest `CREATED` audit through `opentatu-services` and runs [`pipeline`].
+//! the next `CREATED` audit (reverifications first) through `opentatu-services` and runs
+//! [`pipeline`].
 //!
 //! Implemented steps: create (services), snapshot of the exact commit (R02, phase 1),
 //! deterministic scanners through the [`ScannerSuite`] port (phase 2), the cartographer's
-//! security map and ASVS coverage (phase 3, needs [`AiSettings`]), artifacts — `app.json`,
-//! `audit.json`, `coverage.json`, `llm_usage.jsonl`, `map/`, `history.jsonl`, `MEMORY.md`
-//! (§B.4). Every step
-//! that is not implemented yet is listed in the audit's limitations and the audit ends
-//! `PARTIAL`: an audit that did not analyze anything is never reported as complete
-//! (R13, R14). Later phases replace limitations with real steps.
+//! security map and ASVS coverage (phase 3), hunter, verifier and skeptic (phase 4), the
+//! planner's fix tasks (phase 5), the reporter, and the artifacts of §B.4 — all AI steps
+//! need [`AiSettings`]. A REVERIFICATION audit (queued by a submitted fix) takes a short
+//! path instead: snapshot of the fix commit, verifier with the fix as untrusted data,
+//! regression search (R09), regression-test check (R19), decision (R06). An audit with
+//! limitations ends `PARTIAL`: it is never reported as complete (R13, R14).
 
 mod ai_run;
 mod artifacts;
@@ -20,7 +21,9 @@ mod cartography;
 mod error;
 mod hunt;
 pub mod pipeline;
+mod planning;
 mod reporting;
+mod reverification;
 mod usage;
 mod verification;
 
@@ -28,10 +31,10 @@ use std::future::Future;
 use std::sync::Arc;
 use std::time::Duration;
 
-use opentatu_core::{AuditId, DataLayout};
+use opentatu_core::{AuditId, AuditKind, DataLayout};
 use opentatu_llm::Llm;
 use opentatu_scanners::ScannerSuite;
-use opentatu_services::Services;
+use opentatu_services::{ReverificationOutcome, Services};
 use opentatu_snapshots::Snapshots;
 
 pub use error::Error;
@@ -89,12 +92,23 @@ impl Worker {
         };
         tracing::info!(audit_id = %audit.id, "audit started");
         let id = audit.id.clone();
+        let kind = audit.kind;
         match pipeline::run(self, audit).await {
             Ok(finished) => {
                 tracing::info!(audit_id = %id, status = %finished.status, "audit finished");
             }
             Err(error) => {
                 tracing::error!(audit_id = %id, %error, "audit failed");
+                if kind == AuditKind::Reverification {
+                    // R06: a fix that could not be reverified is not approved.
+                    let outcome = ReverificationOutcome {
+                        notes: vec![format!("Reverificação não concluída: {error}")],
+                        ..Default::default()
+                    };
+                    if let Err(error) = self.services.record_reverification(&id, outcome).await {
+                        tracing::warn!(audit_id = %id, %error, "could not record the failed reverification");
+                    }
+                }
                 let failed = self.services.fail_audit(&id, &error.to_string()).await?;
                 // Best effort: the database already holds the failure.
                 if let Err(error) = artifacts::write_all(self, &failed).await {

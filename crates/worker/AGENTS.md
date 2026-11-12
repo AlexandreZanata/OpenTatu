@@ -2,7 +2,7 @@
 
 Layer: **application** · May depend on: core, db, memory, reports, llm, investigator,
 scanners, snapshots, context, services · Status: phase 1 ✅ (queue, snapshot, artifacts);
-phase 2 ✅ (scanners step); phase 3 ✅ (cartographer, map, coverage); phase 4 ✅ (hunt, verify, skeptic, report, budget)
+phase 2 ✅ (scanners step); phase 3 ✅ (cartographer, map, coverage); phase 4 ✅ (hunt, verify, skeptic, report, budget); phase 5 ✅ (planner, reverification)
 
 ## Responsibility
 
@@ -16,16 +16,18 @@ phase 2 ✅ (scanners step); phase 3 ✅ (cartographer, map, coverage); phase 4 
 | File | Contents | Phase |
 |---|---|---|
 | `src/lib.rs` | ✅ `Worker` (`new` takes an `Arc<dyn ScannerSuite>`, `run_once`, `drain`, `run`) — queue = audits table (ADR-0021) | 1–2 |
-| `src/pipeline.rs` | ✅ `run`, `Step`, `PENDING_STEPS`; snapshot and scanners steps implemented (a scanner that cannot run becomes a limitation) | 1–5 |
-| `src/ai_run.rs` | ✅ `AiRun` — shared state of the AI steps (files, catalog, budget, prompt values, fingerprint of the commit's code) | 4 |
+| `src/pipeline.rs` | ✅ `run`, `Step`, `PENDING_STEPS`; snapshot and scanners steps (a scanner that cannot run becomes a limitation); the REVERIFICATION path; `finish` (COMPLETED only without limitations) | 1–5 |
+| `src/planning.rs` | ✅ §C.7 step 12: planner in batches of 5 findings, tasks validated (findings of the batch, files of the commit), unplanned findings as a limitation | 5 |
+| `src/reverification.rs` | ✅ REVERIFICATION: verifier on the fix commit with `<fix>`, closed findings' code searched (R09), test files changed (R19), decision via services, system report body | 5 |
+| `src/ai_run.rs` | ✅ `AiRun` — shared state of the AI steps (files, catalog, budget, prompt values, fingerprint of the commit's code, `code_present` for R09) | 4–5 |
 | `src/hunt.rs` | ✅ §C.7 steps 7–8: prioritized rounds (≤ 3, stop rule), validation, fingerprint, memory decisions | 4 |
-| `src/verification.rs` | ✅ §C.7 steps 9–10: verifier (≤ 4 concurrent, R05 check), skeptic (R18) | 4 |
+| `src/verification.rs` | ✅ §C.7 steps 9–10: verifier (≤ 4 concurrent, R05 check), skeptic (R18); `ask_verifier` shared with reverifications | 4–5 |
 | `src/reporting.rs` | ✅ §C.7 step 14: `report_data`, reporter or deterministic body | 4 |
 | `src/budget.rs` | ✅ `BudgetGuard` — tokens/calls/minutes per audit, `BUDGET_EXHAUSTED` (R13) | 4 |
 | `src/cartography.rs` | ✅ §C.7 step 5: context → cartographer → sanitize → `record_map`; failures become limitations | 3 |
 | `src/usage.rs` | ✅ `ServicesUsageRecorder` (the `UsageRecorder` port over services) | 3 |
-| `src/artifacts.rs` | ✅ atomic writes of `app.json`, `map/`, `coverage.json`, `llm_usage.jsonl`, `hypotheses.json`, `evidence/`, `findings.json`, `findings.sarif`, `findings/<ID>.json`, `report.md`, `audit.json`, `history.jsonl`, `MEMORY.md`; `memory_text` | 1–4 |
-| `tests/audit_pipeline.rs` | ✅ end-to-end with `FakeSuite` and `FakeClient`: register → create → snapshot → scanners → cartographer (invalid answer retried, invented file and ASVS id dropped, R11 event) → artifacts; no AI / failing scanners → limitations; unreachable repo → FAILED | 1–3 |
+| `src/artifacts.rs` | ✅ atomic writes of `app.json`, `map/`, `coverage.json`, `llm_usage.jsonl`, `hypotheses.json`, `evidence/`, `findings.json`, `findings.sarif`, `findings/<ID>.json`, `tasks/MANIFEST.json` and `tasks/<TASK>.md` (rewritten in the planning audit when a reverification changes a task), `report.md`, `audit.json`, `history.jsonl`, `MEMORY.md`; `memory_text` | 1–5 |
+| `tests/audit_pipeline.rs` | ✅ end-to-end with `FakeSuite` and `FakeClient`: register → create → snapshot → scanners → cartographer (invalid answer retried, invented file and ASVS id dropped, R11 event) → hunt → verify → skeptic → planner → artifacts; fix trail: claim → submit → REVERIFICATION approved (R06, R19) or rejected (task reopened), unfetchable commit rejected; no AI / failing scanners → limitations; unreachable repo → FAILED | 1–5 |
 
 ## Local rules
 

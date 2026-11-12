@@ -156,7 +156,7 @@ Template:
 - **Consequences:** changing a prompt requires a version bump and a rebuild.
 
 ## ADR-0012 — MCP over stdio with one token per agent
-- **Date:** 2026-11-11 · **Status:** proposed (implemented in phase 5)
+- **Date:** 2026-11-11 · **Status:** accepted (implemented in phase 5, ADR-0030)
 - **Context:** fixing agents run on the same machine; §E.6 asks for per-agent tokens.
 - **Decision:** `opentatu mcp` speaks MCP on stdio and is spawned by each agent; the agent's
   token is passed through its MCP configuration environment and maps to the actor
@@ -478,3 +478,41 @@ Template:
   round; large apps get their riskiest entry points first and report the rest as not
   analyzed.
 
+
+## ADR-0030 — Fix trail: planner tasks, MCP through rmcp, agent tokens, reverification
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** phase 5 (§C.5, §E.6; R06, R09, R19): fixing agents take tasks over MCP and
+  only OpenTatu closes findings. (Numbers 0026–0029 are reserved for the Sentinel expansion
+  proposal drafted in parallel.)
+- **Decision:**
+  - *Tasks.* Ids `<FINDING>-T<N>` and fix priority (`Finding::fix_priority`, R09) are the
+    system's; the planner's `task_id` is only a local reference for `depends_on`; files
+    outside the commit are dropped. Lifecycle OPEN → CLAIMED → FIX_SUBMITTED → DONE; a
+    rejected fix reopens the task (`TASK_CREATED` with `reopened`). A task change and its
+    finding's new state are written under one event.
+  - *MCP.* The official Rust SDK `rmcp` 3.9 (spec §E.2) on stdio serves both the
+    2026-07-28 per-request metadata and the older `initialize` handshake. One process per
+    agent session; a random 256-bit token (`otk_<hex>`, shown once, stored as sha256)
+    identifies the agent (`AGENT_REGISTERED`/`AGENT_REVOKED`); read-only and refused calls
+    record `MCP_TOOL_CALLED`.
+  - *Reverification.* `submit_fix` queues a REVERIFICATION audit of the exact commit, served
+    before every other audit (§A.2), never used as a "previous audit" and never created by
+    hand. On the snapshot of that commit the worker runs the verifier on the original
+    hypothesis with the fix as untrusted `<fix>` data (a refutation must cite lines of the
+    commit, like a confirmation); searches the identifying code (§B.8 window) of every
+    CLOSED finding (R09); and checks that the commit adds or changes a test file relative
+    to the commit the task was planned on (R19 — reported, not blocking: "when possible").
+    PASSED only when the verifier refutes the vulnerability and nothing regressed; anything
+    else (confirmed, inconclusive, no answer, unfetchable commit) is FAILED with reasons.
+    Scanners do not run in a reverification (its scope is one fix).
+  - *Status.* An audit is COMPLETED only when it produced no limitation; FULL audits stay
+    PARTIAL while the dynamic lab (phase 8) does not exist.
+- **Alternatives considered:** hand-written JSON-RPC (a second protocol implementation and
+  two protocol eras to maintain); a long-running networked MCP server (auth on a socket,
+  ADR-0012); rejecting fixes without a new test (R19 says "when possible"); re-running
+  scanners in every reverification (minutes per fix, no input to the decision).
+- **Consequences:** decisions need `serve` or `worker` running; a fix that moves the
+  vulnerable code elsewhere is caught only if the verifier sees it (it is told whether the
+  identifying code is unchanged); `MANIFEST.json` and task files show live states and are
+  rewritten when a reverification changes a task. New dependencies: `rmcp`, `schemars`
+  (tool schemas), `getrandom` (tokens).

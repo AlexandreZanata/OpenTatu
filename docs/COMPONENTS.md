@@ -41,6 +41,11 @@ it replaces.
 | Git invocations | `opentatu_snapshots` (`git.rs`) | `Command::new("git")` elsewhere |
 | Audit pipeline steps and limitations | `opentatu_worker::pipeline` (`Step`, `PENDING_STEPS`) | status logic in other crates |
 | Credentials in memory | `opentatu_core::Secret` | plain `String` keys/tokens |
+| Fixing-agent tokens | `opentatu_core::AgentToken` (stored only as `hash()`) | storing or logging the token |
+| Who may close a finding | `Services::record_reverification` (`Reverification::decide`, R06) | closing a finding anywhere else |
+| MCP protocol | `rmcp` inside `opentatu-mcp` (`FixServer`) | hand-written JSON-RPC |
+| Test-file detection | `opentatu_context::is_test_path` | test-name heuristics elsewhere |
+| sha256 text (`sha256:<hex>`) | `opentatu_core::fingerprint` (crate-private `sha256_text`) | other hashing helpers |
 | Terminal output | `apps/opentatu/src/output.rs` | `println!` elsewhere |
 | Domain vocabulary | `docs/GLOSSARY.md` | synonyms |
 
@@ -54,12 +59,12 @@ it replaces.
 | `MapId::for_audit(&AuditId)` | Map version ID with the audit's stamp | formatting map IDs |
 | `FindingId::new(slug, n)` | `<SLUG>-SEC-<NNNN>`; `.number()` | formatting finding IDs |
 | `HypothesisId`, `EvidenceId` `::new(audit, n)` | `<AUDIT>-H-<NNN>`, `<AUDIT>-EV-<NNN>` | formatting child IDs |
-| `TaskId::new(finding, n)` | `<FINDING>-T<N>` | formatting task IDs |
+| `TaskId::new(finding, n)` | `<FINDING>-T<N>`; `.finding()`, `.number()` | formatting task IDs |
 | `EventId::new(n)` | `EVT-<NNNNNNNN>` | formatting event IDs |
 | `CommitHash` (`short()`) | Full 40/64-hex commit (R02) | branch names or short hashes in records |
 | `NewApp` (`validate()`), `App` | App profile, git-option injection rejected (R01) | ad-hoc profile structs |
 | `Audit` (`duration_seconds()`) | Audit record / queue item (§B.5) | custom audit structs |
-| `DataLayout` | Every path of §B.4 (db, app files, audits, raw scanner outputs, scanner caches, mirrors, snapshots) | building paths by hand |
+| `DataLayout` | Every path of §B.4 (db, app files, audits, raw scanner outputs, scanner caches, mirrors, snapshots, `task_manifest_file`, `task_file`) | building paths by hand |
 | `ScannerKind`, `ScannerResult`, `ScannerRun` | The four scanners and their normalized results (§A.3) | per-tool result structs outside `opentatu-scanners` |
 | `AsvsCatalog` (`embedded`, `resolve`, `up_to`, `position`), `AsvsRequirement`, `AsvsLevel`, `ASVS_VERSION`, `APPLICABLE_LEVEL` | OWASP ASVS 5.0.0 catalog (Q-013) | requirement lists elsewhere |
 | `SecurityMap`, `MapContent` (`sanitize`), `EntryPoint`, `Component`, `TrustBoundary`, `SensitiveData`, `Authentication`, `Authorization`, `Integration`, `SecurityConfiguration`, `Infrastructure`, `CriticalDependency`, `AuthenticationRequirement` | The security map and its validation against the commit (§C.1) | ad-hoc map JSON |
@@ -68,7 +73,11 @@ it replaces.
 | `SuspiciousInstruction` (`bounded_excerpt`) | Instruction found in analyzed content (R11) | role-specific copies |
 | `Hypothesis`, `HypothesisContent`, `CodeLocation` (`line_range`), `Confidence`, `Verdict` (`state`) | Hypotheses (§C.2) | ad-hoc hypothesis JSON |
 | `Verification` (`evidence_problem`, R05), `EvidenceItem`, `EvidenceStep`, `RegressionTest` | Verifier answer after the system's checks (§C.3, §C.9) | trusting a "confirmed" verdict without evidence |
-| `Finding` (`is_open`, `fix_priority`), `Detection`, `SkepticReview` (`decide`) | Live finding record (§B.7), skeptic review (§C.4, R18) | — |
+| `Finding` (`is_open`, `fix_priority`, `code_present_in`), `Detection`, `SkepticReview` (`decide`) | Live finding record (§B.7), skeptic review (§C.4, R18); `code_present_in` finds the identifying code at another commit (R09) | — |
+| `Task`, `TaskContent`, `TaskState` (`allowed_transitions`, `validate_transition`), `FixSubmission`, `Rejection` | Fix tasks (§C.5, §E.6): lifecycle OPEN → CLAIMED → FIX_SUBMITTED → DONE, a rejected fix reopens | ad-hoc task JSON |
+| `Reverification` (`decide`), `ReverificationResult` | One reverification of a submitted fix; `decide` is the R06/R09 rule | approving fixes elsewhere |
+| `Agent` (`validate_name`, `actor`), `AgentToken` (`from_random`, `parse`, `hash`, `expose`), `agent::TOKEN_BYTES` | Fixing agents and their MCP tokens (R16) | `String` tokens |
+| `fingerprint::SNIPPET_LINES` | Lines of code in a finding's identity (§B.8) | other window sizes |
 | `HuntRound`, `ScannerTriage`, `TriageDecision` | One hunter round (§C.7 step 7) | — |
 | `Comparison` | New / persistent / not re-detected / regressions | — |
 | `ReportText` | Reporter body of an audit | — |
@@ -108,11 +117,16 @@ it replaces.
 | `investigation::{insert_hypothesis, update_hypothesis, hypothesis, hypotheses_of_audit, hypotheses_of_finding, hypothesis_count, dismissed_hypotheses, evidence_count}` | Hypotheses (derived state with events) |
 | `investigation::{next_finding_number, insert_finding, update_finding, finding, findings_of_app}` | Findings (numbers never reused) |
 | `investigation::{insert_round, rounds_of_audit, insert_report, report_of_audit}` | Hunter rounds and report texts (append-only) |
+| `tasks::{next_task_number, insert_task, update_task, task, tasks_of_app, tasks_of_finding, tasks_of_audit}` | Fix tasks; a change and its finding's new state share one event |
+| `tasks::{insert_verification, decide_verification, verification_of_audit, verifications_of_task}` | Reverifications (decided once, trigger-enforced) |
+| `tasks::{insert_agent, revoke_agent, agent, agent_by_token_hash, agents}` | Fixing agents (token hash only) |
 | `health::schema_version` | Highest applied migration |
-| `rows::{parsed, parsed_opt, json, unsigned, to_i64}` (crate-private) | Typed column reading with column-named errors — use in every repository |
+| `rows::{parsed, parsed_opt, json, to_json, content, unsigned, to_i64}` (crate-private) | Typed column reading and JSON `content` columns with column-named errors — use in every repository |
 
 Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`, `maps`,
-`hypotheses`, `findings`, `hunt_rounds`, `audit_reports` (see `migrations/`). Test fixture: `audits::tests::insert_queued` (app + queued audit).
+`hypotheses`, `findings`, `hunt_rounds`, `audit_reports`, `tasks`, `verifications`, `agents`
+(see `migrations/`). The queue (`audits::next_queued`) serves REVERIFICATION first (§A.2).
+Test fixture: `audits::tests::insert_queued` (app + queued audit).
 
 ## opentatu-services (`crates/services`)
 
@@ -135,6 +149,12 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`,
 | `Services::record_hypothesis(&Audit, NewHypothesis, &DedupOutcome)` | Hypothesis by memory decision: new, persistent, regression (R09), known false positive (R08), accepted risk |
 | `Services::record_verification`, `record_review`, `record_hunt_round`, `record_report`, `record_budget_exhausted` | Verdict (evidence ids, finding creation), skeptic review, rounds, report, R13 |
 | `Services::hypotheses_of_audit`, `hypothesis`, `hunt_rounds`, `findings_of_app`, `finding`, `finding_timeline`, `evidence_of_finding`, `dismissed_hypotheses`, `dismissed_before`, `false_positives`, `report_of_audit`, `comparison_of_audit` | Investigation queries (`DedupOutcome`, `DismissedBefore` re-exported from memory) |
+| `Services::record_tasks(audit, Vec<PlannedTask>)` | Planner tasks: system ids and priority, `depends_on` resolved, `TASK_CREATED` (§C.5) |
+| `Services::claim_task`, `submit_fix(id, &Agent, NewFix)` | `TASK_CLAIMED`; `FIX_SUBMITTED` + a queued REVERIFICATION audit (R06) |
+| `Services::record_reverification(audit, ReverificationOutcome)` | The only way a finding closes: PASSED → `REVERIFICATION_PASSED` + `FINDING_CLOSED`; FAILED → `REVERIFICATION_FAILED` + task reopened (`TASK_CREATED`) |
+| `Services::task`, `tasks_of_app`, `tasks_of_finding`, `tasks_of_audit`, `task_status` (`TaskStatus`), `reverification_of_audit` | Fix trail queries |
+| `Services::register_agent`, `revoke_agent`, `authenticate_agent(&AgentToken)`, `agents` | Fixing agents (`AGENT_REGISTERED`/`AGENT_REVOKED`; unknown and revoked tokens → `Error::Unauthorized`) |
+| `Services::record_mcp_call` | `MCP_TOOL_CALLED` for read-only and refused MCP calls (Q-007) |
 | `Services::record_llm_usage(&LlmUsage)` | Stores one model call, stamped with the clock |
 | `Services::llm_usage_this_month(model)` → `UsageTotals` | Monthly totals (plan share, §A.2) |
 
@@ -157,6 +177,7 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`,
 | `view::{Item, KeyValue}` + `component_items`, `trust_boundary_items`, `sensitive_data_items`, `integration_items`, `dependency_items`, `authentication_rows`, `authorization_rows`, `configuration_rows`, `infrastructure_rows`, `requirement_lines` | Map sections (in `view/map.rs`) |
 | `view::{CoverageRow, coverage_row, requirement_status_badge}` | Coverage matrix rows |
 | `view::{FindingRow, finding_row, HypothesisRow, hypothesis_row, finding_state_badge, confidence_label}` | Findings and hypotheses (in `view/findings.rs`) |
+| `view::{TaskRow, task_row, task_state_badge, reverification_badge, reverification_item}` | Fix tasks and reverifications (in `view/tasks.rs`) |
 | `PageError` | Logs details, shows a generic pt-BR error page |
 
 UI components (`templates/components/ui.html`, import as `ui`):
@@ -179,6 +200,7 @@ UI components (`templates/components/ui.html`, import as `ui`):
 | `ui::coverage_table(rows)` | Applicable requirements (`view::CoverageRow`) |
 | `ui::findings_table(rows, empty)` | Findings (`view::FindingRow`) |
 | `ui::hypotheses_table(rows)` | Hypotheses of an audit (`view::HypothesisRow`) |
+| `ui::tasks_table(rows, empty)` | Fix tasks (`view::TaskRow`) |
 | `ui::report_text(text)` | Report body as escaped preformatted text |
 
 CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge`, `c-empty`,
@@ -230,6 +252,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 |---|---|
 | `SnapshotFiles::{scan, files, get, read_text}` | Safe walk of a snapshot (no symlinks, no dependency/build dirs; secrets never read); implements `FileIndex` |
 | `classify`, `FileKind` | Source / Config / Doc / Secret / Other |
+| `is_test_path` | Automated test files (ranking, R19 check) |
 | `render_tree(files, max_lines)` | `<structure>` block |
 | `cartographer_code`, `cartographer_config` → `Selection { excerpts, left_out, bytes }` | Ranked, line-numbered `<code>` / `<config>` within `ContextBudget::CARTOGRAPHER` |
 | `entry_point_code(files, seeds: &[Seed], budget, per_file)` | Handler files + what they reach (imports, same package) up to depth 2 |
@@ -241,9 +264,9 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `run_role::<T: RoleOutput>(&Llm, RoleCall)` → `RoleAnswer<T>` | Render, fence, call, validate, ≤ 2 retries (§C.7) |
 | `RunContext::variables()` | Base-prompt values of the running audit |
 | `CartographerOutput`, `CartographerInputs::blocks`, `asvs_listing` | The cartographer's output type and input blocks |
-| `HunterOutput`, `VerifierOutput`, `SkepticOutput` (`dismissed`), `ReporterOutput` | The other roles' outputs (`roles.rs`) |
+| `HunterOutput`, `VerifierOutput`, `SkepticOutput` (`dismissed`), `PlannerOutput` (`PlannerTask`), `ReporterOutput` | The other roles' outputs (`roles.rs`) |
 | `map_excerpt`, `scanner_lines`, `finding_lines`, `hypothesis_lines` | Text formats of system-built inputs |
-| `Block::{Asvs, Hypotheses, Finding}` | `<asvs>`, `<hypotheses>`, `<finding>` input blocks |
+| `Block::{Asvs, Hypotheses, Finding, Findings, Fix}` | `<asvs>`, `<hypotheses>`, `<finding>`, `<findings>` (planner), `<fix>` (reverification) input blocks |
 
 ## opentatu-snapshots (`crates/snapshots`)
 
@@ -252,6 +275,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Snapshots::refresh_mirror(slug, repo_url)` | Bare mirror per app (clone once, fetch after) |
 | `Snapshots::resolve(slug, revision)` → `CommitHash` | Branch/tag/commit → full hash (R02) |
 | `Snapshots::capture(slug, commit)` → `Snapshot { dir, reused }` | Checkout of the exact commit, reused when complete |
+| `Snapshots::is_ancestor(slug, ancestor, descendant)` | Whether a commit is in another's history (R09 in reverifications) |
 | `testing::{create_repo, commit_files}` (feature `test-support`) | The only helper that creates throwaway git repos in tests |
 
 ## opentatu-memory (`crates/memory`)
@@ -270,7 +294,16 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `AuditRecord::from_audit(&Audit)`, `with_scanners`, `with_ai`, `with_usage`, `with_results(AuditResults)`, `with_coverage`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
 | `ReportData`, `ReportHeader`, `render_report`, `fallback_body`, `FindingSummary`, `OpenHypothesis`, `HypothesisCounts` | `report.md`: system data, R17 header, deterministic body |
 | `findings_sarif(findings, version)` | `findings.sarif` (SARIF 2.1.0) |
-| `FindingRecord::new(finding, evidence, events)` | `findings/<ID>.json` (§B.7) |
+| `FindingRecord::new(finding, evidence, tasks, events)` | `findings/<ID>.json` (§B.7) |
+| `TaskManifest::new`, `ManifestEntry`, `render_task(task, commit)` | `tasks/MANIFEST.json` and `tasks/<TASK>.md` |
+| `reverification_body(reverification, task)` | `report.md` body of a REVERIFICATION audit |
+
+## opentatu-mcp (`crates/mcp`)
+
+| Component | Purpose |
+|---|---|
+| `serve(services, layout, &AgentToken, (reader, writer))`, `serve_stdio` | Authenticates the token once, then serves its agent until the client disconnects |
+| `FixServer::new(services, layout, agent)` | The eight tools of §E.6 over `rmcp` (both MCP protocol eras); one event per call |
 
 ## opentatu-worker (`crates/worker`)
 
@@ -279,14 +312,14 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Worker::{new, run_once, drain, run}` | Claims and runs queued audits; failures end the audit, not the worker |
 | `Worker::new(services, snapshots, scanners, layout)`, `with_ai(AiSettings)` | Takes an `Arc<dyn ScannerSuite>`; AI steps need `AiSettings { llm, owner }` |
 | `ServicesUsageRecorder` | `UsageRecorder` port over `Services` (worker and binary) |
-| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far (snapshot, scanners, map, hunt, verify, report, artifacts) and the limitations of the missing ones |
+| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps (snapshot, scanners, map, hunt, verify, plan, report, artifacts), the REVERIFICATION path (`REVERIFY`) and the limitation of the missing dynamic lab; COMPLETED only without limitations |
+| `verification::ask_verifier` (crate-private) | One verifier call with the system's checks — used by the audit and by reverifications |
 
 ## Planned crates (structure only)
 
 | Crate | Phase | Planned components (see the crate's AGENTS.md) |
 |---|---|---|
 | `opentatu-context` (`crates/context`) | 7 | diff (INCREMENTAL) |
-| `opentatu-mcp` (`crates/mcp`) | 5 | the eight MCP tools of §E.6 |
 
 ## Binary and tooling
 
@@ -294,9 +327,9 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 |---|---|---|
 | CLI definition | `apps/opentatu/src/cli.rs` | Every subcommand (crate `opentatu`) |
 | Production wiring | `apps/opentatu/src/commands/mod.rs` → `services()` | The one place production `Services` are built |
-| `config::{load_dotenv, init_logging, prepare_data_dir, api_key, owner_name}` | `apps/opentatu/src/config.rs` | Env, logging to stderr, data dir (0700), API key as `Secret`, owner's name |
+| `config::{load_dotenv, init_logging, prepare_data_dir, api_key, owner_name, mcp_token}` | `apps/opentatu/src/config.rs` | Env, logging to stderr, data dir (0700), API key as `Secret`, owner's name, agent token (`OPENTATU_MCP_TOKEN`) |
 | `worker::{Configs, build}` | `apps/opentatu/src/commands/worker.rs` | The one place the production `Worker` (with `AiSettings`) is built |
 | `scanners::build` | `apps/opentatu/src/commands/scanners.rs` | The one place production `Scanners` are built (`--scanners-config`) |
 | `output::{line, error}` | `apps/opentatu/src/output.rs` | Terminal output |
-| `pending::not_implemented(cmd, phase)` | `apps/opentatu/src/commands/pending.rs` | Placeholder for planned commands |
+| `agent::{add, list, revoke}`, `mcp::run`, `task::{list, show}` | `apps/opentatu/src/commands/` | Agent tokens (random bytes from `getrandom`, printed once), the MCP server on stdio, tasks for the owner |
 | Repository checks | `xtask/src/` (crate `xtask`) | `architecture`, `docs`, `glossary` |

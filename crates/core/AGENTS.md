@@ -1,7 +1,8 @@
 # opentatu-core — pure domain
 
 Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · Status: base ✅; scanners (phase 2), ASVS, map and
-coverage (phase 3) ✅; hypotheses and findings (phase 4) ✅
+coverage (phase 3) ✅; hypotheses and findings (phase 4) ✅; tasks, reverifications and agents
+(phase 5) ✅
 
 ## Responsibility
 
@@ -36,10 +37,11 @@ coverage (phase 3) ✅; hypotheses and findings (phase 4) ✅
 | `src/coverage.rs` | `Coverage::compute`, `CoverageSummary`, `RequirementCoverage`, `RequirementStatus` | §B.5, R14 |
 | `src/suspicious.rs` | `SuspiciousInstruction` | R11 |
 | `src/hypothesis.rs` | `Hypothesis`, `HypothesisContent`, `CodeLocation`, `Confidence`, `Verdict`, `Verification` (R05 check), `EvidenceItem`, `HuntRound`, `ScannerTriage` | §C.2, §C.3, §C.9 |
-| `src/finding.rs` | `Finding`, `Detection`, `SkepticReview::decide` (R18), `Comparison`, `ReportText` | §B.7, §C.4, §C.6 |
+| `src/finding.rs` | `Finding` (`code_present_in`, R09), `Detection`, `SkepticReview::decide` (R18), `Comparison`, `ReportText` | §B.7, §C.4, §C.6 |
+| `src/task.rs` | `Task`, `TaskContent`, `TaskState` (lifecycle), `FixSubmission`, `Rejection`, `Reverification::decide` (R06, R09), `ReverificationResult` | §A.6, §C.5, §E.6 |
+| `src/agent.rs` | `Agent`, `AgentToken` (`from_random`, `parse`, `hash`; a `Secret`), `TOKEN_BYTES` | §E.6, R16 |
 | `src/lenient.rs` | `any_case` — enum values written by models in any letter case | — |
 
-Planned: fix tasks and verifications (phase 5).
 
 ## Local rules
 

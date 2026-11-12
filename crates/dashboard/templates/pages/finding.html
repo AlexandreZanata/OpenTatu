@@ -17,6 +17,14 @@
   {% call ui::item_list(evidence, "Nenhuma evidência registrada.") %}{% endcall %}
 {% endcall %}
 
+{% call ui::card("Tarefas de correção") %}
+  {% call ui::tasks_table(tasks, "Nenhuma tarefa planejada.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Reverificações") %}
+  {% call ui::item_list(reverifications, "Nenhuma correção enviada. Só a reverificação do OpenTatu fecha o achado.") %}{% endcall %}
+{% endcall %}
+
 {% call ui::card("Linha do tempo") %}
   {% call ui::timeline(timeline) %}{% endcall %}
 {% endcall %}

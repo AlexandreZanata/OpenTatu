@@ -28,12 +28,12 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 4** — OpenTatu investigates: the hunter proposes hypotheses per
-> entry point, the verifier proves or refutes them with evidence from the exact commit, the
-> skeptic challenges every confirmed finding and the system computes its severity; each
-> audit ends with `report.md`, SARIF and OWASP ASVS 5.0.0 coverage. Security map (phase 3),
-> static scanners in isolated containers (phase 2), audits and history (phase 1). Fix tasks
-> over MCP arrive in phase 5. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> Status: **roadmap phase 5** — the fix trail: the planner turns every upheld finding into a
+> task (`tasks/MANIFEST.json`), fixing agents take tasks over MCP and submit a commit, and
+> only OpenTatu's reverification of that commit closes the finding — otherwise the task is
+> reopened with the reasons. Investigation with evidence and computed severity (phase 4),
+> security map and OWASP ASVS 5.0.0 coverage (phase 3), static scanners in isolated
+> containers (phase 2), audits and history (phase 1). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Quick start
 
@@ -50,6 +50,19 @@ cargo run -p opentatu -- serve             # dashboard + worker
 ```
 
 Open http://127.0.0.1:7878. Health check: http://127.0.0.1:7878/health.
+
+### Fixing agents (MCP)
+
+```bash
+cargo run -p opentatu -- agent add my-agent   # prints the token ONCE and the MCP client config
+cargo run -p opentatu -- task list --app myapp
+```
+
+Put the printed `mcpServers` entry in the agent's MCP configuration: the agent's client
+spawns `opentatu mcp` on stdio with `OPENTATU_MCP_TOKEN`. Tools: `opentatu_list_apps`,
+`opentatu_memory`, `opentatu_list_tasks`, `opentatu_get_task`, `opentatu_claim_task`,
+`opentatu_submit_fix`, `opentatu_verification_status`, `opentatu_history`. Keep `serve` (or
+`worker`) running so submitted fixes are reverified.
 
 ## Development
 

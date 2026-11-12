@@ -37,6 +37,22 @@ pub(crate) fn json(row: &SqliteRow, column: &'static str) -> Result<serde_json::
     serde_json::from_str(&text).map_err(|source| Error::InvalidJson { column, source })
 }
 
+/// Serializes a value for a JSON text column.
+pub(crate) fn to_json(
+    column: &'static str,
+    value: &impl serde::Serialize,
+) -> Result<String, Error> {
+    serde_json::to_string(value).map_err(|source| Error::InvalidJson { column, source })
+}
+
+/// Reads the `content` JSON column as a domain record.
+pub(crate) fn content<T: serde::de::DeserializeOwned>(row: &SqliteRow) -> Result<T, Error> {
+    serde_json::from_value(json(row, "content")?).map_err(|source| Error::InvalidJson {
+        column: "content",
+        source,
+    })
+}
+
 /// Reads a non-negative integer column as `u64`.
 pub(crate) fn unsigned(row: &SqliteRow, column: &'static str) -> Result<u64, Error> {
     let value: i64 = row.try_get(column)?;

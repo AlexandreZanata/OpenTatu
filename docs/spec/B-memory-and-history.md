@@ -159,7 +159,10 @@ Event kinds (`opentatu_core::EventKind`):
   `AUDIT_FAILED`
 - Owner: `OWNER_DECISION`
 - MCP read-only calls (Q-007): `MCP_TOOL_CALLED` — state-changing tools record their domain
-  event instead, so every MCP call produces exactly one event
+  event instead, so every MCP call produces exactly one event (a refused call is also
+  recorded as `MCP_TOOL_CALLED`, with the error)
+- Fixing agents (ADR-0030): `AGENT_REGISTERED`, `AGENT_REVOKED` — data `{ "agent":
+  "agent:<name>" }`, never the token
 
 ## B.7 Live finding record (`findings/ABASTEVO-SEC-0004.json`)
 

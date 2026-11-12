@@ -28,6 +28,12 @@ pub fn commit_files(dir: &Path, files: &[(&str, &str)], message: &str) {
     git(dir, &["commit", "--quiet", "-m", message]);
 }
 
+/// Creates branch `name` at `start` (a branch or commit) and checks it out; later
+/// `commit_files` calls commit on it.
+pub fn checkout_new_branch(dir: &Path, name: &str, start: &str) {
+    git(dir, &["checkout", "--quiet", "-b", name, start]);
+}
+
 fn git(dir: &Path, args: &[&str]) {
     // Test fixture: builds a throwaway repository with the git CLI (this crate owns git).
     #[allow(clippy::disallowed_methods)]

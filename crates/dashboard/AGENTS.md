@@ -1,7 +1,7 @@
 # opentatu-dashboard — local web UI
 
 Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · Status: base ✅
-(home, app page with timeline, health); audit page with scanner results (phase 2) ✅; map and coverage pages (phase 3) ✅; findings, hypotheses and report (phase 4) ✅
+(home, app page with timeline, health); audit page with scanner results (phase 2) ✅; map and coverage pages (phase 3) ✅; findings, hypotheses and report (phase 4) ✅; fix tasks and reverifications (phase 5) ✅
 
 ## Responsibility
 
@@ -18,6 +18,7 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | `src/render.rs` | `render(&page)` — the only template → response path |
 | `src/view/mod.rs` | `Layout`, `Badge`, badges, labels, `AuditRow`, `TimelineEntry`, `AppSummary`, `AuditSummary`, `ScannerRunRow`, `ScannerResultRow` — the only domain → UI text mapping (durations: `opentatu_core::duration_label`) |
 | `src/view/findings.rs` | `FindingRow`, `HypothesisRow`, `finding_state_badge`, `confidence_label` |
+| `src/view/tasks.rs` | `TaskRow`, `task_row`, `task_state_badge`, `reverification_badge`, `reverification_item` |
 | `src/view/map.rs` | `MapSummary`, `EntryPointRow`, `Item`, `KeyValue`, map section rows, `CoverageRow`, `authentication_badge`, `requirement_status_badge` |
 | `src/security.rs` | `check_host` (DNS rebinding), `check_origin` (CSRF), `security_headers` (CSP, no-store...) |
 | `src/config.rs` | `DashboardConfig::local` (loopback only) |
@@ -49,6 +50,7 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | `ui::coverage_table(rows)` | applicable requirements (`view::CoverageRow`) |
 | `ui::findings_table(rows, empty)` | findings (`view::FindingRow`) |
 | `ui::hypotheses_table(rows)` | hypotheses of an audit (`view::HypothesisRow`) |
+| `ui::tasks_table(rows, empty)` | fix tasks (`view::TaskRow`) |
 | `ui::report_text(text)` | report body, escaped preformatted text |
 
 ## Local rules

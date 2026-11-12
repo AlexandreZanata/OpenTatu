@@ -125,7 +125,7 @@ flowchart LR
   enum texts in `opentatu_core` via `text_enum!`, IDs in `opentatu_core::ids`, AI output
   keys in the prompts (and, from phase 3, in the output types of the investigator).
 
-## Audit flow (target, phases 1–5)
+## Audit flow (phases 1–5)
 
 ```mermaid
 sequenceDiagram
@@ -146,9 +146,35 @@ sequenceDiagram
     W->>I: hunter
   end
   W->>I: verifier per hypothesis, skeptic per confirmed
-  W->>S: findings, dedup, regressions, tasks (+ events)
+  W->>S: findings, dedup, regressions (+ events)
+  W->>I: planner per batch of findings
+  W->>S: tasks (TASK_CREATED), MANIFEST.json
   W->>I: reporter
   W->>S: complete audit (AUDIT_COMPLETED or AUDIT_PARTIAL)
+```
+
+## Fix trail (phase 5)
+
+```mermaid
+sequenceDiagram
+  participant A as fixing agent
+  participant M as opentatu mcp
+  participant S as services
+  participant W as worker
+  A->>M: opentatu_list_tasks / opentatu_get_task
+  A->>M: opentatu_claim_task (TASK_CLAIMED)
+  A->>A: fix on a branch + regression test, push
+  A->>M: opentatu_submit_fix(branch, commit)
+  M->>S: FIX_SUBMITTED + REVERIFICATION audit queued (first in line)
+  W->>W: snapshot the fix commit
+  W->>W: verifier on the original hypothesis with <fix>; closed findings' code searched (R09); tests changed (R19)
+  W->>S: record_reverification
+  alt approved
+    S->>S: REVERIFICATION_PASSED, FINDING_CLOSED, task DONE
+  else rejected
+    S->>S: REVERIFICATION_FAILED, task reopened with reasons (TASK_CREATED)
+  end
+  A->>M: opentatu_verification_status
 ```
 
 ## Configuration

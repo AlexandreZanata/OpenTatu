@@ -33,9 +33,19 @@
   {% endif %}
 {% endcall %}
 
+{% if !reverification.is_empty() %}
+{% call ui::card("Correção reverificada") %}
+  {% call ui::item_list(reverification, "") %}{% endcall %}
+{% endcall %}
+{% endif %}
+
 {% call ui::card("Achados desta auditoria") %}
   {% call ui::findings_table(findings, "Nenhum achado confirmado nesta auditoria.") %}{% endcall %}
   {% if has_report %}<p><a href="/audits/{{ audit.id }}/report">Ler o relatório da auditoria</a></p>{% endif %}
+{% endcall %}
+
+{% call ui::card("Tarefas de correção planejadas") %}
+  {% call ui::tasks_table(tasks, "Nenhuma tarefa planejada nesta auditoria.") %}{% endcall %}
 {% endcall %}
 
 {% call ui::card("Hipóteses") %}

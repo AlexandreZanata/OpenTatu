@@ -23,7 +23,7 @@ mod selection;
 mod tree;
 
 pub use error::Error;
-pub use files::{FileKind, SnapshotFiles, SourceFile, TextFile, classify};
+pub use files::{FileKind, SnapshotFiles, SourceFile, TextFile, classify, is_test_path};
 pub use related::{Seed, entry_point_code};
 pub use selection::{ContextBudget, Excerpt, Selection, cartographer_code, cartographer_config};
 pub use tree::render_tree;

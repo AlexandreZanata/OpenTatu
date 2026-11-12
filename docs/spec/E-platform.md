@@ -22,7 +22,7 @@
 | Queue | SQLite (jobs table with checkpoints) |
 | Validation | serde + JSON Schema (AI output schemas) |
 | Worker | Rust + Tokio (audit orchestrator) |
-| MCP | Rust MCP SDK (`rmcp`) — phase 5 |
+| MCP | Rust MCP SDK (`rmcp`), stdio — phase 5 ✅ (ADR-0030) |
 | Scanners | official Docker images pinned by digest (Docker or rootless Podman) |
 | HTTPS proxy | none locally; Caddy only on the VPN interface if deployed to a VPS |
 | Authentication | single owner, strong password + TOTP, short session (see Q-005 for local mode) |
@@ -45,8 +45,9 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `hypotheses` | hypothesis_id, audit_id, fingerprint, state, finding_id, content (JSON with the verification and its evidence) | 4 ✅ |
 | `findings` | finding_id, app, number, state, severity, fingerprint, first/last audit, content (JSON live record) | 4 ✅ |
 | `hunt_rounds`, `audit_reports` | audit_id, round / report, content (JSON) — append-only | 4 ✅ |
-| `tasks` | id, finding_id, state, priority, content (JSON), claimed_by, branch, fix_commit | 5 |
-| `verifications` | id, task_id, audit_id, result, occurred_at | 5 |
+| `tasks` | task_id, finding_id, app, audit_id, number, state, priority, claimed_by, branch, fix_commit, created_at, content (JSON) — never deleted | 5 ✅ |
+| `verifications` | audit_id (the REVERIFICATION audit), task_id, result, created_at, decided_at, content (JSON) — decided once | 5 ✅ |
+| `agents` | name, token_hash (never the token, R16), registered_at, revoked_at — never deleted (ADR-0030) | 5 ✅ |
 | `decisions` | id, kind, target, justification, expires_at, occurred_at | 4 |
 | `scanner_results` | id, audit_id, scanner, result_id, rule_id, message, file, start_line, end_line, reported_severity, cwe — append-only | 2 ✅ |
 
@@ -82,6 +83,12 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 
 Rules: one token per agent; every call becomes exactly one event (read-only tools:
 `MCP_TOOL_CALLED`, Q-007); no tool closes a finding or changes severity.
+
+Implementation (ADR-0030): `opentatu mcp` is spawned by the agent's MCP client with
+`OPENTATU_MCP_TOKEN` (created by `opentatu agent add <name>`, stored only as a hash); the
+token identifies the agent, so `agent` in `opentatu_claim_task` is optional and must match.
+`opentatu_submit_fix` takes the full commit hash; the REVERIFICATION audit that it queues
+runs before every other queued audit and is the only way a finding becomes CLOSED (R06).
 
 ## E.7 Roadmap
 

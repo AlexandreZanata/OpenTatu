@@ -1,5 +1,6 @@
-//! `GET /audits/{id}` — one audit: summary, limitations, scanner executions, normalized
-//! scanner results and the audit's events.
+//! `GET /audits/{id}` — one audit: summary, limitations, the fix it reverifies (REVERIFICATION),
+//! the tasks it planned, scanner executions, normalized scanner results and the audit's
+//! events.
 
 use askama::Template;
 use axum::extract::{Path, State};
@@ -10,9 +11,9 @@ use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    AuditSummary, FindingRow, HypothesisRow, Layout, MapSummary, ScannerResultRow, ScannerRunRow,
-    TimelineEntry, audit_summary, finding_row, hypothesis_row, map_summary, scanner_result_row,
-    scanner_run_row, timeline_entry,
+    AuditSummary, FindingRow, HypothesisRow, Item, Layout, MapSummary, ScannerResultRow,
+    ScannerRunRow, TaskRow, TimelineEntry, audit_summary, finding_row, hypothesis_row, map_summary,
+    reverification_item, scanner_result_row, scanner_run_row, task_row, timeline_entry,
 };
 
 /// Template data of the audit page.
@@ -27,6 +28,8 @@ struct AuditPage {
     coverage: Option<CoverageSummary>,
     findings: Vec<FindingRow>,
     hypotheses: Vec<HypothesisRow>,
+    tasks: Vec<TaskRow>,
+    reverification: Vec<Item>,
     has_report: bool,
     timeline: Vec<TimelineEntry>,
 }
@@ -70,6 +73,18 @@ pub async fn page(
             .await?
             .iter()
             .map(hypothesis_row)
+            .collect(),
+        tasks: services
+            .tasks_of_audit(&id)
+            .await?
+            .iter()
+            .map(task_row)
+            .collect(),
+        reverification: services
+            .reverification_of_audit(&id)
+            .await?
+            .iter()
+            .map(reverification_item)
             .collect(),
         has_report: services.report_of_audit(&id).await?.is_some(),
         timeline: events.iter().map(timeline_entry).collect(),

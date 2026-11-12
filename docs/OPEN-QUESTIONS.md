@@ -19,7 +19,8 @@ Template:
 
 Q-001 to Q-010 were answered on 2026-11-12: the owner delegated the decisions ("implement
 them") and asked for the license; the recommended options were adopted (ADR-0019). Q-011 and
-Q-012 were answered by the owner the same day (ADR-0022). No question is open.
+Q-012 were answered by the owner the same day (ADR-0022); Q-013 was also answered.
+Q-030 (phase 5) is open.
 
 ---
 
@@ -122,3 +123,19 @@ Q-012 were answered by the owner the same day (ADR-0022). No question is open.
   cartographer associates the requirements that apply to each entry point and to the app as
   a whole; coverage counts those.
 
+---
+
+## Q-030 — A fix approved on a branch that is never merged
+- **Status:** open · **Blocks:** nothing yet
+- **Context:** R06 closes a finding when OpenTatu approves the REVERIFICATION of the
+  submitted commit, which usually lives on a branch. If that branch is never merged, the
+  next FULL audit of the app's branch finds the same code and R09 marks the CLOSED finding
+  as REGRESSION with raised priority. Reverifications already tell the two cases apart by
+  git ancestry (ADR-0030): a closed finding's code in a commit that does not contain its
+  fix is not a regression of that commit. (Q-014–Q-029 are used by the Sentinel drafts.)
+- **Options:** (a) keep R09 literal in FULL audits — "regression" until the fix is merged;
+  (b) use the ancestry rule in FULL audits too and report "fix approved but not merged"
+  (finding reopened without the priority raise); (c) close a finding only when its fix
+  commit reaches the app's branch ("approved, awaiting merge" until then).
+- **Working interpretation:** (a) in FULL audits (phase 4 behavior unchanged); the ancestry
+  rule applies only inside reverifications.

@@ -15,7 +15,7 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
 | 2 — Static scanners | ✅ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard (verified 2026-11-12) |
 | 3 — Cartographer and coverage | ✅ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right (TBG map reviewed; owner approved phase 4 on 2026-11-12) |
 | 4 — Hunter, verifier (static) and skeptic | ✅ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage (verified 2026-11-12 on the owner's app Abastevo) |
-| 5 — Fix trail and MCP | ⬜ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own |
+| 5 — Fix trail and MCP | ✅ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own (verified 2026-11-12) |
 | 6 — Benchmark | ⬜ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
 | 7 — Incremental audit | ⬜ | Diff between commits, trigger by push (webhook or schedule) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed |
 | 8 — Dynamic lab | ⬜ (on request) | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab |
@@ -148,4 +148,41 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
   timeout is now 900 s and rounds hold 20 entry points. After the run, prompts were refined
   (hunter 2.1.0 asks for the violated ASVS ids; reporter 2.1.0 fixes the headings) and model
   text accepts `null`; covered by tests, not re-run end to end.
-- Next: phase 5 (fix trail and MCP) — waits for the owner's approval.
+- The owner approved moving to phase 5 (2026-11-12).
+
+
+## Phase 5: what exists
+
+- Core: `Task` (OPEN → CLAIMED → FIX_SUBMITTED → DONE; a rejected fix reopens it),
+  `Reverification::decide` (R06, R09), `Agent` and `AgentToken` (random 256-bit, stored as
+  a hash, R16), `Finding::code_present_in` (R09), events `AGENT_REGISTERED`/`AGENT_REVOKED`.
+- Database (migration 0007): `tasks` (never deleted), `verifications` (decided once),
+  `agents` (token hash only); the queue serves REVERIFICATION first (§A.2).
+- Use cases: `record_tasks` (system ids and priority, dependencies resolved), `claim_task`,
+  `submit_fix` (queues the REVERIFICATION audit of the exact commit), `record_reverification`
+  (the only path to CLOSED), agent registration/authentication/revocation,
+  `record_mcp_call`; `create_audit` refuses hand-made reverifications.
+- Planner step (§C.7 step 12, `prompts/planner.md` 2.0.0) in batches of 5 findings; tasks
+  validated against the batch and the commit; `tasks/MANIFEST.json` and
+  `tasks/<TASK>.md` (pt-BR, with rejection reasons and how to deliver); tasks in the
+  finding records.
+- REVERIFICATION path: snapshot of the fix commit, verifier with the fix as untrusted
+  `<fix>` data (`prompts/verifier.md` 1.2.0; a refutation must cite lines of the commit),
+  closed findings' code searched (R09), changed test files (R19), system report body.
+- `opentatu-mcp` over `rmcp` 3.9 (both protocol eras): the eight tools of §E.6, one
+  event per call; `opentatu mcp`, `opentatu agent add|list|revoke`,
+  `opentatu task list|show`.
+- Dashboard: tasks and reverifications on the finding, app and audit pages.
+- An audit is COMPLETED only without limitations; FULL audits stay PARTIAL until the
+  dynamic lab (phase 8).
+- Verified end to end on a synthetic vulnerable Flask app (local repository, fictitious
+  data): FULL audit `AUD-LOJADEMO-20261112-1132` (6 min, 15 calls, US$0.028) confirmed both
+  planted flaws (IDOR and SQL injection, CRITICAL) plus two real ones it was not told about,
+  and planned 4 tasks whose regression test reproduced the IDOR. A scripted MCP client
+  (both protocol eras) listed, claimed and submitted as `agent:claude-e2e`; each
+  reverification took one verifier call (~US$0.001–0.0025, under a minute): the real IDOR
+  fix was approved and the finding closed; a fake SQL-injection fix (a reassuring comment,
+  reported as 2 suspicious instructions) was rejected; a real fix that undid the IDOR fix
+  was rejected as a regression (R09); the final fix was approved. That run exposed a false
+  regression on branches cut before another fix — now decided by git ancestry, with a test.
+- Open: Q-030 (an approved fix that is never merged).

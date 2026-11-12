@@ -23,6 +23,9 @@ use crate::macros::impl_text;
 const PREFIX: &str = "sha256:";
 const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
 
+/// Lines of code taken as a finding's identity (§B.8), at most.
+pub const SNIPPET_LINES: u32 = 60;
+
 /// Input of [`Fingerprint::compute`].
 #[derive(Debug, Clone, Copy)]
 pub struct FingerprintInput<'a> {
@@ -50,19 +53,30 @@ impl Fingerprint {
             input.symbol.trim(),
             normalize_snippet(input.snippet, input.file)
         );
-        let digest = Sha256::digest(material.as_bytes());
-        let mut text = String::with_capacity(PREFIX.len() + 64);
-        text.push_str(PREFIX);
-        for byte in digest.iter() {
-            text.push(char::from(HEX_DIGITS[usize::from(byte >> 4)]));
-            text.push(char::from(HEX_DIGITS[usize::from(byte & 0x0f)]));
-        }
-        Self(text)
+        Self(sha256_text(material.as_bytes()))
     }
 
     /// The fingerprint text.
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+/// `sha256:<64 lowercase hex>` of `bytes` — the one hash text format of the system
+/// (fingerprints, agent token hashes).
+pub(crate) fn sha256_text(bytes: &[u8]) -> String {
+    let digest = Sha256::digest(bytes);
+    let mut text = String::with_capacity(PREFIX.len() + 64);
+    text.push_str(PREFIX);
+    push_hex(&mut text, &digest);
+    text
+}
+
+/// Appends `bytes` as lowercase hex.
+pub(crate) fn push_hex(text: &mut String, bytes: &[u8]) {
+    for byte in bytes {
+        text.push(char::from(HEX_DIGITS[usize::from(byte >> 4)]));
+        text.push(char::from(HEX_DIGITS[usize::from(byte & 0x0f)]));
     }
 }
 

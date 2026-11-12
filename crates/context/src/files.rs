@@ -210,6 +210,23 @@ impl FileIndex for SnapshotFiles {
     }
 }
 
+/// Path segments and file stems of automated tests.
+const TEST_SEGMENTS: &[&str] = &["test", "tests", "__tests__", "spec", "specs"];
+
+/// Whether a repository-relative path looks like an automated test (`tests/`, `*_test.go`,
+/// `*.test.ts`, `test_*.py`, `*.spec.js`...).
+pub fn is_test_path(path: &str) -> bool {
+    let name = path.rsplit('/').next().unwrap_or(path);
+    let stem = name.split('.').next().unwrap_or(name);
+    path.split('/')
+        .any(|segment| TEST_SEGMENTS.contains(&segment))
+        || TEST_SEGMENTS.contains(&stem)
+        || name.starts_with("test_")
+        || name.contains("_test.")
+        || name.contains(".test.")
+        || name.contains(".spec.")
+}
+
 /// Classifies a repository-relative path.
 pub fn classify(path: &str) -> FileKind {
     let name = path.rsplit('/').next().unwrap_or(path);
@@ -300,6 +317,23 @@ fn is_config(path: &str, lower: &str, extension: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_paths_are_recognized() {
+        for path in [
+            "tests/api.rs",
+            "api/orders_test.go",
+            "src/app.test.ts",
+            "test_login.py",
+            "web/__tests__/x.js",
+            "src/a.spec.js",
+        ] {
+            assert!(is_test_path(path), "{path}");
+        }
+        for path in ["src/latest.rs", "api/orders.go", "contest/main.go"] {
+            assert!(!is_test_path(path), "{path}");
+        }
+    }
 
     #[test]
     fn classification_keeps_secrets_out_and_finds_config() {

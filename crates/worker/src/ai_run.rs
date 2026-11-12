@@ -6,14 +6,14 @@ use std::path::Path;
 use std::sync::Arc;
 
 use opentatu_context::SnapshotFiles;
-use opentatu_core::{App, AsvsCatalog, Audit, CodeLocation, Fingerprint, FingerprintInput};
+use opentatu_core::fingerprint::SNIPPET_LINES;
+use opentatu_core::{
+    App, AsvsCatalog, Audit, CodeLocation, Finding, Fingerprint, FingerprintInput,
+};
 use opentatu_investigator::RunContext;
 
 use crate::budget::BudgetGuard;
 use crate::{AiSettings, Error, Worker, artifacts};
-
-/// Lines of code taken as a hypothesis identity (§B.8), at most.
-const SNIPPET_LINES: u32 = 60;
 
 /// The AI steps' shared state.
 #[derive(Debug, Clone)]
@@ -99,5 +99,13 @@ impl AiRun {
             symbol: &location.symbol,
             snippet: &snippet,
         })
+    }
+
+    /// Whether the code that identifies `finding` (§B.8) is in this commit, at any line of
+    /// the same file ([`Finding::code_present_in`], R09).
+    pub(crate) fn code_present(&self, finding: &Finding) -> bool {
+        self.files
+            .read_text(&finding.location.file)
+            .is_some_and(|text| finding.code_present_in(&text.content))
     }
 }

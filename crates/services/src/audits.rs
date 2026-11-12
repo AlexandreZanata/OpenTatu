@@ -32,16 +32,37 @@ pub struct NewAudit {
 impl Services {
     /// Creates and enqueues an audit. The ID is stamped with `created_at` (Q-001), with a
     /// `-N` suffix on same-minute collisions. Emits `AUDIT_CREATED`.
+    /// A REVERIFICATION is queued only by [`Self::submit_fix`], with the fix it checks.
     pub async fn create_audit(&self, input: NewAudit) -> Result<Audit, Error> {
-        let now = self.clock.now();
+        if input.kind == AuditKind::Reverification {
+            return Err(Error::Conflict(
+                "a reverification is queued by submitting a fix (opentatu_submit_fix)".into(),
+            ));
+        }
         let mut tx = self.db.begin().await?;
-        if opentatu_db::apps::get(&mut tx, &input.app).await?.is_none() {
+        let audit = self.insert_audit(&mut tx, input).await?;
+        tx.commit().await?;
+        Ok(audit)
+    }
+
+    /// [`Self::create_audit`] inside a caller's transaction (a submitted fix enqueues its
+    /// reverification together with `FIX_SUBMITTED`).
+    pub(crate) async fn insert_audit(
+        &self,
+        tx: &mut opentatu_db::SqliteConnection,
+        input: NewAudit,
+    ) -> Result<Audit, Error> {
+        let now = self.clock.now();
+        if opentatu_db::apps::get(&mut *tx, &input.app)
+            .await?
+            .is_none()
+        {
             return Err(Error::UnknownApp(input.app));
         }
         let mut sequence = 1;
         let id = loop {
             let candidate = AuditId::new(&input.app, &now, sequence);
-            if !opentatu_db::audits::exists(&mut tx, &candidate).await? {
+            if !opentatu_db::audits::exists(&mut *tx, &candidate).await? {
                 break candidate;
             }
             sequence += 1;
@@ -58,7 +79,7 @@ impl Services {
             status: AuditStatus::Created,
             commit: input.commit,
             branch: input.branch,
-            previous_audit_id: opentatu_db::audits::last_final(&mut tx, id.slug()).await?,
+            previous_audit_id: opentatu_db::audits::last_final(&mut *tx, id.slug()).await?,
             created_at: now,
             started_at: None,
             completed_at: None,
@@ -74,8 +95,7 @@ impl Services {
                 "branch": audit.branch,
                 "previous_audit_id": audit.previous_audit_id,
             }));
-        opentatu_db::audits::insert(&mut tx, &audit, &event).await?;
-        tx.commit().await?;
+        opentatu_db::audits::insert(&mut *tx, &audit, &event).await?;
         Ok(audit)
     }
 
@@ -227,6 +247,18 @@ mod tests {
         assert!(matches!(
             services.create_audit(new_audit("ghost")).await,
             Err(Error::UnknownApp(_))
+        ));
+    }
+
+    #[tokio::test]
+    async fn r06_reverifications_come_only_from_a_submitted_fix() {
+        let (services, _) = services().await;
+        services.register_app(new_app("abastevo")).await.unwrap();
+        let mut input = new_audit("abastevo");
+        input.kind = AuditKind::Reverification;
+        assert!(matches!(
+            services.create_audit(input).await,
+            Err(Error::Conflict(_))
         ));
     }
 

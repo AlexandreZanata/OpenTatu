@@ -92,12 +92,16 @@ pub async fn list_recent(conn: &mut SqliteConnection, limit: u32) -> Result<Vec<
     rows.iter().map(from_row).collect()
 }
 
-/// The oldest queued (`CREATED`) audit, if any.
+/// The next queued (`CREATED`) audit, if any: reverifications first, then incremental
+/// and PR audits, then full audits (spec §A.2 consumption priority); oldest first within
+/// a kind.
 pub async fn next_queued(conn: &mut SqliteConnection) -> Result<Option<Audit>, Error> {
     let row = sqlx::query(concat!(
         "SELECT ",
         columns!(),
-        " FROM audits WHERE status = 'CREATED' ORDER BY created_at, id LIMIT 1"
+        " FROM audits WHERE status = 'CREATED' ORDER BY \
+         CASE kind WHEN 'REVERIFICATION' THEN 0 WHEN 'FULL' THEN 2 ELSE 1 END, created_at, id \
+         LIMIT 1"
     ))
     .fetch_optional(&mut *conn)
     .await?;
@@ -105,10 +109,11 @@ pub async fn next_queued(conn: &mut SqliteConnection) -> Result<Option<Audit>, E
 }
 
 /// Latest audit of `app` that reached `COMPLETED` or `PARTIAL` (the "previous audit").
+/// Reverifications check one fix on a branch, so they are never a previous audit.
 pub async fn last_final(conn: &mut SqliteConnection, app: &Slug) -> Result<Option<AuditId>, Error> {
     let id: Option<String> = sqlx::query_scalar(
         "SELECT id FROM audits WHERE app = ? AND status IN ('COMPLETED', 'PARTIAL') \
-         ORDER BY created_at DESC, id DESC LIMIT 1",
+         AND kind <> 'REVERIFICATION' ORDER BY created_at DESC, id DESC LIMIT 1",
     )
     .bind(app.as_str())
     .fetch_optional(&mut *conn)
@@ -320,6 +325,23 @@ pub(crate) mod tests {
                 EventKind::AuditPartial
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn reverifications_jump_the_queue() {
+        let (db, full) = database_with_audit().await;
+        let mut conn = db.connection().await.unwrap();
+        let mut reverification = queued("AUD-ABASTEVO-20261129-1433");
+        reverification.kind = AuditKind::Reverification;
+        let created = NewEvent::new(EventKind::AuditCreated, Actor::System, NOW.parse().unwrap())
+            .with_audit(reverification.id.clone());
+        insert(&mut conn, &reverification, &created).await.unwrap();
+        assert_eq!(
+            next_queued(&mut conn).await.unwrap().map(|a| a.id),
+            Some(reverification.id.clone()),
+            "spec §A.2: reverifications before full audits, even when newer"
+        );
+        assert_ne!(full.id, reverification.id);
     }
 
     #[tokio::test]

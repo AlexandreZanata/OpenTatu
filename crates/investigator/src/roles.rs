@@ -1,4 +1,4 @@
-//! Output types of the hunter, verifier, skeptic and reporter (spec §C.2–§C.4, §C.6), and
+//! Output types of the hunter, verifier, skeptic, planner and reporter (spec §C.2–§C.6), and
 //! the text formats of their system-built inputs. The serde type is the schema
 //! (ADR-0024); everything is validated again by the system before use.
 
@@ -6,7 +6,7 @@ use std::fmt::Write as _;
 
 use opentatu_core::{
     AiRole, EntryPoint, EvidenceItem, Finding, Hypothesis, HypothesisContent, RegressionTest,
-    ScannerResult, ScannerTriage, SecurityMap, Severity, SeverityAdjustments, Verdict,
+    ScannerResult, ScannerTriage, SecurityMap, Severity, SeverityAdjustments, TaskContent, Verdict,
 };
 use serde::Deserialize;
 
@@ -106,6 +106,41 @@ impl SkepticOutput {
 
 impl RoleOutput for SkepticOutput {
     const ROLE: AiRole = AiRole::Skeptic;
+    fn common(&self) -> &CommonFields {
+        &self.common
+    }
+}
+
+/// One task written by the planner.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct PlannerTask {
+    /// Local reference used by `depends_on` (the system assigns the real id).
+    #[serde(default, deserialize_with = "opentatu_core::lenient::text")]
+    pub task_id: String,
+    /// Must repeat an id of `<findings>`.
+    #[serde(default, deserialize_with = "opentatu_core::lenient::text")]
+    pub finding_id: String,
+    /// Local references of the tasks to do first.
+    #[serde(default)]
+    pub depends_on: Vec<String>,
+    /// What the agent must do (pt-BR).
+    #[serde(flatten)]
+    pub content: TaskContent,
+}
+
+/// The planner's answer (`prompts/planner.md` 2.x). Ids, priority and severity are the
+/// system's, never the model's.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct PlannerOutput {
+    /// Shared keys.
+    #[serde(flatten)]
+    pub common: CommonFields,
+    /// Tasks.
+    pub tasks: Vec<PlannerTask>,
+}
+
+impl RoleOutput for PlannerOutput {
+    const ROLE: AiRole = AiRole::Planner;
     fn common(&self) -> &CommonFields {
         &self.common
     }
@@ -231,6 +266,35 @@ mod tests {
         assert_eq!(output.hypotheses[0].potential_severity, Severity::High);
         assert_eq!(output.hypotheses[0].location.lines, "12");
         assert_eq!(output.requirements_checked, ["V8.2.2"]);
+    }
+
+    #[test]
+    fn planner_answer_with_extra_keys_parses() {
+        let answer = r#"{
+          "role": "planner", "audit_id": "AUD-DEMO-20261112-0900",
+          "tasks": [ { "task_id": "T1", "finding_id": "DEMO-SEC-0001", "priority": 1,
+              "severity": "HIGH", "title": "Checar o pedido", "goal": "x",
+              "context": "x", "files_involved": ["api/orders.go"], "steps": ["x"],
+              "constraints": [], "acceptance_criteria": ["x"],
+              "regression_test": { "suggested_file": "api/orders_test.go", "code": "x" },
+              "depends_on": [], "estimate": "S", "instructions_for_agent": "x" } ],
+          "gaps": [], "not_analyzed": [], "suspicious_instructions": []
+        }"#;
+        let output: PlannerOutput = serde_json::from_str(answer).unwrap();
+        let task = &output.tasks[0];
+        assert_eq!(
+            (task.task_id.as_str(), task.finding_id.as_str()),
+            ("T1", "DEMO-SEC-0001")
+        );
+        assert_eq!(task.content.files_involved, ["api/orders.go"]);
+        assert_eq!(
+            task.content
+                .regression_test
+                .as_ref()
+                .unwrap()
+                .suggested_file,
+            "api/orders_test.go"
+        );
     }
 
     #[test]

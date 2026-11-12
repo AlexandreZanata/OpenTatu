@@ -20,7 +20,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::{AuditId, CommitHash, EvidenceId, FindingId, MapId, ScannerKind, Slug};
+use crate::{AuditId, CommitHash, EvidenceId, FindingId, MapId, ScannerKind, Slug, TaskId};
 
 /// Paths of every artifact under the data directory.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -106,6 +106,18 @@ impl DataLayout {
         self.audit_dir(evidence.audit())
             .join("evidence")
             .join(format!("{}.json", evidence.as_str()))
+    }
+
+    /// `tasks/MANIFEST.json`: the fix tasks planned in an audit (spec §B.4).
+    pub fn task_manifest_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("tasks").join("MANIFEST.json")
+    }
+
+    /// `tasks/<TASK>.md`: one fix task for an agent, in the audit that planned it.
+    pub fn task_file(&self, audit: &AuditId, task: &TaskId) -> PathBuf {
+        self.audit_dir(audit)
+            .join("tasks")
+            .join(format!("{}.md", task.as_str()))
     }
 
     /// `apps/<slug>/findings/<ID>.json`: live record of a finding (spec §B.7).
@@ -194,6 +206,12 @@ mod tests {
         assert_eq!(
             layout.coverage_file(&audit),
             Path::new("/data/apps/abastevo/audits/AUD-ABASTEVO-20261129-1432/coverage.json")
+        );
+        assert_eq!(
+            layout.task_file(&audit, &"ABASTEVO-SEC-0004-T1".parse().unwrap()),
+            Path::new(
+                "/data/apps/abastevo/audits/AUD-ABASTEVO-20261129-1432/tasks/ABASTEVO-SEC-0004-T1.md"
+            )
         );
         assert_eq!(
             layout.snapshot_dir(&slug, &commit),

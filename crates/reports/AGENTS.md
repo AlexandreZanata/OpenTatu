@@ -1,6 +1,6 @@
 # opentatu-reports — audit artifacts (pure)
 
-Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (phase 1); report, SARIF, finding records ✅ (phase 4); manifest = phase 5
+Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (phase 1); report, SARIF, finding records ✅ (phase 4); task manifest, task files, reverification report ✅ (phase 5)
 
 ## Responsibility
 
@@ -17,8 +17,9 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (
 | `src/audit_record.rs` | ✅ `AuditRecord` — `audit.json` (§B.5); `with_scanners` (phase 2), `with_ai`, `with_usage`, `with_coverage` (phase 3), `with_results` (phase 4); uncomputed sections `null` (R14) | 1–4 |
 | `src/report.rs` | ✅ `ReportData`, `ReportHeader`, `render_report` (R17 header + body), `fallback_body` | 4 |
 | `src/sarif.rs` | ✅ `findings_sarif` — SARIF 2.1.0 for GitHub code scanning | 4 |
-| `src/finding_record.rs` | ✅ `FindingRecord` — `findings/<ID>.json` with evidence and timeline (§B.7) | 4 |
-| `src/manifest.rs` | `MANIFEST.json` and per-task Markdown | 5 |
+| `src/finding_record.rs` | ✅ `FindingRecord` — `findings/<ID>.json` with evidence, tasks and timeline (§B.7) | 4–5 |
+| `src/manifest.rs` | ✅ `TaskManifest` (`tasks/MANIFEST.json`), `render_task` (`tasks/<TASK>.md`, pt-BR headings, rejection reasons, how to deliver) | 5 |
+| `src/reverification.rs` | ✅ `reverification_body` — decision, reasons, verifier, regressions (R09), regression test (R19) | 5 |
 
 ## Local rules
 

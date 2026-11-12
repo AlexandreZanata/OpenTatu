@@ -8,7 +8,7 @@ use std::io::IsTerminal;
 use std::path::Path;
 
 use anyhow::Context;
-use opentatu_core::{DataLayout, Secret};
+use opentatu_core::{AgentToken, DataLayout, Secret};
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::prelude::*;
 
@@ -51,6 +51,17 @@ pub fn api_key(variable: &str) -> anyhow::Result<Secret> {
         "environment variable {variable} is empty"
     );
     Ok(secret)
+}
+
+/// The fixing agent's MCP token (`OPENTATU_MCP_TOKEN`, set by the agent's MCP client
+/// configuration, ADR-0012). Never logged; an invalid value is not echoed.
+pub fn mcp_token() -> anyhow::Result<AgentToken> {
+    // R16: environment reads live only in this module.
+    #[allow(clippy::disallowed_methods)]
+    let value = std::env::var("OPENTATU_MCP_TOKEN").context(
+        "OPENTATU_MCP_TOKEN is not set (create a token with `opentatu agent add <name>`)",
+    )?;
+    Ok(AgentToken::parse(value.trim())?)
 }
 
 /// Owner's name used in the prompts (`OPENTATU_OWNER`, Q-009); "the owner" when unset.

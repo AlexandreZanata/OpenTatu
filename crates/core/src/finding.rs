@@ -10,8 +10,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AuditId, CodeLocation, CommitHash, FindingId, FindingState, Fingerprint, HypothesisId,
-    Severity, SeverityAdjustments, Slug, Timestamp,
+    AuditId, CodeLocation, CommitHash, FindingId, FindingState, Fingerprint, FingerprintInput,
+    HypothesisId, Severity, SeverityAdjustments, Slug, Timestamp,
 };
 
 /// When and in which audit a finding was seen.
@@ -115,6 +115,26 @@ impl Finding {
     pub fn fix_priority(&self) -> u8 {
         self.severity.fix_priority(self.regression)
     }
+
+    /// Whether the code that identifies this finding (§B.8) appears anywhere in `content`,
+    /// the text of the finding's file at another commit: the same window of lines, moved
+    /// or not. A finding without a line range cannot be searched and counts as absent
+    /// (R09: a closed finding whose code reappears is a regression).
+    pub fn code_present_in(&self, content: &str) -> bool {
+        let Some((first, last)) = self.location.line_range() else {
+            return false;
+        };
+        let window = (last.min(first + crate::fingerprint::SNIPPET_LINES - 1) - first + 1) as usize;
+        let lines: Vec<&str> = content.lines().collect();
+        lines.windows(window).any(|snippet| {
+            Fingerprint::compute(&FingerprintInput {
+                cwe: &self.cwe,
+                file: &self.location.file,
+                symbol: &self.location.symbol,
+                snippet: &snippet.join("\n"),
+            }) == self.fingerprint
+        })
+    }
 }
 
 /// Findings of the app relative to one audit.
@@ -156,6 +176,51 @@ pub struct ReportText {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn r09_identifying_code_is_found_even_when_it_moves() {
+        let original = "a\nlet order = load(id);\nreturn order;\nz\n";
+        let location = CodeLocation {
+            file: "api/orders.go".into(),
+            lines: "2-3".into(),
+            symbol: "GetOrder".into(),
+        };
+        let snippet = "let order = load(id);\nreturn order;";
+        let detection = Detection {
+            audit_id: "AUD-DEMO-20261112-0900".parse().unwrap(),
+            at: "2026-11-12T09:00:00-03:00".parse().unwrap(),
+        };
+        let finding = Finding {
+            finding_id: "DEMO-SEC-0001".parse().unwrap(),
+            app: Slug::new("demo").unwrap(),
+            title: "t".into(),
+            category: "c".into(),
+            cwe: "CWE-639".into(),
+            asvs: vec![],
+            severity: Severity::High,
+            state: FindingState::Closed,
+            fingerprint: Fingerprint::compute(&FingerprintInput {
+                cwe: "CWE-639",
+                file: "api/orders.go",
+                symbol: "GetOrder",
+                snippet,
+            }),
+            location,
+            commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+            first_detected: detection.clone(),
+            last_detected: detection,
+            hypothesis_id: "AUD-DEMO-20261112-0900-H-001".parse().unwrap(),
+            regression: false,
+            review: None,
+        };
+        assert!(finding.code_present_in(original));
+        assert!(
+            finding.code_present_in(&format!("x\ny\n{original}")),
+            "moved down"
+        );
+        assert!(!finding.code_present_in("let order = load(id);\ncheckOwner(order);\n"));
+        assert!(!finding.code_present_in(""));
+    }
 
     #[test]
     fn r18_final_severity_and_decision_are_computed_by_the_system() {

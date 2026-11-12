@@ -32,6 +32,7 @@ pub mod llm_usage;
 pub mod maps;
 pub mod scanner_results;
 pub mod snapshots;
+pub mod tasks;
 
 pub use database::{Connection, Database, Transaction};
 pub use error::Error;

@@ -219,6 +219,30 @@
 {% endif %}
 {% endmacro %}
 
+{#- tasks_table(rows, empty): fix tasks; `rows` are view::TaskRow. -#}
+{% macro tasks_table(rows, empty) %}
+{% if rows.is_empty() %}
+<p class="c-empty__message">{{ empty }}</p>
+{% else %}
+<table class="c-table">
+  <thead><tr><th>Tarefa</th><th>Prioridade</th><th>Severidade</th><th>Estado</th><th>Título</th><th>Agente</th><th>Achado</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.id }}</code></td>
+      <td>{{ row.priority }}</td>
+      <td>{% call badge(row.severity) %}{% endcall %}</td>
+      <td>{% call badge(row.state) %}{% endcall %}{% if row.rejections > 0 %} <span class="c-list__meta">{{ row.rejections }} rejeitada(s)</span>{% endif %}</td>
+      <td>{{ row.title }}</td>
+      <td><code>{{ row.agent }}</code></td>
+      <td><a href="/findings/{{ row.finding }}"><code>{{ row.finding }}</code></a></td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
 {#- hypotheses_table(rows): hypotheses of an audit; `rows` are view::HypothesisRow. -#}
 {% macro hypotheses_table(rows) %}
 {% if rows.is_empty() %}

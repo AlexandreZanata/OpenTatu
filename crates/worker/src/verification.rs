@@ -163,8 +163,39 @@ async fn verify_one(
     map: Option<&SecurityMap>,
     hypothesis: Hypothesis,
 ) -> Result<Outcome, Error> {
+    let verification = match ask_verifier(run, map, &hypothesis, None).await? {
+        Ok(verification) => verification,
+        Err(reason) => return Ok(Outcome::Skipped(reason)),
+    };
+    let (recorded, finding) = run
+        .worker
+        .services
+        .record_verification(&hypothesis.hypothesis_id, verification)
+        .await?;
+    tracing::info!(hypothesis = %recorded.hypothesis_id, state = %recorded.state, finding = ?finding.map(|f| f.finding_id.to_string()), "hypothesis verified");
+    Ok(Outcome::Done)
+}
+
+/// A fix to reverify: the `<fix>` block and the files the fix is about.
+pub(crate) struct FixUnderReview {
+    /// `<fix>` content (JSON).
+    pub description: String,
+    /// Files the task said to change (more seeds for `<code>`).
+    pub files: Vec<String>,
+}
+
+/// Asks the verifier about `hypothesis` at the run's commit. `Ok(Err(reason))` when the
+/// call was skipped (budget, provider failure). The system's checks are applied: a
+/// confirmation — or, in a reverification, a refutation — that cites no line of the
+/// commit becomes inconclusive (R05, R06).
+pub(crate) async fn ask_verifier(
+    run: &AiRun,
+    map: Option<&SecurityMap>,
+    hypothesis: &Hypothesis,
+    fix: Option<&FixUnderReview>,
+) -> Result<Result<Verification, String>, Error> {
     if !run.allow_call().await? {
-        return Ok(Outcome::Skipped("orçamento esgotado".to_owned()));
+        return Ok(Err("orçamento esgotado".to_owned()));
     }
     let services = &run.worker.services;
     let entry = entry_of(map, hypothesis.content.entry_point.as_ref());
@@ -173,12 +204,16 @@ async fn verify_one(
         .location
         .line_range()
         .map(|(first, _)| first);
-    let code = entry_point_code(
-        &run.files,
-        &seeds(&hypothesis.content.location.file, line, entry),
-        CODE_BYTES,
-        FILE_BYTES,
-    );
+    let mut seeds = seeds(&hypothesis.content.location.file, line, entry);
+    for file in fix.iter().flat_map(|f| &f.files) {
+        if !seeds.iter().any(|s| &s.path == file) {
+            seeds.push(Seed {
+                path: file.clone(),
+                line: None,
+            });
+        }
+    }
+    let code = entry_point_code(&run.files, &seeds, CODE_BYTES, FILE_BYTES);
     let mut inputs = vec![
         (
             Block::Hypothesis,
@@ -192,6 +227,9 @@ async fn verify_one(
             map_excerpt(map, &entry.into_iter().collect::<Vec<_>>()),
         ));
     }
+    if let Some(fix) = fix {
+        inputs.push((Block::Fix, fix.description.clone()));
+    }
     let variables = run.variables().await?;
     let call = RoleCall {
         audit_id: &run.audit.id,
@@ -203,7 +241,7 @@ async fn verify_one(
         Ok(answer) => answer,
         Err(error) => {
             tracing::warn!(hypothesis = %hypothesis.hypothesis_id, %error, "verifier failed");
-            return Ok(Outcome::Skipped(format!("verificador falhou: {error}")));
+            return Ok(Err(format!("verificador falhou: {error}")));
         }
     };
     let prompt = answer.prompt_versions.last().cloned().unwrap_or_default();
@@ -236,17 +274,16 @@ async fn verify_one(
             output.hypothesis_id, hypothesis.hypothesis_id
         ));
     }
-    if verification.verdict == Verdict::Confirmed
-        && let Some(problem) = verification.evidence_problem(run.files.as_ref())
-    {
+    let checked = match verification.verdict {
+        Verdict::Confirmed => true,
+        Verdict::Dismissed => fix.is_some(),
+        Verdict::Inconclusive => false,
+    };
+    if checked && let Some(problem) = verification.evidence_problem(run.files.as_ref()) {
         verification.verdict = Verdict::Inconclusive;
         verification.system_notes.push(problem);
     }
-    let (recorded, finding) = services
-        .record_verification(&hypothesis.hypothesis_id, verification)
-        .await?;
-    tracing::info!(hypothesis = %recorded.hypothesis_id, state = %recorded.state, finding = ?finding.map(|f| f.finding_id.to_string()), "hypothesis verified");
-    Ok(Outcome::Done)
+    Ok(Ok(verification))
 }
 
 async fn review_one(

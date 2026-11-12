@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
-use opentatu_core::{AuditKind, ScannerKind};
+use opentatu_core::{AuditKind, ScannerKind, TaskState};
 
 /// OpenTatu — personal security investigation agent (local and private).
 #[derive(Debug, Parser)]
@@ -63,8 +63,15 @@ pub enum Command {
     /// Audits.
     #[command(subcommand)]
     Audit(AuditCommand),
-    /// Run the MCP server over stdio for fixing agents [roadmap phase 5].
+    /// Run the MCP server over stdio for one fixing agent. Its MCP client spawns this
+    /// command with the agent's token in OPENTATU_MCP_TOKEN (see `opentatu agent add`).
     Mcp,
+    /// Fixing agents allowed to use the MCP server (one token each).
+    #[command(subcommand)]
+    Agent(AgentCommand),
+    /// Fix tasks planned by the audits.
+    #[command(subcommand)]
+    Task(TaskCommand),
     /// Deterministic scanners (Semgrep, Gitleaks, Trivy, OSV-Scanner).
     #[command(subcommand)]
     Scanners(ScannersCommand),
@@ -111,6 +118,48 @@ pub struct AddAppArgs {
     pub lab_url: Option<String>,
 }
 
+/// `opentatu agent ...`
+#[derive(Debug, Subcommand)]
+pub enum AgentCommand {
+    /// Register a fixing agent and print its MCP token ONCE (only its hash is stored).
+    Add {
+        /// Agent name: letters, digits, `-`, `_`, `.` (events show `agent:<name>`).
+        name: String,
+    },
+    /// List registered agents.
+    List,
+    /// Revoke an agent's token; its history stays.
+    Revoke {
+        /// Agent name.
+        name: String,
+    },
+}
+
+/// `opentatu task ...`
+#[derive(Debug, Subcommand)]
+pub enum TaskCommand {
+    /// List the fix tasks of an app, most urgent first.
+    List {
+        /// App slug.
+        #[arg(long)]
+        app: String,
+        /// Only tasks in this state: open, claimed, fix_submitted or done.
+        #[arg(long, value_parser = parse_task_state)]
+        state: Option<TaskState>,
+    },
+    /// Show one task and its reverifications.
+    Show {
+        /// Task id, e.g. ABASTEVO-SEC-0004-T1.
+        task_id: String,
+    },
+}
+
+fn parse_task_state(text: &str) -> Result<TaskState, String> {
+    text.to_ascii_uppercase()
+        .parse()
+        .map_err(|_| format!("unknown task state {text:?} (open, claimed, fix_submitted, done)"))
+}
+
 /// `opentatu audit ...`
 #[derive(Debug, Subcommand)]
 pub enum AuditCommand {
@@ -119,7 +168,8 @@ pub enum AuditCommand {
         /// App slug.
         #[arg(long)]
         app: String,
-        /// Audit kind: full, incremental, reverification or pr.
+        /// Audit kind: full, incremental or pr (reverifications are queued by
+        /// `opentatu_submit_fix`).
         #[arg(long, default_value = "full", value_parser = parse_kind)]
         kind: AuditKind,
         /// Branch, tag or commit to audit (default: the app's branch).
@@ -151,7 +201,7 @@ pub struct WorkerArgs {
 fn parse_kind(text: &str) -> Result<AuditKind, String> {
     text.to_ascii_uppercase()
         .parse()
-        .map_err(|_| format!("unknown audit kind {text:?} (full, incremental, reverification, pr)"))
+        .map_err(|_| format!("unknown audit kind {text:?} (full, incremental, pr)"))
 }
 
 /// `opentatu scanners ...`

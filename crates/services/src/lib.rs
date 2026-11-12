@@ -20,6 +20,7 @@ mod health;
 mod investigation;
 mod maps;
 mod scanners;
+mod tasks;
 mod timeline;
 mod usage;
 
@@ -35,6 +36,7 @@ pub use investigation::NewHypothesis;
 pub use maps::{NewMap, Reporter};
 pub use opentatu_memory::{DedupOutcome, DismissedBefore};
 pub use scanners::{ScannerOutcome, ScannerRunSummary};
+pub use tasks::{NewFix, PlannedTask, ReverificationOutcome, TaskStatus};
 
 /// Entry point to every use case. Cheap to clone.
 #[derive(Debug, Clone)]

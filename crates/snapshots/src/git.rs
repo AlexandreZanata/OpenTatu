@@ -49,6 +49,25 @@ impl Git {
 
     /// Runs `git <hardening> <location> <args>` and returns stdout.
     pub(crate) async fn run(&self, action: &'static str, args: &[&str]) -> Result<String, Error> {
+        let output = self.output(args).await?;
+        if output.status.success() {
+            return Ok(String::from_utf8_lossy(&output.stdout).into_owned());
+        }
+        Err(failure(action, &output))
+    }
+
+    /// Runs a yes/no git command (e.g. `merge-base --is-ancestor`): exit 0 is `true`,
+    /// exit 1 is `false`, anything else is an error.
+    pub(crate) async fn check(&self, action: &'static str, args: &[&str]) -> Result<bool, Error> {
+        let output = self.output(args).await?;
+        match output.status.code() {
+            Some(0) => Ok(true),
+            Some(1) => Ok(false),
+            _ => Err(failure(action, &output)),
+        }
+    }
+
+    async fn output(&self, args: &[&str]) -> Result<std::process::Output, Error> {
         // R12: the single authorized git process; arguments are never built by a shell.
         #[allow(clippy::disallowed_methods)]
         let mut command = Command::new("git");
@@ -68,19 +87,20 @@ impl Git {
                 command.arg("-C").arg(dir);
             }
         }
-        let output = command
+        command
             .args(args)
             .output()
             .await
-            .map_err(|source| Error::GitUnavailable(source.to_string()))?;
-        if output.status.success() {
-            return Ok(String::from_utf8_lossy(&output.stdout).into_owned());
-        }
-        let stderr = redact_credentials(&String::from_utf8_lossy(&output.stderr));
-        Err(Error::Git {
-            action,
-            message: truncate(stderr.trim()),
-        })
+            .map_err(|source| Error::GitUnavailable(source.to_string()))
+    }
+}
+
+/// The error of a failed git command, with credentials redacted from its stderr.
+fn failure(action: &'static str, output: &std::process::Output) -> Error {
+    let stderr = redact_credentials(&String::from_utf8_lossy(&output.stderr));
+    Error::Git {
+        action,
+        message: truncate(stderr.trim()),
     }
 }
 

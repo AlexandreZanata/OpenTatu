@@ -49,6 +49,10 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | A snapshot directory for context selection | `tempfile::tempdir()` + `SnapshotFiles::scan` |
 | A hypothesis / dedup inputs (db, memory) | `opentatu_db::investigation::tests::sample_hypothesis`, `opentatu_memory::dedup::tests::{finding, fp}` |
 | A full investigation with fake answers | `crates/worker/tests/audit_pipeline.rs` (`*_ANSWER` constants, `models()`) |
+| A planned task, a submitted fix and its reverification | `submitted_fix(&model, fixed)` + `reverifier_answer(verdict)` in `crates/worker/tests/audit_pipeline.rs` |
+| An upheld finding with a task (services) | `upheld_finding` + `planned` in `crates/services/src/tasks.rs` tests; `planned()` in `crates/mcp/tests/protocol.rs` |
+| An MCP client | `Client::start(&services, &token, modern)` in `crates/mcp/tests/protocol.rs` (JSON-RPC over a pipe, both protocol eras) |
+| A task (db, reports) | `opentatu_db::tasks::tests::sample_task`, `opentatu_reports` `manifest::tests::task` |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |

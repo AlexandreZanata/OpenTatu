@@ -1,16 +1,17 @@
-//! `GET /apps/{slug}` — one app: profile, audits and the timeline of its events.
+//! `GET /apps/{slug}` — one app: profile, open findings, fix tasks not done, audits and the
+//! timeline of its events.
 
 use askama::Template;
 use axum::extract::{Path, State};
 use axum::response::Html;
-use opentatu_core::{App, Slug};
+use opentatu_core::{App, Slug, TaskState};
 
 use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    AuditRow, FindingRow, Layout, MapSummary, TimelineEntry, audit_row, finding_row, map_summary,
-    timeline_entry,
+    AuditRow, FindingRow, Layout, MapSummary, TaskRow, TimelineEntry, audit_row, finding_row,
+    map_summary, task_row, timeline_entry,
 };
 
 /// Audits listed on the page.
@@ -26,6 +27,7 @@ struct AppPage {
     app: App,
     map: Option<MapSummary>,
     findings: Vec<FindingRow>,
+    tasks: Vec<TaskRow>,
     audits: Vec<AuditRow>,
     timeline: Vec<TimelineEntry>,
 }
@@ -47,6 +49,13 @@ pub async fn page(
             .iter()
             .filter(|f| f.is_open())
             .map(finding_row)
+            .collect(),
+        tasks: services
+            .tasks_of_app(&slug, None)
+            .await?
+            .iter()
+            .filter(|t| t.state != TaskState::Done)
+            .map(task_row)
             .collect(),
         audits: services
             .audits_of_app(&slug, AUDITS)

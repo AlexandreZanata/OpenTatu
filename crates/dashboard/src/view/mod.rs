@@ -4,10 +4,13 @@
 
 mod findings;
 mod map;
+mod tasks;
 
 pub use findings::{
     FindingRow, HypothesisRow, confidence_label, finding_row, finding_state_badge, hypothesis_row,
 };
+
+pub use tasks::{TaskRow, reverification_badge, reverification_item, task_row, task_state_badge};
 
 pub use map::{
     CoverageRow, EntryPointRow, Item, KeyValue, MapSummary, authentication_badge,
@@ -116,6 +119,8 @@ pub fn event_label(kind: EventKind) -> &'static str {
         K::AuditCompleted => "Auditoria concluída",
         K::AuditFailed => "Auditoria falhou",
         K::OwnerDecision => "Decisão do dono",
+        K::AgentRegistered => "Agente de correção cadastrado",
+        K::AgentRevoked => "Agente de correção revogado",
         K::McpToolCalled => "Ferramenta MCP consultada",
     }
 }
