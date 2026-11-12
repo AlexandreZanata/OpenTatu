@@ -23,11 +23,10 @@ dashboard, mcp · Status: `serve`, `dashboard`, `worker`, `app`, `audit`, `scann
 | `src/commands/llm.rs` | `llm ping [--model]` |
 | `src/commands/app.rs` | `app add`, `app list` |
 | `src/commands/audit.rs` | `audit create` (resolves the commit, R02), `audit list` |
-| `src/commands/worker.rs` | `worker [--once]`, `serve` (dashboard + worker) |
+| `src/commands/worker.rs` | `worker [--once]`, `serve` (dashboard + worker); `build` — the only production wiring of `Worker` with `AiSettings` (API key, `OPENTATU_OWNER`); without a key the AI steps become limitations |
 | `src/commands/scanners.rs` | `scanners update [--only]`, `scanners status`; `build()` — the only production wiring of `Scanners` |
 | `src/commands/pending.rs` | `not_implemented(cmd, phase)` for planned commands |
-| `src/usage.rs` | `ServicesUsageRecorder` — the `UsageRecorder` port over `Services` |
-| `src/config.rs` | `.env`, logging, `prepare_data_dir` → `DataLayout` (0700), `api_key` → `Secret` — the only env reader (R16) |
+| `src/config.rs` | `.env`, logging, `prepare_data_dir` → `DataLayout` (0700), `api_key` → `Secret`, `owner_name` — the only env reader (R16) |
 | `src/output.rs` | the only module that prints |
 
 ## Local rules

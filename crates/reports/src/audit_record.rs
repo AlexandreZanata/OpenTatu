@@ -6,7 +6,10 @@
 
 use std::collections::BTreeMap;
 
-use opentatu_core::{Audit, AuditId, AuditKind, AuditStatus, CommitHash, Slug, Timestamp};
+use opentatu_core::{
+    Audit, AuditId, AuditKind, AuditStatus, CommitHash, CoverageSummary, Slug, Timestamp,
+    UsageTotals,
+};
 use serde::Serialize;
 
 /// Serializable form of `audit.json`.
@@ -36,16 +39,18 @@ pub struct AuditRecord {
     pub duration_seconds: Option<i64>,
     /// Owner-facing start (or creation) time, pt-BR (spec §B.3).
     pub display: String,
-    /// Model per AI role (phase 3+).
+    /// Model per AI role that ran (R17).
     pub models: Option<BTreeMap<String, String>>,
-    /// Prompt versions used (phase 3+).
+    /// Version of every prompt used, by prompt name (R17).
     pub prompt_versions: Option<BTreeMap<String, String>>,
     /// Scanner versions (phase 2+).
     pub scanners: Option<BTreeMap<String, String>>,
+    /// Model calls of the audit: count, tokens and cost (R17).
+    pub usage: Option<UsageTotals>,
     /// Finding counts (phase 4+).
     pub results: Option<serde_json::Value>,
-    /// ASVS coverage (phase 3+).
-    pub coverage: Option<serde_json::Value>,
+    /// ASVS coverage summary (R14); `null` when no map was produced.
+    pub coverage: Option<CoverageSummary>,
     /// What this audit did not cover.
     pub limitations: Vec<String>,
 }
@@ -69,6 +74,7 @@ impl AuditRecord {
             models: None,
             prompt_versions: None,
             scanners: None,
+            usage: None,
             results: None,
             coverage: None,
             limitations: audit.limitations.clone(),
@@ -79,6 +85,32 @@ impl AuditRecord {
     #[must_use]
     pub fn with_scanners(mut self, versions: BTreeMap<String, String>) -> Self {
         self.scanners = (!versions.is_empty()).then_some(versions);
+        self
+    }
+
+    /// Sets the models and prompt versions used (`None` when no AI role ran, R14).
+    #[must_use]
+    pub fn with_ai(
+        mut self,
+        models: BTreeMap<String, String>,
+        prompt_versions: BTreeMap<String, String>,
+    ) -> Self {
+        self.models = (!models.is_empty()).then_some(models);
+        self.prompt_versions = (!prompt_versions.is_empty()).then_some(prompt_versions);
+        self
+    }
+
+    /// Sets the usage totals (`None` when no model was called).
+    #[must_use]
+    pub fn with_usage(mut self, usage: UsageTotals) -> Self {
+        self.usage = (usage.calls > 0).then_some(usage);
+        self
+    }
+
+    /// Sets the ASVS coverage summary.
+    #[must_use]
+    pub fn with_coverage(mut self, coverage: Option<CoverageSummary>) -> Self {
+        self.coverage = coverage;
         self
     }
 
@@ -119,6 +151,8 @@ mod tests {
         assert_eq!(json["display"], "29/11/2026 às 14:32 (horário de Brasília)");
         assert!(json["results"].is_null());
         assert!(json["scanners"].is_null());
+        assert!(json["models"].is_null());
+        assert!(json["usage"].is_null());
         assert!(json["coverage"].is_null());
         assert_eq!(
             json["limitations"][0],

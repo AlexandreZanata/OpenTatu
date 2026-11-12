@@ -44,6 +44,9 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | A database | `Database::in_memory()` (migrated) |
 | Use cases | `Services::in_memory(Arc::new(FixedClock::at(...)?))` |
 | LLM answers | `FakeClient::push_answer`, `FakeClient::requests` |
+| An `Llm` over the fake and prompt values | `opentatu_investigator::run::tests::{llm, variables}` (inside the investigator); `AiSettings` in `crates/worker/tests/audit_pipeline.rs` |
+| An app with a queued audit (db) | `opentatu_db::audits::tests::insert_queued` |
+| A snapshot directory for context selection | `tempfile::tempdir()` + `SnapshotFiles::scan` |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |

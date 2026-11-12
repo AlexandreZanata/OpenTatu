@@ -53,6 +53,19 @@ pub fn api_key(variable: &str) -> anyhow::Result<Secret> {
     Ok(secret)
 }
 
+/// Owner's name used in the prompts (`OPENTATU_OWNER`, Q-009); "the owner" when unset.
+pub fn owner_name() -> String {
+    // R16: environment reads live only in this module.
+    #[allow(clippy::disallowed_methods)]
+    let value = std::env::var("OPENTATU_OWNER").unwrap_or_default();
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        "the owner".to_owned()
+    } else {
+        trimmed.to_owned()
+    }
+}
+
 /// Creates the data directory (owner-only permissions on Unix) and returns its layout
 /// (`DataLayout` is the only source of paths under it, spec §B.4).
 pub fn prepare_data_dir(data_dir: &Path) -> anyhow::Result<DataLayout> {

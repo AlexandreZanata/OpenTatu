@@ -2,7 +2,7 @@
 
 Layer: **application** · May depend on: core, db, memory, reports, llm, investigator,
 scanners, snapshots, context, services · Status: phase 1 ✅ (queue, snapshot, artifacts);
-phase 2 ✅ (scanners step)
+phase 2 ✅ (scanners step); phase 3 ✅ (cartographer, map, coverage)
 
 ## Responsibility
 
@@ -17,8 +17,10 @@ phase 2 ✅ (scanners step)
 |---|---|---|
 | `src/lib.rs` | ✅ `Worker` (`new` takes an `Arc<dyn ScannerSuite>`, `run_once`, `drain`, `run`) — queue = audits table (ADR-0021) | 1–2 |
 | `src/pipeline.rs` | ✅ `run`, `Step`, `PENDING_STEPS`; snapshot and scanners steps implemented (a scanner that cannot run becomes a limitation) | 1–5 |
-| `src/artifacts.rs` | ✅ atomic writes of `app.json`, `audit.json`, `history.jsonl`, `MEMORY.md` | 1 |
-| `tests/audit_pipeline.rs` | ✅ end-to-end with `FakeSuite`: register → create → snapshot → scanners → artifacts; failing/not-ready scanners → limitations; unreachable repo → FAILED | 1–2 |
+| `src/cartography.rs` | ✅ §C.7 step 5: context → cartographer → sanitize → `record_map`; failures become limitations | 3 |
+| `src/usage.rs` | ✅ `ServicesUsageRecorder` (the `UsageRecorder` port over services) | 3 |
+| `src/artifacts.rs` | ✅ atomic writes of `app.json`, `map/`, `coverage.json`, `llm_usage.jsonl`, `audit.json`, `history.jsonl`, `MEMORY.md`; `memory_text` | 1–3 |
+| `tests/audit_pipeline.rs` | ✅ end-to-end with `FakeSuite` and `FakeClient`: register → create → snapshot → scanners → cartographer (invalid answer retried, invented file and ASVS id dropped, R11 event) → artifacts; no AI / failing scanners → limitations; unreachable repo → FAILED | 1–3 |
 | `src/budget.rs` | per-audit limits from `config/models.toml`; pause on exhaustion | 4 |
 
 ## Local rules

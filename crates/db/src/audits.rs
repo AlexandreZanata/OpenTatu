@@ -203,7 +203,7 @@ fn from_row(row: &SqliteRow) -> Result<Audit, Error> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use opentatu_core::{Actor, AuditKind, EventKind};
 
     use super::*;
@@ -212,7 +212,7 @@ mod tests {
 
     const COMMIT: &str = "4c4a5df92ace8d8068e57362a7308e8b9d031b3a";
 
-    fn queued(id: &str) -> Audit {
+    pub(crate) fn queued(id: &str) -> Audit {
         let id: AuditId = id.parse().unwrap();
         Audit {
             app: id.slug().clone(),
@@ -232,6 +232,16 @@ mod tests {
 
     fn event(kind: EventKind, audit: &Audit) -> NewEvent {
         NewEvent::new(kind, Actor::System, audit.created_at).with_audit(audit.id.clone())
+    }
+
+    /// Test fixture: the sample app of `id`'s slug plus the queued audit `id`.
+    pub(crate) async fn insert_queued(conn: &mut SqliteConnection, id: &str) -> Audit {
+        let audit = queued(id);
+        insert_sample(conn, audit.app.as_str()).await;
+        insert(conn, &audit, &event(EventKind::AuditCreated, &audit))
+            .await
+            .unwrap();
+        audit
     }
 
     async fn database_with_audit() -> (Database, Audit) {

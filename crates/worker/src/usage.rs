@@ -1,6 +1,6 @@
-//! Adapter: the LLM router's usage port, implemented over the services layer. Lives in the
-//! composition root because `opentatu-llm` and `opentatu-services` must not depend on each
-//! other (architecture.toml).
+//! Adapter: the LLM router's usage port, implemented over the services layer. Lives here
+//! because `opentatu-llm` and `opentatu-services` must not depend on each other
+//! (architecture.toml); the worker and the binary both use it.
 
 use opentatu_core::LlmUsage;
 use opentatu_llm::UsageRecorder;

@@ -8,7 +8,6 @@ mod cli;
 mod commands;
 mod config;
 mod output;
-mod usage;
 
 use std::process::ExitCode;
 

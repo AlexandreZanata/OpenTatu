@@ -7,7 +7,11 @@
 //! <root>/apps/<slug>/MEMORY.md               working memory (generated)
 //! <root>/apps/<slug>/OWNER-NOTES.md          owner's free notes (hand-edited, read into MEMORY.md)
 //! <root>/apps/<slug>/history.jsonl           mirror of the app's events
+//! <root>/apps/<slug>/map/current.json        latest security map
+//! <root>/apps/<slug>/map/versions/<map>.json every map version
 //! <root>/apps/<slug>/audits/<audit>/audit.json
+//! <root>/apps/<slug>/audits/<audit>/coverage.json          ASVS × entry points matrix
+//! <root>/apps/<slug>/audits/<audit>/llm_usage.jsonl        one line per model call
 //! <root>/apps/<slug>/audits/<audit>/scanners/<tool>.json   raw scanner outputs
 //! <root>/scanner-cache/<tool>/             offline rules and vulnerability databases
 //! <root>/repos/<slug>.git                    bare mirror of the app's repository
@@ -16,7 +20,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::{AuditId, CommitHash, ScannerKind, Slug};
+use crate::{AuditId, CommitHash, MapId, ScannerKind, Slug};
 
 /// Paths of every artifact under the data directory.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -77,6 +81,29 @@ impl DataLayout {
         self.audit_dir(audit).join("audit.json")
     }
 
+    /// `coverage.json` (ASVS × entry points, spec §B.4).
+    pub fn coverage_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("coverage.json")
+    }
+
+    /// `llm_usage.jsonl`: one line per model call of the audit (never the key or the code).
+    pub fn llm_usage_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("llm_usage.jsonl")
+    }
+
+    /// `map/current.json`: the latest security map of the app.
+    pub fn current_map_file(&self, slug: &Slug) -> PathBuf {
+        self.app_dir(slug).join("map").join("current.json")
+    }
+
+    /// `map/versions/<map>.json`: one version of the security map.
+    pub fn map_version_file(&self, map: &MapId) -> PathBuf {
+        self.app_dir(map.slug())
+            .join("map")
+            .join("versions")
+            .join(format!("{}.json", map.as_str()))
+    }
+
     /// Raw scanner outputs of one audit (`scanners/<tool>.json`).
     pub fn scanner_output_dir(&self, audit: &AuditId) -> PathBuf {
         self.audit_dir(audit).join("scanners")
@@ -125,6 +152,14 @@ mod tests {
         assert_eq!(
             layout.mirror_dir(&slug),
             Path::new("/data/repos/abastevo.git")
+        );
+        assert_eq!(
+            layout.map_version_file(&MapId::for_audit(&audit)),
+            Path::new("/data/apps/abastevo/map/versions/MAP-ABASTEVO-20261129-1432.json")
+        );
+        assert_eq!(
+            layout.coverage_file(&audit),
+            Path::new("/data/apps/abastevo/audits/AUD-ABASTEVO-20261129-1432/coverage.json")
         );
         assert_eq!(
             layout.snapshot_dir(&slug, &commit),

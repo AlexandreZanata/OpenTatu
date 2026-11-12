@@ -24,7 +24,7 @@ pub enum Error {
 /// page (no internals leak into HTML).
 #[derive(Debug)]
 pub enum PageError {
-    /// The requested app or audit does not exist (404).
+    /// The requested app, audit or map does not exist (404).
     NotFound,
     /// Anything else (500); the message is logged only.
     Internal(String),
@@ -39,9 +39,9 @@ impl From<askama::Error> for PageError {
 impl From<opentatu_services::Error> for PageError {
     fn from(error: opentatu_services::Error) -> Self {
         match error {
-            opentatu_services::Error::UnknownApp(_) | opentatu_services::Error::UnknownAudit(_) => {
-                Self::NotFound
-            }
+            opentatu_services::Error::UnknownApp(_)
+            | opentatu_services::Error::UnknownAudit(_)
+            | opentatu_services::Error::UnknownMap(_) => Self::NotFound,
             other => Self::Internal(other.to_string()),
         }
     }

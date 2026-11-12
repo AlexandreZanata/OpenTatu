@@ -8,7 +8,9 @@ use opentatu_core::{App, Slug};
 use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
-use crate::view::{AuditRow, Layout, TimelineEntry, audit_row, timeline_entry};
+use crate::view::{
+    AuditRow, Layout, MapSummary, TimelineEntry, audit_row, map_summary, timeline_entry,
+};
 
 /// Audits listed on the page.
 const AUDITS: u32 = 50;
@@ -21,6 +23,7 @@ const TIMELINE: u32 = 100;
 struct AppPage {
     layout: Layout,
     app: App,
+    map: Option<MapSummary>,
     audits: Vec<AuditRow>,
     timeline: Vec<TimelineEntry>,
 }
@@ -35,6 +38,7 @@ pub async fn page(
     let app = services.app(&slug).await?;
     render(&AppPage {
         layout: Layout::default(),
+        map: services.current_map(&slug).await?.as_ref().map(map_summary),
         audits: services
             .audits_of_app(&slug, AUDITS)
             .await?

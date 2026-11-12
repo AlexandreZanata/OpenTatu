@@ -75,11 +75,11 @@ fn from_row(row: &SqliteRow) -> Result<ScannerResult, Error> {
 
 #[cfg(test)]
 mod tests {
-    use opentatu_core::{Actor, Audit, AuditKind, AuditStatus, EventKind, ScannerKind};
+    use opentatu_core::{Actor, EventKind, ScannerKind};
 
     use super::*;
     use crate::Database;
-    use crate::apps::tests::{NOW, insert_sample};
+    use crate::audits::tests::insert_queued;
 
     fn result(n: u32) -> ScannerResult {
         ScannerResult {
@@ -99,27 +99,8 @@ mod tests {
     async fn results_round_trip_and_are_append_only() {
         let db = Database::in_memory().await.unwrap();
         let mut conn = db.connection().await.unwrap();
-        insert_sample(&mut conn, "abastevo").await;
-        let id: AuditId = "AUD-ABASTEVO-20261112-0900".parse().unwrap();
-        let audit = Audit {
-            id: id.clone(),
-            app: id.slug().clone(),
-            kind: AuditKind::Full,
-            status: AuditStatus::Created,
-            commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
-            branch: None,
-            previous_audit_id: None,
-            created_at: NOW.parse().unwrap(),
-            started_at: None,
-            completed_at: None,
-            checkpoint: None,
-            limitations: vec![],
-        };
-        let created = NewEvent::new(EventKind::AuditCreated, Actor::Owner, audit.created_at)
-            .with_audit(id.clone());
-        crate::audits::insert(&mut conn, &audit, &created)
-            .await
-            .unwrap();
+        let audit = insert_queued(&mut conn, "AUD-ABASTEVO-20261112-0900").await;
+        let id = audit.id.clone();
         let ran = NewEvent::new(EventKind::ScannerRan, Actor::System, audit.created_at)
             .with_audit(id.clone());
 

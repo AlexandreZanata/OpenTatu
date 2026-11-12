@@ -6,7 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{AiRole, AuditId};
+use crate::{AiRole, AuditId, Timestamp};
 
 /// One model call.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -27,6 +27,16 @@ pub struct LlmUsage {
     pub cost_usd: Option<f64>,
     /// Wall-clock latency in milliseconds.
     pub duration_ms: u64,
+}
+
+/// A recorded model call: one line of `llm_usage.jsonl` (spec §B.4).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RecordedLlmUsage {
+    /// When it was recorded (from the clock, R03).
+    pub occurred_at: Timestamp,
+    /// The call.
+    #[serde(flatten)]
+    pub usage: LlmUsage,
 }
 
 /// Sum of recorded calls over a period (e.g. the current month, for the 60% plan share).

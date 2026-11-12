@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}{{ map.map_id }} · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card(map.map_id) %}
+  <dl class="c-meta">
+    <dt>Aplicação</dt><dd><a href="/apps/{{ map.app }}">{{ map.app }}</a></dd>
+    <dt>Auditoria</dt><dd><a href="/audits/{{ map.audit_id }}"><code>{{ map.audit_id }}</code></a></dd>
+    <dt>Commit</dt><dd><code>{{ map.commit }}</code></dd>
+    <dt>Gerado em</dt><dd>{% call ui::datetime(map.created_at) %}{% endcall %}</dd>
+    <dt>Modelo</dt><dd><code>{{ map.model }}</code></dd>
+    <dt>Prompts</dt><dd><code>{{ map.prompts }}</code></dd>
+    <dt>OWASP ASVS</dt><dd>{{ map.asvs_version }}</dd>
+  </dl>
+  <p class="c-list__meta">Descrição feita pelo cartógrafo (IA) e validada pelo sistema contra o commit: arquivos inexistentes e requisitos ASVS desconhecidos foram removidos (veja as notas do sistema). Confira se as entradas correspondem ao seu sistema.</p>
+{% endcall %}
+
+{% call ui::card("Entradas") %}
+  {% call ui::entry_points_table(entry_points) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Componentes") %}
+  {% call ui::item_list(components, "Nenhum componente descrito.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Fronteiras de confiança") %}
+  {% call ui::item_list(trust_boundaries, "Nenhuma fronteira descrita.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Dados sensíveis") %}
+  {% call ui::item_list(sensitive_data, "Nenhum dado sensível identificado.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Autenticação e sessão") %}
+  {% call ui::key_values(authentication) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Autorização") %}
+  {% call ui::key_values(authorization) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Integrações externas") %}
+  {% call ui::item_list(integrations, "Nenhuma integração identificada.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Configuração de segurança") %}
+  {% call ui::key_values(configuration) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Infraestrutura") %}
+  {% call ui::key_values(infrastructure) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Dependências críticas") %}
+  {% call ui::item_list(dependencies, "Nenhuma dependência crítica listada.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Requisitos ASVS da aplicação inteira") %}
+  {% call ui::text_list(app_asvs, "Nenhum requisito associado à aplicação inteira.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Mudanças desde o mapa anterior") %}
+  {% call ui::text_list(changes, "Nenhuma mudança registrada (ou primeiro mapa).") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Perguntas em aberto") %}
+  {% call ui::text_list(open_questions, "Nenhuma pergunta.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Lacunas") %}
+  {% call ui::text_list(gaps, "Nenhuma lacuna informada.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Não analisado") %}
+  {% call ui::text_list(not_analyzed, "Nada ficou de fora.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Notas do sistema") %}
+  {% call ui::text_list(system_notes, "O sistema não removeu nada da resposta do cartógrafo.") %}{% endcall %}
+{% endcall %}
+{% endblock %}

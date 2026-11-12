@@ -13,6 +13,8 @@ list of controls; the requirements are in the spec (R10–R16, §E.5, §E.8).
 | Analyzed code attacks the AI (prompt injection, R11) | Inputs only in fenced blocks (`fence`); base prompt principle 2; suspicious instructions recorded as events; AI has no tools beyond what OpenTatu exposes (R12) |
 | Analyzed code attacks the host through scanners | Containers with `--network=none`, read-only root FS (small `/tmp` tmpfs), no capabilities, `no-new-privileges`, memory/CPU/PID limits, non-root user (owner of the data directory), code mounted read-only; images pinned by digest; rootless Podman recommended (ADR-0023) |
 | Code or results leak while refreshing scanner data | Refresh runs (`opentatu scanners update`) are separate containers with network that can never mount the application code (`ContainerRun::command_line` refuses); analysis runs are offline; scanner telemetry disabled |
+| Secrets reach the model through context selection | `opentatu-context` never reads `.env`, private keys, keystores or `*.tfvars` (names only), never follows symlinks, and skips dependency/build directories; the map keeps environment variable names only |
+| The AI invents or is steered into a wrong map (R11) | Inputs fenced; the map is validated against the commit (`MapContent::sanitize` drops invented files, lines and ASVS ids, recorded as system notes); suspicious instructions become events; AI text is escaped in the dashboard |
 | Secrets found by scanners are stored or shown | Gitleaks runs with `--redact` (raw output holds `REDACTED`); normalized results never use the matched text; the dashboard escapes every message |
 | Secret leakage (R15, R16) | API key only in the environment (`.env`, git-ignored, `0600`), read in one place into `Secret` (prints `****`), never logged or stored; secrets in findings masked with `mask_secret`; no prompt/code content in logs or provider errors |
 | Application code used to train third-party models | Models that train on prompts are listed in `models_that_train_on_prompts` and refused for AI roles; roles use DeepSeek V4.1 Flash (no training, zero retention renewed monthly — re-check after 2026-11-30) |
@@ -33,6 +35,8 @@ list of controls; the requirements are in the spec (R10–R16, §E.5, §E.8).
 | Credential wrapper | `opentatu_core::Secret` |
 | Model allowlist and training guard | `opentatu_llm::Llm` + `config/models.toml` |
 | Fencing untrusted content | `opentatu_investigator::fence` |
+| What the AI may see of a commit | `crates/context/src/files.rs` (`classify`, `IGNORED_DIRS`) |
+| Validation of AI output against the commit | `opentatu_core::MapContent::sanitize`, `opentatu_investigator::run_role` |
 | Secret masking | `opentatu_core::mask_secret` |
 | Container isolation | `opentatu_scanners::{ISOLATION_FLAGS, ContainerRun}` |
 | Scanner arguments (offline, redaction, telemetry off) | `crates/scanners/src/adapters/` |

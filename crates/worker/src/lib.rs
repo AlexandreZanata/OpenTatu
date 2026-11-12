@@ -5,26 +5,41 @@
 //! the oldest `CREATED` audit through `opentatu-services` and runs [`pipeline`].
 //!
 //! Implemented steps: create (services), snapshot of the exact commit (R02, phase 1),
-//! deterministic scanners through the [`ScannerSuite`] port (phase 2), artifacts —
-//! `app.json`, `audit.json`, `history.jsonl`, `MEMORY.md` (§B.4). Every step
+//! deterministic scanners through the [`ScannerSuite`] port (phase 2), the cartographer's
+//! security map and ASVS coverage (phase 3, needs [`AiSettings`]), artifacts — `app.json`,
+//! `audit.json`, `coverage.json`, `llm_usage.jsonl`, `map/`, `history.jsonl`, `MEMORY.md`
+//! (§B.4). Every step
 //! that is not implemented yet is listed in the audit's limitations and the audit ends
 //! `PARTIAL`: an audit that did not analyze anything is never reported as complete
 //! (R13, R14). Later phases replace limitations with real steps.
 
 mod artifacts;
+mod cartography;
 mod error;
 pub mod pipeline;
+mod usage;
 
 use std::future::Future;
 use std::sync::Arc;
 use std::time::Duration;
 
 use opentatu_core::{AuditId, DataLayout};
+use opentatu_llm::Llm;
 use opentatu_scanners::ScannerSuite;
 use opentatu_services::Services;
 use opentatu_snapshots::Snapshots;
 
 pub use error::Error;
+pub use usage::ServicesUsageRecorder;
+
+/// What the worker needs to run the AI roles.
+#[derive(Debug, Clone)]
+pub struct AiSettings {
+    /// Model router (allowlist, accounting, rate-limit backoff).
+    pub llm: Llm,
+    /// Owner's name for the prompts (`OPENTATU_OWNER`, Q-009).
+    pub owner: String,
+}
 
 /// The audit worker.
 #[derive(Debug, Clone)]
@@ -33,6 +48,7 @@ pub struct Worker {
     snapshots: Snapshots,
     scanners: Arc<dyn ScannerSuite>,
     layout: DataLayout,
+    ai: Option<AiSettings>,
 }
 
 impl Worker {
@@ -49,7 +65,15 @@ impl Worker {
             snapshots,
             scanners,
             layout,
+            ai: None,
         }
+    }
+
+    /// Enables the AI steps. Without it, audits list them as limitations (R13).
+    #[must_use]
+    pub fn with_ai(mut self, ai: AiSettings) -> Self {
+        self.ai = Some(ai);
+        self
     }
 
     /// Runs the oldest queued audit, if any, and returns its ID. A failure inside the

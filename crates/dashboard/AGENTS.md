@@ -1,7 +1,7 @@
 # opentatu-dashboard — local web UI
 
 Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · Status: base ✅
-(home, app page with timeline, health); audit page with scanner results (phase 2) ✅
+(home, app page with timeline, health); audit page with scanner results (phase 2) ✅; map and coverage pages (phase 3) ✅
 
 ## Responsibility
 
@@ -14,9 +14,10 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | File | Contents |
 |---|---|
 | `src/routes.rs` | `router()` — the only route registration; `DashboardState`; HTTP tests |
-| `src/pages/<page>.rs` | one handler + template struct per page (`home`, `app`, `audit`, `health`) |
+| `src/pages/<page>.rs` | one handler + template struct per page (`home`, `app`, `audit`, `map`, `coverage`, `health`) |
 | `src/render.rs` | `render(&page)` — the only template → response path |
-| `src/view.rs` | `Layout`, `Badge`, badges, labels, `AuditRow`, `TimelineEntry`, `AppSummary`, `AuditSummary`, `ScannerRunRow`, `ScannerResultRow`, `duration_label` — the only domain → UI text mapping |
+| `src/view/mod.rs` | `Layout`, `Badge`, badges, labels, `AuditRow`, `TimelineEntry`, `AppSummary`, `AuditSummary`, `ScannerRunRow`, `ScannerResultRow`, `duration_label` — the only domain → UI text mapping |
+| `src/view/map.rs` | `MapSummary`, `EntryPointRow`, `Item`, `KeyValue`, map section rows, `CoverageRow`, `authentication_badge`, `requirement_status_badge` |
 | `src/security.rs` | `check_host` (DNS rebinding), `check_origin` (CSRF), `security_headers` (CSP, no-store...) |
 | `src/config.rs` | `DashboardConfig::local` (loopback only) |
 | `src/server.rs` | `serve()` with graceful shutdown |
@@ -39,6 +40,12 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | `ui::timeline(entries)` | event timeline with empty state |
 | `ui::scanner_runs_table(rows)` | scanner executions of an audit (`view::ScannerRunRow`) |
 | `ui::scanner_results_table(rows)` | normalized scanner results (`view::ScannerResultRow`) |
+| `ui::text_list(items, empty)` | plain sentences with an empty message |
+| `ui::item_list(items, empty)` | titled items with details (`view::Item`) |
+| `ui::key_values(rows)` | labeled values (`view::KeyValue`) |
+| `ui::entry_points_table(rows)` | entry points of a map (`view::EntryPointRow`) |
+| `ui::coverage_summary(summary)` | ASVS coverage numbers |
+| `ui::coverage_table(rows)` | applicable requirements (`view::CoverageRow`) |
 
 ## Local rules
 

@@ -13,7 +13,7 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
 | 0 — Foundation and research | ✅ | Part D research recorded in [opencode-go.md](opencode-go.md); `config/models.toml` filled; OpenCode Go client in `opentatu-llm`; `llm_usage` table and accounting | `cargo run -p opentatu -- llm ping` answers with DeepSeek Flash and records tokens (verified 2026-11-12) |
 | 1 — Apps, audits and memory | ✅ | App registration, snapshot by commit, audit creation with ID and dates, append-only event log use cases, `MEMORY.md` generation, timeline in the dashboard, `opentatu serve` and `opentatu worker` | Creating an "empty" audit produces `AUD-<SLUG>-<YYYYMMDD>-<HHMM>`, the right events, and shows in the timeline with date and time in Brasília time (verified 2026-11-12) |
 | 2 — Static scanners | ✅ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard (verified 2026-11-12) |
-| 3 — Cartographer and coverage | ⬜ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right |
+| 3 — Cartographer and coverage | 🟡 | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right |
 | 4 — Hunter, verifier (static) and skeptic | ⬜ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage |
 | 5 — Fix trail and MCP | ⬜ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own |
 | 6 — Benchmark | ⬜ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
@@ -92,4 +92,33 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
   saved, 23 normalized results (Semgrep 5, Gitleaks 1, Trivy 10, OSV-Scanner 7) on the audit
   page, versions in `audit.json`, the planted token absent from every output; the audit took
   21 s.
-- Next: phase 3 (cartographer and coverage) — waits for the owner's approval.
+
+## Phase 3: what exists
+
+- OWASP ASVS 5.0.0 catalog embedded (`config/asvs/`, CC BY-SA 4.0); levels 1–3 applicable
+  (Q-013).
+- `opentatu-context`: safe walk of the snapshot (no symlinks, secrets never read), file
+  tree, configuration files and code ranked by entry-point and security signals, packed in
+  an explicit budget with line numbers; what is left out becomes a limitation.
+- `opentatu-investigator`: `run_role` (render, fence, JSON mode, validation by the serde
+  output type, at most 2 retries), base-prompt values, cartographer inputs/output;
+  `prompts/cartographer.md` 2.1.0 with typed sections, the `<asvs>` block and one entry
+  point per WebSocket message type.
+- Core `SecurityMap` with `MapContent::sanitize` (drops invented files, lines and ASVS ids),
+  `Coverage::compute` (requirements without a result are NOT_TESTED, R14),
+  `SuspiciousInstruction`; append-only `maps` table (migration 0005).
+- Worker step `MAP` (§C.7 step 5): map stored with `MAP_UPDATED`, suspicious instructions
+  as events (R11), `map/current.json` and `map/versions/`, `coverage.json`,
+  `llm_usage.jsonl`, `audit.json` with models, prompt versions, usage and coverage;
+  `MEMORY.md` with mapped entry points and coverage. Without an API key or when the role
+  fails, the audit continues with a limitation.
+- Dashboard: map page `/maps/{id}` (entry points table and every map section), coverage
+  page `/audits/{id}/coverage`, map/coverage cards on the app and audit pages.
+- Verified on the owner's app TBG-Tupi-Battle-Grounds (commit `b9041af`, 3,980 files):
+  full audit `AUD-TBG-20261112-0938` in 5m45s — four scanners, then one cartographer call
+  (284K input tokens, US$0.038) producing 80 entry points (HTTP API, admin API, static
+  fallback, both WebSocket servers with one entry per message type, CLIs, deploy jobs),
+  none dropped by validation, and 163 applicable ASVS requirements, all NOT_TESTED. The
+  first call of an earlier run returned ports as numbers and was retried (now accepted).
+- Done criterion pending: the owner confirms that the entry points are right.
+- Next: phase 4 (hunter, verifier and skeptic) — waits for the owner's approval.

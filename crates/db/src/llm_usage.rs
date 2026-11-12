@@ -2,11 +2,11 @@
 //!
 //! Append-only: there is no update or delete function, and triggers reject both.
 
-use opentatu_core::{LlmUsage, Timestamp, UsageTotals};
+use opentatu_core::{AuditId, LlmUsage, RecordedLlmUsage, Timestamp, UsageTotals};
 use sqlx::{Row as _, SqliteConnection};
 
 use crate::Error;
-use crate::rows::to_i64;
+use crate::rows::{parsed, parsed_opt, to_i64, unsigned};
 
 /// Records one model call made at `occurred_at`.
 pub async fn record(
@@ -61,6 +61,36 @@ pub async fn totals_since(
         output_tokens: count("output_tokens")?,
         cost_usd: row.try_get("cost_usd")?,
     })
+}
+
+/// Calls made for `audit`, in order.
+pub async fn list_by_audit(
+    conn: &mut SqliteConnection,
+    audit: &AuditId,
+) -> Result<Vec<RecordedLlmUsage>, Error> {
+    let rows = sqlx::query(
+        "SELECT audit_id, role, model, input_tokens, output_tokens, reasoning_tokens,                 cost_usd, duration_ms, occurred_at          FROM llm_usage WHERE audit_id = ? ORDER BY id",
+    )
+    .bind(audit.as_str())
+    .fetch_all(&mut *conn)
+    .await?;
+    rows.iter()
+        .map(|row| {
+            Ok(RecordedLlmUsage {
+                occurred_at: parsed(row, "occurred_at")?,
+                usage: LlmUsage {
+                    audit_id: parsed_opt(row, "audit_id")?,
+                    role: parsed_opt(row, "role")?,
+                    model: row.try_get("model")?,
+                    input_tokens: unsigned(row, "input_tokens")?,
+                    output_tokens: unsigned(row, "output_tokens")?,
+                    reasoning_tokens: unsigned(row, "reasoning_tokens")?,
+                    cost_usd: row.try_get("cost_usd")?,
+                    duration_ms: unsigned(row, "duration_ms")?,
+                },
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -128,6 +158,33 @@ mod tests {
         assert_eq!(totals.input_tokens, 200);
         assert_eq!(totals.output_tokens, 80);
         assert!((totals.cost_usd - 0.25).abs() < f64::EPSILON);
+    }
+
+    #[tokio::test]
+    async fn calls_of_an_audit_are_listed_in_order() {
+        let db = Database::in_memory().await.unwrap();
+        let mut conn = db.connection().await.unwrap();
+        let audit =
+            crate::audits::tests::insert_queued(&mut conn, "AUD-ABASTEVO-20261112-0900").await;
+        let mine = LlmUsage {
+            audit_id: Some(audit.id.clone()),
+            ..usage("m1", Some(0.01))
+        };
+        record(
+            &mut conn,
+            &usage("m1", None),
+            &at("2026-11-12T09:01:00-03:00"),
+        )
+        .await
+        .unwrap();
+        record(&mut conn, &mine, &at("2026-11-12T09:02:00-03:00"))
+            .await
+            .unwrap();
+
+        let calls = list_by_audit(&mut conn, &audit.id).await.unwrap();
+        assert_eq!(calls.len(), 1, "diagnostic calls are not part of the audit");
+        assert_eq!(calls[0].usage, mine);
+        assert_eq!(calls[0].occurred_at, at("2026-11-12T09:02:00-03:00"));
     }
 
     #[tokio::test]

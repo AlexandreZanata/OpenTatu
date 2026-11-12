@@ -4,14 +4,14 @@
 use askama::Template;
 use axum::extract::{Path, State};
 use axum::response::Html;
-use opentatu_core::AuditId;
+use opentatu_core::{AuditId, CoverageSummary};
 
 use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    AuditSummary, Layout, ScannerResultRow, ScannerRunRow, TimelineEntry, audit_summary,
-    scanner_result_row, scanner_run_row, timeline_entry,
+    AuditSummary, Layout, MapSummary, ScannerResultRow, ScannerRunRow, TimelineEntry,
+    audit_summary, map_summary, scanner_result_row, scanner_run_row, timeline_entry,
 };
 
 /// Template data of the audit page.
@@ -22,6 +22,8 @@ struct AuditPage {
     audit: AuditSummary,
     runs: Vec<ScannerRunRow>,
     results: Vec<ScannerResultRow>,
+    map: Option<MapSummary>,
+    coverage: Option<CoverageSummary>,
     timeline: Vec<TimelineEntry>,
 }
 
@@ -50,6 +52,8 @@ pub async fn page(
             .iter()
             .map(scanner_result_row)
             .collect(),
+        map: services.map_of_audit(&id).await?.as_ref().map(map_summary),
+        coverage: services.coverage_of_audit(&id).await?.map(|c| c.summary),
         timeline: events.iter().map(timeline_entry).collect(),
     })
 }

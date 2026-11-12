@@ -14,7 +14,7 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (
 
 | File | Contents | Phase |
 |---|---|---|
-| `src/audit_record.rs` | ✅ `AuditRecord` — `audit.json` (§B.5); `with_scanners` (phase 2); uncomputed sections `null` (R14) | 1–2 |
+| `src/audit_record.rs` | ✅ `AuditRecord` — `audit.json` (§B.5); `with_scanners` (phase 2), `with_ai`, `with_usage`, `with_coverage` (phase 3); uncomputed sections `null` (R14) | 1–3 |
 | `src/report.rs` | header with models, prompt versions, scanners, usage, duration + reporter text | 4 |
 | `src/sarif.rs` | SARIF 2.1.0 export for GitHub code scanning | 4 |
 | `src/manifest.rs` | `MANIFEST.json` and per-task Markdown | 5 |

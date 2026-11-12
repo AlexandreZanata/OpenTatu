@@ -1,13 +1,13 @@
 # opentatu-investigator — AI roles of the internal investigator
 
 Layer: **ai** · May depend on: `opentatu-core`, `opentatu-llm` · Status: base ✅ (prompts,
-rendering, fencing); role execution = phases 3–5
+rendering, fencing); role execution and the cartographer (phase 3) ✅; other roles = phases 4–5
 
 ## Responsibility
 
 - **Does:** turn "run role X with these inputs" into a validated JSON answer: prompt
-  catalog, strict variable rendering, fencing of untrusted inputs, (phase 3+) output types,
-  JSON Schema validation and the retry loop (≤ 2 retries, §C.7).
+  catalog, strict variable rendering, fencing of untrusted inputs, role output types
+  (validated by deserialization) and the retry loop (≤ 2 retries, §C.7).
 - **Does not:** decide which role runs when (worker), persist anything (services), call
   scanners.
 
@@ -18,13 +18,16 @@ rendering, fencing); role execution = phases 3–5
 | `src/prompts.rs` | `SOURCES` (embedded prompt files), `VARIABLES`, `Prompt`, `system_template` |
 | `src/render.rs` | `render`, `placeholders` |
 | `src/fence.rs` | `Block`, `fence` (R11) |
-| `src/outputs.rs` | `CommonFields`, `SuspiciousInstruction` — shared output keys (Q-008) |
+| `src/outputs.rs` | `CommonFields` (re-exports `SuspiciousInstruction` from core) — shared output keys (Q-008) |
+| `src/run.rs` | `run_role`, `RoleCall`, `RoleAnswer`, `RoleOutput`, `MAX_RETRIES` — render, fence, call, validate, retry |
+| `src/variables.rs` | `RunContext::variables` — base-prompt values of the running audit |
+| `src/cartographer.rs` | `CartographerOutput`, `CartographerInputs::blocks`, `asvs_listing` |
 | `src/error.rs` | `Error` |
 | `../../prompts/*.md` | the prompt texts (normative, versioned) |
 
-Planned: role output types (one module per role, serde + JSON Schema, embedding
-`CommonFields` with `#[serde(flatten)]`), `run.rs` (call `Llm::generate`, validate, retry, collect suspicious
-instructions for `SUSPICIOUS_INSTRUCTION_DETECTED` events).
+Planned: one module per remaining role (hunter, verifier, skeptic — phase 4; planner,
+reporter — phase 5), each an output type embedding `CommonFields` with `#[serde(flatten)]`
+and implementing `RoleOutput`. The serde type is the schema (ADR-0024).
 
 ## Local rules
 
@@ -39,4 +42,5 @@ instructions for `SUSPICIOUS_INSTRUCTION_DETECTED` events).
 ## Tests
 
 Prompt files: front matter, registration and variables are tested. Rendering and fencing
-have unit tests. Role execution tests (later) use `opentatu_llm::FakeClient`.
+have unit tests. Role execution tests use `opentatu_llm::FakeClient` (`run::tests::llm`,
+`run::tests::variables` are the shared fixtures).

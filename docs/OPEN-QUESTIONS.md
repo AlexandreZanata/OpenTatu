@@ -111,3 +111,14 @@ Q-012 were answered by the owner the same day (ADR-0022). No question is open.
 - **Options:** keep Console balance at zero / disable Extra Usage; or accept the fallback.
 - **Answer:** the owner's Console balance is zero, so the plan blocks at its limits instead
   of charging pay-as-you-go.
+
+## Q-013 — Which ASVS levels count as applicable requirements?
+- **Status:** answered (2026-11-12)
+- **Context:** coverage (R14) needs a set of applicable OWASP ASVS requirements; ASVS 5.0.0
+  has 345 requirements in three levels (70 at level 1, 183 more at level 2, 92 more at
+  level 3).
+- **Options:** levels 1–2 (253 requirements); level 1 only (70); levels 1–3 (345).
+- **Answer:** levels 1, 2 and 3 (owner) — `opentatu_core::APPLICABLE_LEVEL`. The
+  cartographer associates the requirements that apply to each entry point and to the app as
+  a whole; coverage counts those.
+

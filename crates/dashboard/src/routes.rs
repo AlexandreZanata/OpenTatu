@@ -30,6 +30,8 @@ pub fn router(state: DashboardState, config: &DashboardConfig) -> Router {
         .route("/", get(pages::home::page))
         .route("/apps/{slug}", get(pages::app::page))
         .route("/audits/{id}", get(pages::audit::page))
+        .route("/audits/{id}/coverage", get(pages::coverage::page))
+        .route("/maps/{map_id}", get(pages::map::page))
         .route("/health", get(pages::health::json))
         .route("/assets/app.css", get(assets::stylesheet))
         .layer(middleware::from_fn_with_state(
@@ -225,6 +227,126 @@ mod tests {
             assert_eq!(status, StatusCode::NOT_FOUND, "{missing}");
         }
     }
+
+    #[tokio::test]
+    async fn r14_map_and_coverage_pages_show_the_map_and_not_tested_requirements() {
+        let services = services().await;
+        services
+            .register_app(opentatu_core::NewApp {
+                slug: opentatu_core::Slug::new("demo").unwrap(),
+                name: "Demo".into(),
+                repo_url: "/srv/demo".into(),
+                branch: "main".into(),
+                stack: vec![],
+                sensitive_data: vec![],
+                lab_url: None,
+            })
+            .await
+            .unwrap();
+        let audit = services
+            .create_audit(opentatu_services::NewAudit {
+                app: opentatu_core::Slug::new("demo").unwrap(),
+                kind: opentatu_core::AuditKind::Full,
+                commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+                branch: Some("main".into()),
+                requested_by: opentatu_core::Actor::Owner,
+            })
+            .await
+            .unwrap();
+        let content: opentatu_core::MapContent = serde_json::from_str(MAP_CONTENT).unwrap();
+        let map = services
+            .record_map(
+                &audit,
+                opentatu_services::NewMap {
+                    content,
+                    model: "deepseek-v4.1-flash".into(),
+                    prompt_versions: vec!["base@1.1.0".into(), "cartographer@2.1.0".into()],
+                    gaps: vec!["Sem o código do matchmaking.".into()],
+                    not_analyzed: vec![],
+                    system_notes: vec!["Entrada EP-009 descartada.".into()],
+                },
+            )
+            .await
+            .unwrap();
+        let router = router_over(services);
+        let host = "127.0.0.1:7878";
+
+        let (status, _, body) =
+            get_from(router.clone(), &format!("/maps/{}", map.map_id), host).await;
+        assert_eq!(status, StatusCode::OK);
+        for expected in [
+            "MAP-DEMO-20261129-1432",
+            "match.join",
+            "src/ws.rs:40",
+            "Não exige",
+            "Sem o código do matchmaking.",
+            "Entrada EP-009 descartada.",
+            "V13.1.1 — Verify",
+            "&#60;script&#62;",
+        ] {
+            assert!(body.contains(expected), "map page missing {expected:?}");
+        }
+        assert!(!body.contains("<script>"), "AI text is escaped");
+
+        let (status, _, body) = get_from(
+            router.clone(),
+            "/audits/AUD-DEMO-20261129-1432/coverage",
+            host,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        for expected in [
+            "V4.4.1",
+            "V13.1.1",
+            "Não testado",
+            "aplicação inteira",
+            "EP-001",
+            "0%",
+        ] {
+            assert!(
+                body.contains(expected),
+                "coverage page missing {expected:?}"
+            );
+        }
+
+        let (_, _, body) = get_from(router.clone(), "/audits/AUD-DEMO-20261129-1432", host).await;
+        assert!(body.contains("href=\"/maps/MAP-DEMO-20261129-1432\""));
+        assert!(body.contains("/audits/AUD-DEMO-20261129-1432/coverage"));
+        let (_, _, body) = get_from(router.clone(), "/apps/demo", host).await;
+        assert!(body.contains("Mapa atual"));
+        for missing in [
+            "/maps/MAP-DEMO-20261129-1433",
+            "/maps/x",
+            "/audits/AUD-DEMO-20261129-1433/coverage",
+        ] {
+            let (status, _, _) = get_from(router.clone(), missing, host).await;
+            assert_eq!(status, StatusCode::NOT_FOUND, "{missing}");
+        }
+    }
+
+    /// A small validated map: one WebSocket entry point and one app-wide requirement.
+    const MAP_CONTENT: &str = r#"{
+      "components": [ { "name": "Servidor", "kind": "api", "files": ["src/main.rs"] } ],
+      "entry_points": [ { "id": "EP-001", "method": "WS", "path": "match.join",
+          "file": "src/ws.rs", "line": 40, "symbol": "on_join", "authentication": "no",
+          "allowed_roles": [], "inputs": ["message"],
+          "authorization_check": "nenhuma visível <script>", "sensitive_data": [],
+          "applicable_asvs": ["V4.4.1"] } ],
+      "trust_boundaries": [], "sensitive_data": [],
+      "authentication": { "mechanism": "token", "storage": "desconhecido",
+          "expiry": "desconhecido", "renewal": "desconhecido", "logout": "desconhecido",
+          "files": [] },
+      "authorization": { "mechanism": "desconhecido", "checked_at": [],
+          "entry_points_without_check": ["EP-001"] },
+      "integrations": [],
+      "configuration": { "cors": "desconhecido", "cookies": "desconhecido",
+          "headers": "desconhecido", "debug_mode": "desconhecido",
+          "error_handling": "desconhecido" },
+      "infrastructure": { "base_image": "desconhecido", "container_user": "desconhecido",
+          "ports": [], "environment_variables": [] },
+      "critical_dependencies": [], "app_asvs": ["V13.1.1"],
+      "changes_since_previous_map": [], "open_questions": []
+    }"#;
 
     #[tokio::test]
     async fn health_returns_json() {

@@ -21,17 +21,20 @@ use crate::cli::{AppCommand, AuditCommand, Cli, Command, DbCommand, LlmCommand, 
 /// Runs the parsed command.
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
     let data_dir = cli.data_dir.as_path();
-    let scanners_config = cli.scanners_config.as_path();
+    let configs = worker::Configs {
+        scanners: cli.scanners_config.as_path(),
+        models: cli.models_config.as_path(),
+    };
     match cli.command {
         Command::Serve { listen, worker } => {
-            worker::serve(data_dir, scanners_config, listen.address, &worker).await
+            worker::serve(data_dir, configs, listen.address, &worker).await
         }
         Command::Dashboard(args) => dashboard::run(data_dir, args.address).await,
-        Command::Worker(args) => worker::run(data_dir, scanners_config, &args).await,
+        Command::Worker(args) => worker::run(data_dir, configs, &args).await,
         Command::Scanners(ScannersCommand::Update { only }) => {
-            scanners::update(data_dir, scanners_config, only).await
+            scanners::update(data_dir, configs.scanners, only).await
         }
-        Command::Scanners(ScannersCommand::Status) => scanners::status(data_dir, scanners_config),
+        Command::Scanners(ScannersCommand::Status) => scanners::status(data_dir, configs.scanners),
         Command::App(AppCommand::Add(args)) => app::add(data_dir, args).await,
         Command::App(AppCommand::List) => app::list(data_dir).await,
         Command::Audit(AuditCommand::Create {

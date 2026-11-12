@@ -1,6 +1,6 @@
 //! Use cases: accounting of model calls (spec §A.2, §D.2; R17).
 
-use opentatu_core::{LlmUsage, UsageTotals};
+use opentatu_core::{AuditId, LlmUsage, RecordedLlmUsage, UsageTotals};
 
 use crate::{Error, Services};
 
@@ -19,6 +19,16 @@ impl Services {
         let since = self.clock.now().start_of_month();
         let mut conn = self.db.connection().await?;
         Ok(opentatu_db::llm_usage::totals_since(&mut conn, model, &since).await?)
+    }
+
+    /// Model calls of an audit, in order (`llm_usage.jsonl`, models and usage of
+    /// `audit.json`, R17).
+    pub async fn llm_usage_of_audit(
+        &self,
+        audit: &AuditId,
+    ) -> Result<Vec<RecordedLlmUsage>, Error> {
+        let mut conn = self.db.connection().await?;
+        Ok(opentatu_db::llm_usage::list_by_audit(&mut conn, audit).await?)
     }
 }
 

@@ -138,6 +138,7 @@ sequenceDiagram
   W->>S: create audit (ID, created_at, AUDIT_CREATED)
   W->>W: snapshot exact commit (R02)
   W->>SC: run isolated scanners, normalize
+  W->>C: tree, config, ranked code (budget)
   W->>I: cartographer(map inputs)
   I->>L: generate(role, messages, schema)
   W->>C: select excerpts per entry point
@@ -157,6 +158,8 @@ sequenceDiagram
 | Secrets and local overrides | environment / `.env` (read only in `apps/opentatu/src/config.rs`) |
 | Provider, models per role, allowlist, budgets | [`config/models.toml`](../config/models.toml) (path: `--models-config` / `OPENTATU_MODELS_CONFIG`) |
 | Scanner images, versions, ruleset, ecosystems | [`config/scanners.toml`](../config/scanners.toml) (path: `--scanners-config` / `OPENTATU_SCANNERS_CONFIG`) |
+| OWASP ASVS catalog | [`config/asvs/`](../config/asvs/README.md), embedded in the binary; applicable level `opentatu_core::APPLICABLE_LEVEL` (Q-013) |
+| Owner's name in prompts | `OPENTATU_OWNER` (`.env`) |
 | Dependency versions | root `Cargo.toml` `[workspace.dependencies]` |
 | Allowed crate dependencies | [`architecture.toml`](../architecture.toml) |
 | Lints and banned calls | root `Cargo.toml` `[workspace.lints]` + [`clippy.toml`](../clippy.toml) |

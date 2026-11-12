@@ -8,7 +8,7 @@ use opentatu_core::{Clock, SystemClock};
 use opentatu_llm::{CallContext, Llm, ModelsConfig, OpenCodeGoClient, RetryPolicy};
 
 use crate::output;
-use crate::usage::ServicesUsageRecorder;
+use opentatu_worker::ServicesUsageRecorder;
 
 /// `opentatu llm ping [--model <id>]`: one minimal call per model; prints model, latency,
 /// tokens and cost, and shows that the call was recorded in `llm_usage` (spec §D.2, phase 0).

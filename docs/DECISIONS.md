@@ -356,3 +356,62 @@ Template:
   Trivy database); audits list "run `opentatu scanners update`" until it ran. Semgrep
   registry rules have their own license (Semgrep Rules License): used locally, never
   redistributed — the ruleset is downloaded on the owner's machine, not committed.
+
+## ADR-0024 — Cartographer, versioned security map and ASVS coverage (phase 3)
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** phase 3 adds the first AI role (§C.1, §C.7 steps 5–6 and 13): a map of the
+  real entry points of the audited commit and the ASVS coverage matrix (R14). The owner
+  chose ASVS 5.0.0 levels 1–3 (Q-013) and an app of their own for the done criterion.
+- **Decision:**
+  - **Catalog.** The official ASVS 5.0.0 flat JSON is committed unmodified
+    (`config/asvs/`, CC BY-SA 4.0, attribution in its README) and embedded in the binary
+    (`AsvsCatalog::embedded`), so stored requirement ids always refer to one version.
+    `APPLICABLE_LEVEL` (L3) is the owner's choice.
+  - **Context selection** (`opentatu-context`). The cartographer runs before any entry
+    point is known, so it receives: the file tree (code and configuration listed, the rest
+    summarized per directory), configuration files ranked deployment-first, and code ranked
+    by signals (route/handler/socket declarations of common stacks, security vocabulary,
+    entry-file names, server/API/message-dispatch paths; tests, examples, archives and
+    developer scripts ranked last), packed into an explicit byte budget with line numbers
+    and cut to header + windows around routes when a file is too large. Symlinks are
+    never followed; `.env`, keys and keystores are listed by name and never read (R15,
+    R16). What does not fit is reported and becomes an audit limitation (R14).
+    Per-entry-point selection (handler + middlewares + callees) is phase 4, with its consumer.
+  - **Role execution** (`opentatu-investigator::run_role`). System prompt = base + role
+    rendered with system values; user message = fenced inputs; JSON mode; the serde output
+    type is the schema (no separate JSON Schema document or dependency); an invalid answer
+    is sent back with the parse/validation problem, at most 2 retries (§C.7); `role` and
+    `audit_id` must match the call.
+  - **Prompt.** `cartographer.md` 2.x types every map section (authentication,
+    authorization, configuration, infrastructure, boundaries, sensitive data, integrations,
+    critical dependencies), adds `line`, `app_asvs`, non-HTTP entry points (`WS`, `CLI`,
+    `JOB`, `MESSAGE`; 2.1.0: one per WebSocket message type handled, besides the
+    connection) and the `<asvs>` input block, and asks for every applicable requirement
+    (met or not). Numbers written as text (`"12"`) or text written as numbers (ports) are
+    accepted; everything else must match the type.
+  - **Never invent, enforced by the system.** `MapContent::sanitize` drops entry points
+    whose file is not in the commit, lines beyond the end of the file, ASVS ids absent from
+    the catalog, invented file references and environment variable values, renumbers
+    entry points and records what it removed as system notes.
+  - **Storage.** `SecurityMap` (core) in the append-only `maps` table (migration 0005), one
+    version per audit, created_at from the clock, with a `MAP_UPDATED` event carrying model
+    and prompt versions; files `map/current.json` and `map/versions/<map>.json`.
+    Suspicious instructions reported by the role become `SUSPICIOUS_INSTRUCTION_DETECTED`
+    events (R11).
+  - **Coverage is derived**, never stored as a source of truth: `Coverage::compute` over the
+    map and verification results (none until phase 4, so every applicable requirement is
+    `NOT_TESTED`, never "safe"); written to `coverage.json` and the `coverage` section of
+    `audit.json`. `audit.json` also gets `models`, `prompt_versions` and `usage`, and every
+    call is listed in `llm_usage.jsonl` (R17).
+  - The worker runs the step only with `AiSettings` (model router + owner name); without an
+    API key, or when the role fails after its retries, the audit continues and lists the
+    missing map as a limitation (R13). `ServicesUsageRecorder` moved from the binary to the
+    worker so tests and the binary share it.
+- **Alternatives considered:** sending the whole repository (violates §C.7 step 6 and is
+  costly on large repos); letting the model ask for files through tool calls (more calls,
+  more complexity; revisit if maps miss entry points); a JSON Schema crate (duplicates the
+  serde types); deterministic ASVS applicability rules (too coarse without understanding
+  the code).
+- **Consequences:** one cartographer call per audit with about 250K input tokens (about
+  US$0.04 at list price); very large apps lose lower-ranked files, which the audit reports.
+

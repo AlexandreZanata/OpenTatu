@@ -41,7 +41,7 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `audits` | id, app, kind, status, commit_hash, previous_audit_id, created_at, started_at, completed_at, budget, usage, summary | base |
 | `events` | id, kind, app, audit_id, occurred_at, actor, target, data (JSON), model, prompt_version, references_event_id — **no UPDATE or DELETE (SQLite triggers)** | base |
 | `llm_usage` | id, audit_id, role, model, input_tokens, output_tokens, reasoning_tokens, cost_usd, duration_ms, occurred_at — append-only | 0 ✅ |
-| `maps` | id, app, audit_id, content (JSON), created_at | 3 |
+| `maps` | id, map_id, app, audit_id, commit_hash, content (JSON), created_at — append-only | 3 ✅ |
 | `hypotheses` | id, audit_id, content (JSON), verdict | 4 |
 | `findings` | id, app, state, severity, cwe, fingerprint, location, first_detected, last_detected | 4 |
 | `evidence` | id, finding_id, audit_id, kind, content (JSON), artifact_file | 4 |

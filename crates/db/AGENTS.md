@@ -1,6 +1,7 @@
 # opentatu-db — SQLite persistence
 
-Layer: **infrastructure** · May depend on: `opentatu-core` · Status: base ✅
+Layer: **infrastructure** · May depend on: `opentatu-core` · Status: base ✅; scanner
+results (phase 2), maps (phase 3) ✅
 
 ## Responsibility
 
@@ -17,13 +18,15 @@ Layer: **infrastructure** · May depend on: `opentatu-core` · Status: base ✅
 | `migrations/0002_llm_usage.sql` | `llm_usage` (model-call accounting) + append-only triggers |
 | `migrations/0003_audit_progress.sql` | `audits.checkpoint`, `audits.limitations` |
 | `migrations/0004_scanner_results.sql` | `scanner_results` (normalized scanner results) + append-only triggers |
+| `migrations/0005_maps.sql` | `maps` (one security map version per audit, JSON) + append-only triggers |
 | `src/database.rs` | `Database` (`open`, `in_memory`, `connection`, `begin`), `Connection`, `Transaction` |
 | `src/rows.rs` | `parsed`, `parsed_opt`, `json`, `unsigned`, `to_i64` — use them in every repository |
 | `src/events.rs` | `append`, `list_by_app`, `recent_by_app`, `list_by_audit` (no update/delete, R04) |
 | `src/apps.rs` | `insert` (with event), `get`, `list` |
 | `src/audits.rs` | `insert`, `get`, `exists`, `list_by_app`, `list_recent`, `next_queued`, `last_final`, `update_status` (validated, with event), `set_checkpoint` |
 | `src/snapshots.rs` | `record` (once per commit, event per capture) |
-| `src/llm_usage.rs` | `record`, `totals_since` (append-only) |
+| `src/llm_usage.rs` | `record`, `totals_since`, `list_by_audit` (append-only) |
+| `src/maps.rs` | `insert` (with `MAP_UPDATED`), `get`, `by_audit`, `latest_by_app` |
 | `src/scanner_results.rs` | `insert_run` (results + `SCANNER_RAN`), `list_by_audit` (append-only) |
 | `src/health.rs` | `schema_version` |
 | `src/error.rs` | `Error` |

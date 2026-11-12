@@ -34,6 +34,8 @@ opentatu_core::text_enum! {
         Data => "data",
         /// Generated MEMORY.md.
         Memory => "memory",
+        /// OWASP ASVS requirements that may apply (system-provided catalog).
+        Asvs => "asvs",
     }
 }
 

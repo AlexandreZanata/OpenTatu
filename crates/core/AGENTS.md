@@ -1,6 +1,7 @@
 # opentatu-core — pure domain
 
-Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · Status: base ✅
+Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · Status: base ✅; scanners (phase 2), ASVS, map and
+coverage (phase 3) ✅
 
 ## Responsibility
 
@@ -28,8 +29,12 @@ Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · St
 | `src/event.rs` | `EventKind`, `Actor`, `NewEvent`, `Event` | §B.6, R04 |
 | `src/fingerprint.rs` | `Fingerprint`, `FingerprintInput`, `normalize_snippet` | §B.8 |
 | `src/secrets.rs` | `mask_secret`, `Secret` | R15, R16 |
-| `src/usage.rs` | `LlmUsage`, `UsageTotals` | §D.2, R17 |
+| `src/usage.rs` | `LlmUsage`, `RecordedLlmUsage`, `UsageTotals` | §D.2, R17 |
 | `src/scanner.rs` | `ScannerKind`, `ScannerResult`, `ScannerRun` | §A.3, §C.7, R18 |
+| `src/asvs.rs` | `AsvsCatalog` (embedded ASVS 5.0.0), `AsvsRequirement`, `AsvsLevel`, `APPLICABLE_LEVEL` | §A.4, Q-013 |
+| `src/map.rs` | `SecurityMap`, `MapContent` + `sanitize`, map parts, `FileIndex` | §C.1, §B.4 |
+| `src/coverage.rs` | `Coverage::compute`, `CoverageSummary`, `RequirementCoverage`, `RequirementStatus` | §B.5, R14 |
+| `src/suspicious.rs` | `SuspiciousInstruction` | R11 |
 
 Planned: per-audit budget tracking types (phase 4), finding records (phase 4).
 

@@ -13,6 +13,10 @@ pub enum Error {
     #[error("snapshot failed: {0}")]
     Snapshot(#[from] opentatu_snapshots::Error),
 
+    /// The snapshot could not be read for context selection.
+    #[error("context selection failed: {0}")]
+    Context(#[from] opentatu_context::Error),
+
     /// An artifact could not be serialized.
     #[error("cannot serialize artifact: {0}")]
     Json(#[from] serde_json::Error),

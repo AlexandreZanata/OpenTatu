@@ -3,23 +3,9 @@
 //! Each role's output type (phase 3+) embeds [`CommonFields`] with `#[serde(flatten)]`,
 //! so the shared keys are defined exactly once. Keys are English; free-text values pt-BR.
 
+pub use opentatu_core::SuspiciousInstruction;
 use opentatu_core::{AiRole, AuditId};
 use serde::{Deserialize, Serialize};
-
-/// Text inside analyzed content that addresses the AI (R11). Recorded as a
-/// `SUSPICIOUS_INSTRUCTION_DETECTED` event by the worker.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct SuspiciousInstruction {
-    /// File where it was found, relative to the repository root.
-    pub file: String,
-    /// Line or range, e.g. `"12"` or `"12-14"`.
-    pub line: String,
-    /// Short excerpt, secrets masked (at most ~200 characters).
-    pub excerpt: String,
-    /// Why it is suspicious (pt-BR).
-    pub reason: String,
-}
 
 /// Keys every role output must contain (base prompt, last paragraph). All are required:
 /// a missing key fails validation and triggers the retry of spec §C.7.

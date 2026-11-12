@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}Cobertura {{ audit_id }} · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card("Cobertura OWASP ASVS") %}
+  <dl class="c-meta">
+    <dt>Auditoria</dt><dd><a href="/audits/{{ audit_id }}"><code>{{ audit_id }}</code></a></dd>
+    <dt>Mapa</dt><dd><a href="/maps/{{ map_id }}"><code>{{ map_id }}</code></a></dd>
+    <dt>Versão</dt><dd>OWASP ASVS {{ asvs_version }}, níveis 1 a {{ level }} ({{ catalog_requirements }} requisitos no catálogo)</dd>
+  </dl>
+  {% call ui::coverage_summary(summary) %}{% endcall %}
+  <p class="c-list__meta">"Não testado" nunca significa "seguro": a verificação de cada requisito começa na fase 4 (caçador e verificador).</p>
+{% endcall %}
+
+{% call ui::card("Requisitos aplicáveis") %}
+  {% call ui::coverage_table(rows) %}{% endcall %}
+{% endcall %}
+{% endblock %}

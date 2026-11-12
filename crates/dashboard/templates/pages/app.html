@@ -14,6 +14,14 @@
   </dl>
 {% endcall %}
 
+{% call ui::card("Mapa de segurança") %}
+  {% if let Some(map) = map %}
+  <p>Mapa atual <a href="/maps/{{ map.map_id }}"><code>{{ map.map_id }}</code></a> do commit <code>{{ map.commit }}</code>, gerado em {% call ui::datetime(map.created_at) %}{% endcall %}: {{ map.entry_points }} entradas, {{ map.components }} componentes, {{ map.integrations }} integrações.</p>
+  {% else %}
+  {% call ui::empty_state("Nenhum mapa ainda.", "O cartógrafo gera o mapa na próxima auditoria (requer OPENCODE_GO_API_KEY).") %}{% endcall %}
+  {% endif %}
+{% endcall %}
+
 {% call ui::card("Auditorias") %}
   {% call ui::audits_table(audits) %}{% endcall %}
 {% endcall %}

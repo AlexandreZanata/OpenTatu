@@ -25,6 +25,9 @@ it replaces.
 | Prompt variables | `opentatu_investigator::prompts::VARIABLES` | new `{{x}}` without registering it |
 | Container isolation flags | `opentatu_scanners::ISOLATION_FLAGS` | hand-built `docker run` args |
 | Scanner images, versions, rulesets | `config/scanners.toml` (`ScannersConfig`) | image tags or versions in code |
+| ASVS requirements and applicable level | `opentatu_core::AsvsCatalog` (`config/asvs/`), `APPLICABLE_LEVEL` | requirement ids or texts typed by hand |
+| What a role sees of the commit | `opentatu_context` (`SnapshotFiles`, `render_tree`, `cartographer_*`) | reading snapshot files in the worker or roles |
+| One AI role call (render, fence, validate, retry) | `opentatu_investigator::run_role` | calling `Llm::generate` for a role directly |
 | How each scanner runs and is normalized | `crates/scanners/src/adapters/<tool>.rs` | tool arguments or output parsing elsewhere |
 | Dashboard routes | `opentatu_dashboard::routes::router` | `.route(...)` elsewhere |
 | UI markup | `crates/dashboard/templates/components/ui.html` | copy markup into pages |
@@ -55,6 +58,12 @@ it replaces.
 | `Audit` (`duration_seconds()`) | Audit record / queue item (§B.5) | custom audit structs |
 | `DataLayout` | Every path of §B.4 (db, app files, audits, raw scanner outputs, scanner caches, mirrors, snapshots) | building paths by hand |
 | `ScannerKind`, `ScannerResult`, `ScannerRun` | The four scanners and their normalized results (§A.3) | per-tool result structs outside `opentatu-scanners` |
+| `AsvsCatalog` (`embedded`, `resolve`, `up_to`, `position`), `AsvsRequirement`, `AsvsLevel`, `ASVS_VERSION`, `APPLICABLE_LEVEL` | OWASP ASVS 5.0.0 catalog (Q-013) | requirement lists elsewhere |
+| `SecurityMap`, `MapContent` (`sanitize`), `EntryPoint`, `Component`, `TrustBoundary`, `SensitiveData`, `Authentication`, `Authorization`, `Integration`, `SecurityConfiguration`, `Infrastructure`, `CriticalDependency`, `AuthenticationRequirement` | The security map and its validation against the commit (§C.1) | ad-hoc map JSON |
+| `FileIndex` | What validation needs to know about the commit (implemented by `opentatu-context`) | passing file lists around |
+| `Coverage::compute`, `CoverageSummary`, `RequirementCoverage`, `RequirementStatus` | ASVS coverage matrix, derived (R14) | storing coverage as truth |
+| `SuspiciousInstruction` (`bounded_excerpt`) | Instruction found in analyzed content (R11) | role-specific copies |
+| `RecordedLlmUsage` | One line of `llm_usage.jsonl` | ad-hoc usage rows |
 | `Timestamp` | Whole-second instant; `iso()`, `display_pt_br()`, `local_minute()`, `local_month()`, `seconds_since()`, `start_of_month()` | `jiff`/`chrono` types outside core |
 | `Clock`, `SystemClock`, `FixedClock` | Injectable "now" (R03); fixed clock for tests | system time calls |
 | `AuditKind`, `AuditStatus` + `allowed_transitions()`, `validate_transition()`, `reached_by(EventKind)` | Audit enums and status machine (§A.5, R13, Q-002) | ad-hoc status checks |
@@ -82,11 +91,13 @@ it replaces.
 | `snapshots::record` | Captured commits (once per commit) + `SNAPSHOT_CAPTURED` |
 | `events::{recent_by_app, list_by_audit}` | Timelines |
 | `scanner_results::{insert_run, list_by_audit}` | Normalized scanner results (append-only) + `SCANNER_RAN` |
+| `maps::{insert, get, by_audit, latest_by_app}` | Security map versions (append-only) + `MAP_UPDATED` |
+| `llm_usage::list_by_audit` | Model calls of one audit |
 | `health::schema_version` | Highest applied migration |
 | `rows::{parsed, parsed_opt, json, unsigned, to_i64}` (crate-private) | Typed column reading with column-named errors — use in every repository |
 
-Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results` (see
-`migrations/`).
+Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`, `maps`
+(see `migrations/`). Test fixture: `audits::tests::insert_queued` (app + queued audit).
 
 ## opentatu-services (`crates/services`)
 
@@ -102,6 +113,10 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results` 
 | `Services::app_timeline`, `app_history`, `audit_events`, `now` | Event queries; clock for artifacts |
 | `Services::record_scanner_run`, `record_scanner_failure` | `SCANNER_RAN` (+ results) / `SCANNER_FAILED` |
 | `Services::scanner_results`, `scanner_runs` → `ScannerRunSummary` (`ScannerOutcome`) | Results of an audit; its runs derived from events |
+| `Services::record_map(&Audit, NewMap)` → `SecurityMap` | Stores a map version (id, date, ASVS version set by the system) + `MAP_UPDATED` |
+| `Services::record_suspicious_instructions(audit, Reporter, items)` | One `SUSPICIOUS_INSTRUCTION_DETECTED` event per item (R11) |
+| `Services::current_map`, `map_of_audit`, `map`, `coverage_of_audit` | Map and coverage queries |
+| `Services::llm_usage_of_audit` | Calls of one audit (`llm_usage.jsonl`, `audit.json`) |
 | `Services::record_llm_usage(&LlmUsage)` | Stores one model call, stamped with the clock |
 | `Services::llm_usage_this_month(model)` → `UsageTotals` | Monthly totals (plan share, §A.2) |
 
@@ -120,6 +135,9 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results` 
 | `view::{AuditRow, audit_row, TimelineEntry, timeline_entry, AppSummary, app_summary}` | Rows for the table, timeline and apps list components |
 | `view::{AuditSummary, audit_summary, duration_label}` | Audit page header (pt-BR durations) |
 | `view::{ScannerRunRow, scanner_run_row, ScannerResultRow, scanner_result_row}` | Rows of the scanner tables |
+| `view::{MapSummary, map_summary, EntryPointRow, entry_point_row, authentication_badge}` | Map header and entry point rows |
+| `view::{Item, KeyValue}` + `component_items`, `trust_boundary_items`, `sensitive_data_items`, `integration_items`, `dependency_items`, `authentication_rows`, `authorization_rows`, `configuration_rows`, `infrastructure_rows`, `requirement_lines` | Map sections (in `view/map.rs`) |
+| `view::{CoverageRow, coverage_row, requirement_status_badge}` | Coverage matrix rows |
 | `PageError` | Logs details, shows a generic pt-BR error page |
 
 UI components (`templates/components/ui.html`, import as `ui`):
@@ -134,6 +152,12 @@ UI components (`templates/components/ui.html`, import as `ui`):
 | `ui::timeline(entries)` | Event timeline (`view::TimelineEntry`), with empty state |
 | `ui::scanner_runs_table(rows)` | Scanner executions of an audit (`view::ScannerRunRow`) |
 | `ui::scanner_results_table(rows)` | Normalized scanner results (`view::ScannerResultRow`) |
+| `ui::text_list(items, empty)` | Plain sentences (limitations, gaps, questions) |
+| `ui::item_list(items, empty)` | Titled items with details (`view::Item`) |
+| `ui::key_values(rows)` | Labeled values (`view::KeyValue`) |
+| `ui::entry_points_table(rows)` | Entry points of a map (`view::EntryPointRow`) |
+| `ui::coverage_summary(summary)` | ASVS coverage numbers (`CoverageSummary`) |
+| `ui::coverage_table(rows)` | Applicable requirements (`view::CoverageRow`) |
 
 CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge`, `c-empty`,
 `c-list`, `c-meta`, `c-table`, `c-timeline`,
@@ -178,6 +202,24 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Scanners::{new, update, cache_dir}` | Container-backed suite; `update` refreshes offline data (network, no source) |
 | `testing::FakeSuite` (feature `test-support`) | Canned outcomes per scanner for worker tests |
 
+## opentatu-context (`crates/context`)
+
+| Component | Purpose |
+|---|---|
+| `SnapshotFiles::{scan, files, get, read_text}` | Safe walk of a snapshot (no symlinks, no dependency/build dirs; secrets never read); implements `FileIndex` |
+| `classify`, `FileKind` | Source / Config / Doc / Secret / Other |
+| `render_tree(files, max_lines)` | `<structure>` block |
+| `cartographer_code`, `cartographer_config` → `Selection { excerpts, left_out, bytes }` | Ranked, line-numbered `<code>` / `<config>` within `ContextBudget::CARTOGRAPHER` |
+
+## opentatu-investigator role execution (`crates/investigator`)
+
+| Component | Purpose |
+|---|---|
+| `run_role::<T: RoleOutput>(&Llm, RoleCall)` → `RoleAnswer<T>` | Render, fence, call, validate, ≤ 2 retries (§C.7) |
+| `RunContext::variables()` | Base-prompt values of the running audit |
+| `CartographerOutput`, `CartographerInputs::blocks`, `asvs_listing` | The cartographer's output type and input blocks |
+| `Block::Asvs` | `<asvs>` input block |
+
 ## opentatu-snapshots (`crates/snapshots`)
 
 | Component | Purpose |
@@ -198,21 +240,22 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 
 | Component | Purpose |
 |---|---|
-| `AuditRecord::from_audit(&Audit)`, `with_scanners(versions)`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
+| `AuditRecord::from_audit(&Audit)`, `with_scanners`, `with_ai`, `with_usage`, `with_coverage`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
 
 ## opentatu-worker (`crates/worker`)
 
 | Component | Purpose |
 |---|---|
 | `Worker::{new, run_once, drain, run}` | Claims and runs queued audits; failures end the audit, not the worker |
-| `Worker::new(services, snapshots, scanners, layout)` | Takes an `Arc<dyn ScannerSuite>` |
-| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far (snapshot, scanners, artifacts) and the limitations of the missing ones |
+| `Worker::new(services, snapshots, scanners, layout)`, `with_ai(AiSettings)` | Takes an `Arc<dyn ScannerSuite>`; AI steps need `AiSettings { llm, owner }` |
+| `ServicesUsageRecorder` | `UsageRecorder` port over `Services` (worker and binary) |
+| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far (snapshot, scanners, map, artifacts) and the limitations of the missing ones |
 
 ## Planned crates (structure only)
 
 | Crate | Phase | Planned components (see the crate's AGENTS.md) |
 |---|---|---|
-| `opentatu-context` (`crates/context`) | 3, 7 | file tree, excerpt selection, config files, diff |
+| `opentatu-context` (`crates/context`) | 4, 7 | per-entry-point selection (hunter), diff (INCREMENTAL) |
 | `opentatu-mcp` (`crates/mcp`) | 5 | the eight MCP tools of §E.6 |
 
 ## Binary and tooling
@@ -221,8 +264,8 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 |---|---|---|
 | CLI definition | `apps/opentatu/src/cli.rs` | Every subcommand (crate `opentatu`) |
 | Production wiring | `apps/opentatu/src/commands/mod.rs` → `services()` | The one place production `Services` are built |
-| `config::{load_dotenv, init_logging, database_path, api_key}` | `apps/opentatu/src/config.rs` | Env, logging to stderr, data dir (0700), API key as `Secret` |
-| `ServicesUsageRecorder` | `apps/opentatu/src/usage.rs` | `UsageRecorder` over `Services` (composition root) |
+| `config::{load_dotenv, init_logging, prepare_data_dir, api_key, owner_name}` | `apps/opentatu/src/config.rs` | Env, logging to stderr, data dir (0700), API key as `Secret`, owner's name |
+| `worker::{Configs, build}` | `apps/opentatu/src/commands/worker.rs` | The one place the production `Worker` (with `AiSettings`) is built |
 | `scanners::build` | `apps/opentatu/src/commands/scanners.rs` | The one place production `Scanners` are built (`--scanners-config`) |
 | `output::{line, error}` | `apps/opentatu/src/output.rs` | Terminal output |
 | `pending::not_implemented(cmd, phase)` | `apps/opentatu/src/commands/pending.rs` | Placeholder for planned commands |

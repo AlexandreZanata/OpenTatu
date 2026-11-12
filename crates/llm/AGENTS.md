@@ -20,14 +20,14 @@ client, router, guards, retries, accounting port)
 | `src/opencode_go.rs` | `OpenCodeGoClient` (Chat Completions, Bearer, User-Agent, `x-opencode-session`) |
 | `src/context.rs` | `CallContext` (audit + provider session id) |
 | `src/retry.rs` | `RetryPolicy` (capped exponential backoff) |
-| `src/usage.rs` | `UsageRecorder` port (implemented in the binary over services) |
+| `src/usage.rs` | `UsageRecorder` port (implemented by `opentatu_worker::ServicesUsageRecorder`) |
 | `src/client.rs` | `LlmClient` trait, `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` |
 | `src/config.rs` | `ModelsConfig` and parts; `validate()`; test that `config/models.toml` parses |
 | `src/fake.rs` | `FakeClient` — the only test double for model calls |
 | `src/error.rs` | `Error` (`RateLimited`, `Authentication`, ...) |
 
-Planned: per-audit budget enforcement and the 60% monthly share (phase 4, with the worker),
-`llm_usage.jsonl` per audit (phase 1+).
+Planned: per-audit budget enforcement and the 60% monthly share (phase 4, with the worker).
+`llm_usage.jsonl` per audit is written by the worker (phase 3).
 
 ## Local rules
 

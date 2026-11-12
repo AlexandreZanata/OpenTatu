@@ -1,26 +1,39 @@
-# opentatu-context — code excerpts for the AI roles
+# opentatu-context — what the AI roles see of the analyzed commit
 
-Layer: **infrastructure** · May depend on: `opentatu-core` · Status: planned (phases 3, 7)
+Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 3 ✅ (tree,
+configuration, cartographer selection); per-entry-point selection = phase 4; diff = phase 7
 
 ## Responsibility
 
 - **Does:** read the snapshot of the audited commit and select what each role sees
-  (§C.7 step 6): file tree, config files, excerpts per entry point (route + middlewares +
-  called functions up to depth N), diffs for incremental audits.
+  (§C.7 steps 5–6): file tree, configuration files, ranked code excerpts with line numbers,
+  within explicit budgets; report what was left out.
 - **Does not:** send anything to models, fence content (the investigator does), read outside
   the snapshot directory.
 
-## Planned files
+## Files
 
-| File | Contents | Phase |
-|---|---|---|
-| `src/tree.rs` | file tree for `<structure>` (ignoring vendored/build dirs) | 3 |
-| `src/config_files.rs` | manifests, Dockerfile, compose, IaC, `.env.example` for `<config>` | 3 |
-| `src/selection.rs` | excerpts per entry point within a size budget for `<code>` | 3 |
-| `src/diff.rs` | changed files/hunks between two commits for `<diff>` | 7 |
+| File | Contents |
+|---|---|
+| `src/files.rs` | `SnapshotFiles` (safe walk, `read_text`, `FileIndex`), `classify`, `FileKind`, ignored directories, secret file patterns |
+| `src/tree.rs` | `render_tree` — `<structure>` (code/config listed, the rest summarized per directory) |
+| `src/selection.rs` | `ContextBudget`, `Selection`, `Excerpt`, `cartographer_code`, `cartographer_config` (ranking signals, packing, excerpts of large files) |
+| `src/error.rs` | `Error` |
+
+Planned: per-entry-point selection — handler + middlewares + callees up to depth N — for the
+hunter (phase 4); `src/diff.rs` for INCREMENTAL audits (phase 7).
 
 ## Local rules
 
-- Never send the whole repository; every selection has an explicit size budget.
-- Never follow symlinks out of the snapshot directory; treat every file as untrusted (R11).
-- Report what was left out so roles can list it in `not_analyzed` (R14).
+- Never send the whole repository; every selection has an explicit byte budget
+  (`ContextBudget`) and returns `left_out` (R14).
+- Never follow symlinks; treat every file as untrusted (R11).
+- Never read `FileKind::Secret` files (`.env`, keys, keystores): their names may appear in
+  the tree, their contents never (R15, R16).
+- Ranking signals live only in `selection.rs`; tune them with a real repository and keep the
+  tests in that file passing.
+
+## Tests
+
+Temporary directories built in each test; ranking, budget, excerpts, secrets and symlinks
+are covered. `cargo test -p opentatu-context`.

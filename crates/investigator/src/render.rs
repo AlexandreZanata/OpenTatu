@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn missing_value_is_an_error() {
         let error = render("{{commit}}", &values(&[])).unwrap_err();
-        assert_eq!(error, Error::MissingVariable("commit".into()));
+        assert!(matches!(error, Error::MissingVariable(name) if name == "commit"));
     }
 
     #[test]

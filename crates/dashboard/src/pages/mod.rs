@@ -2,5 +2,7 @@
 
 pub mod app;
 pub mod audit;
+pub mod coverage;
 pub mod health;
 pub mod home;
+pub mod map;

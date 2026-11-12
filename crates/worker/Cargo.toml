@@ -12,7 +12,11 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+async-trait = { workspace = true }
+opentatu-context = { workspace = true }
 opentatu-core = { workspace = true }
+opentatu-investigator = { workspace = true }
+opentatu-llm = { workspace = true }
 opentatu-memory = { workspace = true }
 opentatu-reports = { workspace = true }
 opentatu-scanners = { workspace = true }

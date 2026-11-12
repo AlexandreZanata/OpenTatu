@@ -4,7 +4,7 @@
 |---|---|---|
 | `models.toml` | provider, model per AI role, budgets (§D.2) — parsed by `opentatu_llm::ModelsConfig` | ✅ phase 0 |
 | `scanners.toml` | container engine, timeout, image pinned by digest + version per scanner, Semgrep ruleset, OSV ecosystems — parsed by `opentatu_scanners::ScannersConfig` (ADR-0023) | ✅ phase 2 |
-| `asvs/` | OWASP ASVS requirements as JSON | phase 3 |
+| `asvs/` | OWASP ASVS 5.0.0 requirements (official flat JSON, CC BY-SA 4.0), embedded by `opentatu_core::AsvsCatalog` (ADR-0024) | ✅ phase 3 |
 
 Scanner rules and vulnerability databases are **not** stored here: `opentatu scanners update`
 downloads them into `<data>/scanner-cache/<tool>/` on the owner's machine (third-party

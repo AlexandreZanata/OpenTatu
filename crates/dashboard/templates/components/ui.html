@@ -98,6 +98,104 @@
 {% endif %}
 {% endmacro %}
 
+{#- text_list(items, empty): plain sentences (limitations, gaps, questions); `empty` is
+    shown when there are none. -#}
+{% macro text_list(items, empty) %}
+{% if items.is_empty() %}
+<p class="c-empty__message">{{ empty }}</p>
+{% else %}
+<ul class="c-list">
+  {%- for item in items %}
+  <li class="c-list__item">{{ item }}</li>
+  {%- endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
+
+{#- item_list(items, empty): titled items with details; `items` are view::Item. -#}
+{% macro item_list(items, empty) %}
+{% if items.is_empty() %}
+<p class="c-empty__message">{{ empty }}</p>
+{% else %}
+<ul class="c-list">
+  {%- for item in items %}
+  <li class="c-list__item"><strong>{{ item.title }}</strong>
+    {%- if !item.detail.is_empty() %}<div class="c-list__meta">{{ item.detail }}</div>{% endif %}</li>
+  {%- endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
+
+{#- key_values(rows): labeled values; `rows` are view::KeyValue. -#}
+{% macro key_values(rows) %}
+<dl class="c-meta">
+  {%- for row in rows %}
+  <dt>{{ row.key }}</dt><dd>{{ row.value }}</dd>
+  {%- endfor %}
+</dl>
+{% endmacro %}
+
+{#- entry_points_table(rows): entry points of a map; `rows` are view::EntryPointRow. -#}
+{% macro entry_points_table(rows) %}
+{% if rows.is_empty() %}
+{% call empty_state("Nenhuma entrada mapeada.", "O cartógrafo não encontrou entradas no material analisado; veja as lacunas abaixo.") %}{% endcall %}
+{% else %}
+<table class="c-table">
+  <thead><tr><th>ID</th><th>Tipo</th><th>Caminho</th><th>Local</th><th>Autenticação</th><th>Papéis</th><th>Entradas de dados</th><th>Verificação de autorização</th><th>ASVS</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.id }}</code></td>
+      <td><code>{{ row.method }}</code></td>
+      <td><code>{{ row.path }}</code></td>
+      <td class="c-table__detail"><code>{{ row.location }}</code><br>{{ row.symbol }}</td>
+      <td>{% call badge(row.authentication) %}{% endcall %}</td>
+      <td>{{ row.roles }}</td>
+      <td>{{ row.inputs }}</td>
+      <td>{{ row.authorization }}</td>
+      <td class="c-table__detail">{{ row.asvs }}</td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{#- coverage_summary(summary): ASVS coverage numbers; `summary` is a
+    opentatu_core::CoverageSummary. Never shows "not tested" as safe (R14). -#}
+{% macro coverage_summary(summary) %}
+<dl class="c-meta">
+  <dt>Requisitos aplicáveis</dt><dd>{{ summary.applicable_requirements }}</dd>
+  <dt>Verificados</dt><dd>{{ summary.verified }}</dd>
+  <dt>Falharam</dt><dd>{{ summary.failed }}</dd>
+  <dt>Não testados</dt><dd>{{ summary.not_tested }}</dd>
+  <dt>Cobertura</dt><dd>{{ summary.percent }}%</dd>
+</dl>
+{% endmacro %}
+
+{#- coverage_table(rows): applicable ASVS requirements; `rows` are view::CoverageRow. -#}
+{% macro coverage_table(rows) %}
+{% if rows.is_empty() %}
+{% call empty_state("Nenhum requisito aplicável.", "O mapa não associou requisitos ASVS a esta aplicação.") %}{% endcall %}
+{% else %}
+<table class="c-table">
+  <thead><tr><th>Requisito</th><th>Nível</th><th>Capítulo</th><th>Situação</th><th>Onde se aplica</th><th>Texto (ASVS, original em inglês)</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.id }}</code></td>
+      <td>{{ row.level }}</td>
+      <td>{{ row.chapter }}</td>
+      <td>{% call badge(row.status) %}{% endcall %}</td>
+      <td class="c-table__detail">{{ row.scope }}</td>
+      <td class="c-table__detail">{{ row.description }}</td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
 {#- timeline(entries): events, newest first; `entries` are view::TimelineEntry. -#}
 {% macro timeline(entries) %}
 {% if entries.is_empty() %}

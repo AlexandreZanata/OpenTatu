@@ -2,6 +2,14 @@
 //! `templates/components/ui.html`, and the ONLY mapping of domain values to owner-facing
 //! (pt-BR) text and CSS modifiers.
 
+mod map;
+
+pub use map::{
+    CoverageRow, EntryPointRow, Item, KeyValue, MapSummary, authentication_badge,
+    authentication_rows, authorization_rows, component_items, configuration_rows, coverage_row,
+    dependency_items, entry_point_row, infrastructure_rows, integration_items, map_summary,
+    requirement_lines, requirement_status_badge, sensitive_data_items, trust_boundary_items,
+};
 use opentatu_core::{
     App, Audit, AuditKind, AuditStatus, Event, EventKind, ScannerResult, Severity, Timestamp,
 };

@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use opentatu_core::{Audit, AuditStatus, ScannerKind};
 
-use crate::{Error, Worker, artifacts};
+use crate::{Error, Worker, artifacts, cartography};
 
 opentatu_core::text_enum! {
     /// Pipeline steps recorded as the audit checkpoint.
@@ -14,15 +14,17 @@ opentatu_core::text_enum! {
         Snapshot => "SNAPSHOT",
         /// §C.7 step 4: deterministic scanners ran (or became limitations).
         Scanners => "SCANNERS",
+        /// §C.7 step 5: the cartographer's map was stored (or became a limitation).
+        Map => "MAP",
         /// §C.7 step 15: artifacts written (`audit.json`, `history.jsonl`, `MEMORY.md`).
         Artifacts => "ARTIFACTS",
     }
 }
 
 /// Owner-facing (pt-BR) limitations of every audit while the analysis steps of spec §C.7
-/// (5–14) do not exist. Each later phase removes the sentence of the step it implements.
+/// (6–14) do not exist. Each later phase removes the sentence of the step it implements.
 pub const PENDING_STEPS: &[&str] = &[
-    "Mapa de segurança e cobertura OWASP ASVS ainda não gerados.",
+    "Nenhum requisito OWASP ASVS verificado: a cobertura lista os requisitos aplicáveis como não testados até a fase 4.",
     "Nenhuma hipótese investigada: caçador, verificador e revisor cético ainda não executados.",
     "Testes dinâmicos não executados (sem laboratório).",
 ];
@@ -31,6 +33,11 @@ pub const PENDING_STEPS: &[&str] = &[
 pub async fn run(worker: &Worker, audit: Audit) -> Result<Audit, Error> {
     let source = snapshot(worker, &audit).await?;
     let mut limitations = scanners(worker, &audit, &source).await?;
+    limitations.extend(cartography::run(worker, &audit, &source).await?);
+    worker
+        .services
+        .set_audit_checkpoint(&audit.id, Step::Map.as_str())
+        .await?;
     limitations.extend(PENDING_STEPS.iter().map(|s| (*s).to_owned()));
     let finished = worker
         .services

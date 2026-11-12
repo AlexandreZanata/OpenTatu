@@ -18,14 +18,18 @@
 {% endcall %}
 
 {% call ui::card("Limitações") %}
-  {% if audit.limitations.is_empty() %}
-    <p>Nenhuma limitação registrada.</p>
+  {% call ui::text_list(audit.limitations, "Nenhuma limitação registrada.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Mapa de segurança e cobertura OWASP ASVS") %}
+  {% if let Some(map) = map %}
+  <p>Mapa <a href="/maps/{{ map.map_id }}"><code>{{ map.map_id }}</code></a>: {{ map.entry_points }} entradas, {{ map.components }} componentes, {{ map.integrations }} integrações.</p>
   {% else %}
-  <ul class="c-list">
-    {%- for limitation in audit.limitations %}
-    <li class="c-list__item">{{ limitation }}</li>
-    {%- endfor %}
-  </ul>
+  <p>Esta auditoria não gerou mapa de segurança (veja as limitações).</p>
+  {% endif %}
+  {% if let Some(coverage) = coverage %}
+  {% call ui::coverage_summary(coverage) %}{% endcall %}
+  <p><a href="/audits/{{ audit.id }}/coverage">Ver a matriz de cobertura</a></p>
   {% endif %}
 {% endcall %}
 

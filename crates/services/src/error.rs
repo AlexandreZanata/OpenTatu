@@ -1,6 +1,6 @@
 //! Use case errors.
 
-use opentatu_core::{AuditId, Slug};
+use opentatu_core::{AuditId, MapId, Slug};
 
 /// Errors of `opentatu-services`.
 #[derive(Debug, thiserror::Error)]
@@ -24,6 +24,10 @@ pub enum Error {
     /// No audit with this ID.
     #[error("audit `{0}` does not exist")]
     UnknownAudit(AuditId),
+
+    /// No map version with this ID.
+    #[error("map `{0}` does not exist")]
+    UnknownMap(MapId),
 
     /// The request conflicts with the current state.
     #[error("conflict: {0}")]

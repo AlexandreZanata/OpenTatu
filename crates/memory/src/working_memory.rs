@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use opentatu_core::{App, Audit, Timestamp};
+use opentatu_core::{App, Audit, CoverageSummary, SecurityMap, Timestamp};
 
 /// Audits listed one by one in the timeline; older ones are summarized per month.
 const TIMELINE_LIMIT: usize = 10;
@@ -26,6 +26,10 @@ pub struct MemoryInput<'a> {
     pub audits: &'a [Audit],
     /// Contents of `OWNER-NOTES.md`, if any.
     pub owner_notes: Option<&'a str>,
+    /// Latest security map, if any.
+    pub map: Option<&'a SecurityMap>,
+    /// ASVS coverage of the latest audit that produced a map, if any.
+    pub coverage: Option<&'a CoverageSummary>,
 }
 
 /// Renders `MEMORY.md`.
@@ -65,11 +69,37 @@ pub fn render_memory(input: &MemoryInput<'_>) -> String {
             .as_deref()
             .unwrap_or("none (static analysis only)")
     );
+    match input.map {
+        Some(map) => {
+            let _ = writeln!(
+                out,
+                "Mapped entry points: {}. External integrations: {}. Map: {} (commit {}).",
+                map.content.entry_points.len(),
+                map.content.integrations.len(),
+                map.map_id,
+                map.commit.short()
+            );
+        }
+        None => out.push_str("Mapped entry points: no map yet.\n"),
+    }
 
     out.push_str("\n## Current situation\n");
     out.push_str("Open findings: none recorded yet.\n");
     out.push_str("Tasks awaiting a fix: 0. Awaiting reverification: 0.\n");
-    out.push_str("ASVS coverage: not measured yet.\n");
+    match input.coverage {
+        Some(coverage) => {
+            let _ = writeln!(
+                out,
+                "ASVS coverage: {}% ({} of {} applicable requirements verified; {} failed, {} not tested).",
+                coverage.percent,
+                coverage.verified,
+                coverage.applicable_requirements,
+                coverage.failed,
+                coverage.not_tested
+            );
+        }
+        None => out.push_str("ASVS coverage: not measured yet.\n"),
+    }
 
     out.push_str("\n## Timeline (last 10 audits)\n");
     if input.audits.is_empty() {
@@ -180,6 +210,14 @@ mod tests {
             updated_at: &updated,
             audits: &audits,
             owner_notes: Some("Webhook de pagamento é crítico."),
+            map: None,
+            coverage: Some(&CoverageSummary {
+                applicable_requirements: 128,
+                verified: 82,
+                failed: 3,
+                not_tested: 43,
+                percent: 64,
+            }),
         });
         for section in [
             "# Memory — Abastevo (abastevo)",
@@ -188,6 +226,8 @@ mod tests {
             "- 2026-11-12 09:00 — AUD-ABASTEVO-20261112-0900 — FULL — PARTIAL — commit 4c4a5df92ace",
             "- Scanners estáticos ainda não executados.",
             "Webhook de pagamento é crítico.",
+            "Mapped entry points: no map yet.",
+            "ASVS coverage: 64% (82 of 128 applicable requirements verified; 3 failed, 43 not tested).",
         ] {
             assert!(
                 memory.contains(section),
@@ -214,6 +254,8 @@ mod tests {
             updated_at: &updated,
             audits: &audits,
             owner_notes: None,
+            map: None,
+            coverage: None,
         });
         assert!(memory.contains("- 2026-11: 5 older audit(s)"), "{memory}");
         assert!(memory.contains("- 2026-10: 15 older audit(s)"), "{memory}");
@@ -231,6 +273,8 @@ mod tests {
             updated_at: &updated,
             audits: &[],
             owner_notes: None,
+            map: None,
+            coverage: None,
         });
         assert!(memory.contains("Last audit: none"));
         assert!(memory.contains("- Everything: no audit has run yet."));
