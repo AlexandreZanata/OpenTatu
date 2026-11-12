@@ -10,6 +10,7 @@
 resolver = "3"
 members = [
     "apps/opentatu",
+    "crates/benchmark",
     "crates/context",
     "crates/core",
     "crates/dashboard",
@@ -36,6 +37,7 @@ repository = "https://github.com/AlexandreZanata/OpenTatu"
 
 [workspace.dependencies]
 # --- Internal crates (single path declaration; never use `path` inside a crate) ---
+opentatu-benchmark = { path = "crates/benchmark" }
 opentatu-context = { path = "crates/context" }
 opentatu-core = { path = "crates/core" }
 opentatu-dashboard = { path = "crates/dashboard" }

@@ -97,7 +97,8 @@ impl Llm {
         self.call(context, None, request).await
     }
 
-    /// Allowlist check, rate-limit retries, then accounting of the successful call.
+    /// Allowlist check, retries of rate limits and transport failures, then accounting of
+    /// the successful call.
     async fn call(
         &self,
         context: &CallContext,
@@ -114,6 +115,10 @@ impl Llm {
                     retry_after_seconds,
                 }) if retry < self.retry.max_retries => {
                     tokio::time::sleep(self.retry.delay(retry, retry_after_seconds)).await;
+                    retry += 1;
+                }
+                Err(Error::Transport(_)) if retry < self.retry.max_retries => {
+                    tokio::time::sleep(self.retry.delay(retry, None)).await;
                     retry += 1;
                 }
                 outcome => break outcome?,
@@ -265,5 +270,29 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(error, Error::RateLimited { .. }));
+    }
+
+    #[tokio::test]
+    async fn transport_failures_are_retried_but_other_failures_are_not() {
+        let fake = Arc::new(FakeClient::new());
+        let instant = RetryPolicy {
+            max_retries: 1,
+            ..RetryPolicy::none()
+        };
+        let llm = Llm::new(fake.clone(), config()).with_retry_policy(instant);
+        fake.push_error(Error::Transport("connection reset".into()));
+        fake.push_answer("{}");
+        assert!(
+            llm.generate(&context(), AiRole::Hunter, vec![], None)
+                .await
+                .is_ok()
+        );
+        fake.push_error(Error::Provider("HTTP 500".into()));
+        fake.push_answer("{}");
+        let error = llm
+            .generate(&context(), AiRole::Hunter, vec![], None)
+            .await
+            .unwrap_err();
+        assert!(matches!(error, Error::Provider(_)), "not retried");
     }
 }

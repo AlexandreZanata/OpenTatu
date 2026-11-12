@@ -1,0 +1,430 @@
+{
+  "benchmark": "juice-shop",
+  "revision": "v20.4.0",
+  "upstream_commit": "266448aba68cd8ba5915f526a128da4fa7bc3f9f",
+  "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261112-1203",
+  "status": "PARTIAL",
+  "completed_at": "2026-11-12T12:37:06-03:00",
+  "duration_seconds": 2040,
+  "models": {
+    "cartographer": "deepseek-v4.1-flash",
+    "hunter": "deepseek-v4.1-flash",
+    "verifier": "deepseek-v4.1-flash"
+  },
+  "prompt_versions": {
+    "base": "1.1.0",
+    "cartographer": "2.1.0",
+    "hunter": "2.1.0",
+    "verifier": "1.2.0"
+  },
+  "usage": {
+    "calls": 48,
+    "input_tokens": 2819187,
+    "output_tokens": 410431,
+    "cost_usd": 0.4014819900000001
+  },
+  "overrides": [],
+  "score": {
+    "expected": 33,
+    "reported": 40,
+    "found": [
+      {
+        "flaw": "EXP-020",
+        "category": "Injection",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0012 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-021",
+        "category": "Injection",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0012 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-022",
+        "category": "Injection",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0002 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-023",
+        "category": "Broken Access Control",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0023 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-024",
+        "category": "Broken Authentication",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0003 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-025",
+        "category": "Injection",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0004 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-026",
+        "category": "Broken Access Control",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0033 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-027",
+        "category": "Injection",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0033 (CONFIRMED)"
+        ]
+      },
+      {
+        "flaw": "EXP-031",
+        "category": "Broken Access Control",
+        "by": [
+          "BENCH-JUICE-SHOP-1-SEC-0021 (CONFIRMED)"
+        ]
+      }
+    ],
+    "hypothesized_only": [],
+    "missed": [
+      {
+        "flaw": "EXP-001",
+        "category": "Broken Authentication",
+        "by": []
+      },
+      {
+        "flaw": "EXP-002",
+        "category": "Broken Authentication",
+        "by": []
+      },
+      {
+        "flaw": "EXP-003",
+        "category": "Broken Authentication",
+        "by": []
+      },
+      {
+        "flaw": "EXP-004",
+        "category": "Broken Authentication",
+        "by": []
+      },
+      {
+        "flaw": "EXP-005",
+        "category": "Sensitive Data Exposure",
+        "by": []
+      },
+      {
+        "flaw": "EXP-006",
+        "category": "Miscellaneous",
+        "by": []
+      },
+      {
+        "flaw": "EXP-007",
+        "category": "Improper Input Validation",
+        "by": []
+      },
+      {
+        "flaw": "EXP-008",
+        "category": "Sensitive Data Exposure",
+        "by": []
+      },
+      {
+        "flaw": "EXP-009",
+        "category": "Broken Access Control",
+        "by": []
+      },
+      {
+        "flaw": "EXP-010",
+        "category": "Miscellaneous",
+        "by": []
+      },
+      {
+        "flaw": "EXP-011",
+        "category": "Broken Access Control",
+        "by": []
+      },
+      {
+        "flaw": "EXP-012",
+        "category": "Security through Obscurity",
+        "by": []
+      },
+      {
+        "flaw": "EXP-013",
+        "category": "XSS",
+        "by": []
+      },
+      {
+        "flaw": "EXP-014",
+        "category": "XSS",
+        "by": []
+      },
+      {
+        "flaw": "EXP-015",
+        "category": "Vulnerable Components",
+        "by": []
+      },
+      {
+        "flaw": "EXP-016",
+        "category": "Sensitive Data Exposure",
+        "by": []
+      },
+      {
+        "flaw": "EXP-017",
+        "category": "Unvalidated Redirects",
+        "by": []
+      },
+      {
+        "flaw": "EXP-018",
+        "category": "Unvalidated Redirects",
+        "by": []
+      },
+      {
+        "flaw": "EXP-019",
+        "category": "Broken Authentication",
+        "by": []
+      },
+      {
+        "flaw": "EXP-028",
+        "category": "Sensitive Data Exposure",
+        "by": []
+      },
+      {
+        "flaw": "EXP-029",
+        "category": "Observability Failures",
+        "by": []
+      },
+      {
+        "flaw": "EXP-030",
+        "category": "Broken Anti Automation",
+        "by": []
+      },
+      {
+        "flaw": "EXP-032",
+        "category": "Improper Input Validation",
+        "by": []
+      },
+      {
+        "flaw": "EXP-033",
+        "category": "Observability Failures",
+        "by": []
+      }
+    ],
+    "false_positives": [
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0001",
+        "severity": "CRITICAL",
+        "location": "lib/insecurity.ts:21",
+        "cwe": "CWE-798"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0005",
+        "severity": "CRITICAL",
+        "location": "routes/userProfile.ts:65",
+        "cwe": "CWE-95"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0006",
+        "severity": "CRITICAL",
+        "location": "routes/verify.ts:52-56",
+        "cwe": "CWE-269"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0007",
+        "severity": "CRITICAL",
+        "location": "lib/insecurity.ts:55",
+        "cwe": "CWE-347"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0008",
+        "severity": "HIGH",
+        "location": "lib/insecurity.ts:41",
+        "cwe": "CWE-916"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0009",
+        "severity": "CRITICAL",
+        "location": "routes/wallet.ts:27",
+        "cwe": "CWE-840"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0010",
+        "severity": "HIGH",
+        "location": "routes/currentUser.ts:29-31",
+        "cwe": "CWE-522"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0011",
+        "severity": "HIGH",
+        "location": "routes/fileUpload.ts:31-34",
+        "cwe": "CWE-22"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0013",
+        "severity": "HIGH",
+        "location": "routes/checkKeys.ts:10-12",
+        "cwe": "CWE-798"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0014",
+        "severity": "HIGH",
+        "location": "routes/deluxe.ts:42-45",
+        "cwe": "CWE-840"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0015",
+        "severity": "HIGH",
+        "location": "routes/profileImageUrlUpload.ts:24",
+        "cwe": "CWE-918"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0016",
+        "severity": "HIGH",
+        "location": "routes/trackOrder.ts:15-18",
+        "cwe": "CWE-943"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0017",
+        "severity": "HIGH",
+        "location": "routes/basketItems.ts:94",
+        "cwe": "CWE-20"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0018",
+        "severity": "HIGH",
+        "location": "routes/showProductReviews.ts:31-36",
+        "cwe": "CWE-943"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0019",
+        "severity": "HIGH",
+        "location": "routes/basketItems.ts:37-43",
+        "cwe": "CWE-639"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0020",
+        "severity": "HIGH",
+        "location": "routes/login.ts:60-65",
+        "cwe": "CWE-798"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0022",
+        "severity": "HIGH",
+        "location": "routes/memory.ts:24",
+        "cwe": "CWE-200"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0024",
+        "severity": "HIGH",
+        "location": "routes/b2bOrder.ts:19-23",
+        "cwe": "CWE-94"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0025",
+        "severity": "MEDIUM",
+        "location": "lib/insecurity.ts:42",
+        "cwe": "CWE-798"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0026",
+        "severity": "MEDIUM",
+        "location": "routes/createProductReviews.ts:23-26",
+        "cwe": "CWE-639"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0027",
+        "severity": "MEDIUM",
+        "location": "routes/changePassword.ts:39-51",
+        "cwe": "CWE-620"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0028",
+        "severity": "MEDIUM",
+        "location": "lib/insecurity.ts:192",
+        "cwe": "CWE-614"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0029",
+        "severity": "MEDIUM",
+        "location": "routes/basket.ts:19",
+        "cwe": "CWE-639"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0030",
+        "severity": "MEDIUM",
+        "location": "routes/chat.ts:192-208",
+        "cwe": "CWE-770"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0031",
+        "severity": "MEDIUM",
+        "location": "routes/redirect.ts:15-18",
+        "cwe": "CWE-601"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0032",
+        "severity": "MEDIUM",
+        "location": "lib/insecurity.ts:73-90",
+        "cwe": "CWE-613"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0034",
+        "severity": "MEDIUM",
+        "location": "routes/orderHistory.ts:16-18",
+        "cwe": "CWE-639"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0035",
+        "severity": "MEDIUM",
+        "location": "routes/chat.ts:42-47",
+        "cwe": "CWE-347"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0036",
+        "severity": "MEDIUM",
+        "location": "routes/basketItems.ts:66-70",
+        "cwe": "CWE-639"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0037",
+        "severity": "MEDIUM",
+        "location": "routes/authenticatedUsers.ts:11-31",
+        "cwe": "CWE-200"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0038",
+        "severity": "MEDIUM",
+        "location": "routes/changePassword.ts:13-27",
+        "cwe": "CWE-598"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0039",
+        "severity": "MEDIUM",
+        "location": "routes/fileServer.ts:26-32",
+        "cwe": "CWE-22"
+      },
+      {
+        "finding": "BENCH-JUICE-SHOP-1-SEC-0040",
+        "severity": "MEDIUM",
+        "location": "routes/order.ts:195-204",
+        "cwe": "CWE-472"
+      }
+    ],
+    "recall": 0.2727272727272727,
+    "precision": 0.175
+  },
+  "pipeline": {
+    "hypotheses": 60,
+    "confirmed": 40,
+    "dismissed_by_verifier": 0,
+    "inconclusive": 4,
+    "not_verified": 16,
+    "dismissed_by_skeptic": 0,
+    "downgraded_by_skeptic": 0
+  }
+}

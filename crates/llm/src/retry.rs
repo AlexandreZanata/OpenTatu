@@ -1,9 +1,10 @@
-//! Backoff for provider rate limits (spec §D.2: exponential backoff with a ceiling; if the
-//! limit persists, the worker pauses the audit with a checkpoint).
+//! Backoff for provider rate limits and transport failures (spec §D.2: exponential backoff
+//! with a ceiling; if the limit persists, the worker pauses the audit with a checkpoint).
 
 use std::time::Duration;
 
-/// Retry policy applied by [`crate::Llm`] to [`crate::Error::RateLimited`] only.
+/// Retry policy applied by [`crate::Llm`] to [`crate::Error::RateLimited`] and
+/// [`crate::Error::Transport`] only.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RetryPolicy {
     /// Retries after the first attempt (0 = never retry).

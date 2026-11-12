@@ -128,6 +128,39 @@ impl ModelsConfig {
         models
     }
 
+    /// Uses `model` for `role` (a benchmark variant, `opentatu benchmark run --role-model`).
+    /// The role keeps its temperature and consent; call [`Self::validate`] afterwards — the
+    /// allowlist and the training guard still apply.
+    pub fn set_role_model(&mut self, role: AiRole, model: &str) -> Result<(), Error> {
+        let config = self
+            .roles
+            .get_mut(&role)
+            .ok_or(Error::RoleNotConfigured(role))?;
+        config.model = model.trim().to_owned();
+        Ok(())
+    }
+
+    /// Replaces some limits of one audit kind for one run (benchmark: a large app must not
+    /// stop before the skeptic). `None` keeps the configured value.
+    pub fn set_audit_budget(
+        &mut self,
+        kind: AuditKind,
+        max_tokens: Option<u64>,
+        max_minutes: Option<u32>,
+    ) -> Result<(), Error> {
+        let budget =
+            self.budget.per_audit.get_mut(&kind).ok_or_else(|| {
+                Error::InvalidConfig(format!("budget.per_audit.{kind} is missing"))
+            })?;
+        if let Some(tokens) = max_tokens {
+            budget.max_tokens = tokens;
+        }
+        if let Some(minutes) = max_minutes {
+            budget.max_minutes = minutes;
+        }
+        Ok(())
+    }
+
     /// Problems that prevent real model calls. Empty means ready.
     pub fn validate(&self) -> Vec<String> {
         let mut problems = Vec::new();
@@ -206,6 +239,51 @@ mod tests {
             );
         }
         assert_eq!(config.provider.api_key_env, "OPENCODE_GO_API_KEY");
+    }
+
+    #[test]
+    fn role_overrides_keep_the_allowlist_and_the_training_guard() {
+        let mut config = committed();
+        config
+            .set_role_model(AiRole::Skeptic, "deepseek-v4.1-flash")
+            .unwrap();
+        assert!(config.validate().is_empty());
+        config
+            .set_role_model(AiRole::Hunter, "muse-spark-1.3-contributor")
+            .unwrap();
+        assert!(
+            config
+                .validate()
+                .iter()
+                .any(|p| p.contains("trains on prompts")),
+            "no consent for the hunter"
+        );
+        config.set_role_model(AiRole::Hunter, "gpt-x").unwrap();
+        assert!(
+            config
+                .validate()
+                .iter()
+                .any(|p| p.contains("allowed_models"))
+        );
+    }
+
+    #[test]
+    fn budget_overrides_change_only_the_given_limits() {
+        let mut config = committed();
+        let before = config.budget.per_audit[&AuditKind::Full];
+        config
+            .set_audit_budget(AuditKind::Full, Some(10_000_000), None)
+            .unwrap();
+        let after = config.budget.per_audit[&AuditKind::Full];
+        assert_eq!(after.max_tokens, 10_000_000);
+        assert_eq!(
+            (after.max_calls, after.max_minutes),
+            (before.max_calls, before.max_minutes)
+        );
+        config
+            .set_audit_budget(AuditKind::Full, Some(0), None)
+            .unwrap();
+        assert!(!config.validate().is_empty(), "0 is still refused");
     }
 
     #[test]

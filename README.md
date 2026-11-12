@@ -28,10 +28,10 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 5** — the fix trail: the planner turns every upheld finding into a
-> task (`tasks/MANIFEST.json`), fixing agents take tasks over MCP and submit a commit, and
-> only OpenTatu's reverification of that commit closes the finding — otherwise the task is
-> reopened with the reasons. Investigation with evidence and computed severity (phase 4),
+> Status: **roadmap phase 6** — a benchmark measures how well OpenTatu finds known flaws in
+> intentionally vulnerable apps (OWASP Juice Shop), per prompt version and per model:
+> [benchmark/SCOREBOARD.md](benchmark/SCOREBOARD.md). Fix trail over MCP with OpenTatu's own
+> reverification (phase 5), investigation with evidence and computed severity (phase 4),
 > security map and OWASP ASVS 5.0.0 coverage (phase 3), static scanners in isolated
 > containers (phase 2), audits and history (phase 1). See [docs/ROADMAP.md](docs/ROADMAP.md).
 

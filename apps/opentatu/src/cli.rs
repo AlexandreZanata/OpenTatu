@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
-use opentatu_core::{AuditKind, ScannerKind, TaskState};
+use opentatu_core::{AiRole, AuditKind, ScannerKind, TaskState};
 
 /// OpenTatu — personal security investigation agent (local and private).
 #[derive(Debug, Parser)]
@@ -72,6 +72,9 @@ pub enum Command {
     /// Fix tasks planned by the audits.
     #[command(subcommand)]
     Task(TaskCommand),
+    /// Benchmark against intentionally vulnerable apps (never run, only audited).
+    #[command(subcommand)]
+    Benchmark(BenchmarkCommand),
     /// Deterministic scanners (Semgrep, Gitleaks, Trivy, OSV-Scanner).
     #[command(subcommand)]
     Scanners(ScannersCommand),
@@ -158,6 +161,63 @@ fn parse_task_state(text: &str) -> Result<TaskState, String> {
     text.to_ascii_uppercase()
         .parse()
         .map_err(|_| format!("unknown task state {text:?} (open, claimed, fix_submitted, done)"))
+}
+
+/// `opentatu benchmark ...`
+#[derive(Debug, Subcommand)]
+pub enum BenchmarkCommand {
+    /// Clone the app at its pinned commit, derive its known flaws from its own markers and
+    /// write the copy that is audited (markers stripped, answer files left out).
+    Prepare {
+        /// Benchmark name (`benchmark/apps/<name>.toml`).
+        name: String,
+        /// Benchmark directory.
+        #[arg(long, default_value = "benchmark")]
+        dir: PathBuf,
+    },
+    /// Run a FULL audit of the prepared copy as a fresh app and score it (real model calls).
+    Run {
+        /// Benchmark name.
+        name: String,
+        /// Use another allowed model for a role, e.g. `skeptic=deepseek-v4.1-flash`
+        /// (repeatable; training consent still applies).
+        #[arg(long = "role-model", value_parser = parse_role_model)]
+        role_models: Vec<(AiRole, String)>,
+        /// Token limit of this run's FULL audit (default: config/models.toml).
+        #[arg(long)]
+        max_tokens: Option<u64>,
+        /// Minute limit of this run's FULL audit (default: config/models.toml).
+        #[arg(long)]
+        max_minutes: Option<u32>,
+        /// Benchmark directory.
+        #[arg(long, default_value = "benchmark")]
+        dir: PathBuf,
+    },
+    /// Recompute the score of a past run from its data directory (the run's `--data-dir`).
+    Rescore {
+        /// The run's audit id.
+        audit: String,
+        /// Benchmark directory.
+        #[arg(long, default_value = "benchmark")]
+        dir: PathBuf,
+    },
+    /// Rewrite `SCOREBOARD.md` from the result files.
+    Scoreboard {
+        /// Benchmark directory.
+        #[arg(long, default_value = "benchmark")]
+        dir: PathBuf,
+    },
+}
+
+fn parse_role_model(text: &str) -> Result<(AiRole, String), String> {
+    let (role, model) = text
+        .split_once('=')
+        .ok_or_else(|| format!("expected role=model, got {text:?}"))?;
+    let role = role
+        .trim()
+        .parse::<AiRole>()
+        .map_err(|_| format!("unknown role {role:?}"))?;
+    Ok((role, model.trim().to_owned()))
 }
 
 /// `opentatu audit ...`

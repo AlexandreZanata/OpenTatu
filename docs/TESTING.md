@@ -53,6 +53,7 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | An upheld finding with a task (services) | `upheld_finding` + `planned` in `crates/services/src/tasks.rs` tests; `planned()` in `crates/mcp/tests/protocol.rs` |
 | An MCP client | `Client::start(&services, &token, modern)` in `crates/mcp/tests/protocol.rs` (JSON-RPC over a pipe, both protocol eras) |
 | A task (db, reports) | `opentatu_db::tasks::tests::sample_task`, `opentatu_reports` `manifest::tests::task` |
+| A benchmark app, known flaws, a scored finding | `opentatu_benchmark` `app::tests::APP`, `score::tests::{expected, finding}` |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |
@@ -70,9 +71,13 @@ cargo xtask check                      # what CI runs
 cargo test -p opentatu-scanners --test containers -- --ignored --nocapture  # real containers
 ```
 
+Quality of the AI roles is not a unit test: it is measured by the benchmark
+([../benchmark/README.md](../benchmark/README.md)) — real models against apps with known
+flaws, one result file per run, per prompt version and model. Run it after changing a
+prompt or a model.
+
 ## Planned (when the features arrive)
 
 - Snapshot tests for `MEMORY.md`, `report.md` and SARIF (phase 1/4) — add `insta` through
   [recipes/add-dependency.md](recipes/add-dependency.md).
 - Rebuild-from-events test for derived tables (phase 4, ADR-0006).
-- Benchmark scoreboard against intentionally vulnerable apps (phase 6).

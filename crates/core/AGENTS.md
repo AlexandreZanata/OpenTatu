@@ -21,7 +21,7 @@ coverage (phase 3) ✅; hypotheses and findings (phase 4) ✅; tasks, reverifica
 | `src/error.rs` | `Error` with expected-format messages | — |
 | `src/ids.rs` | `Slug`, `AuditId`, `MapId`, `FindingId`, `HypothesisId`, `EvidenceId`, `TaskId`, `EventId`, `CommitHash` | §B.2, R02 |
 | `src/app.rs` | `NewApp` (validated profile), `App` | §A.4, R01 |
-| `src/layout.rs` | `DataLayout` — every path under the data directory | §B.4 |
+| `src/layout.rs` | `DataLayout` — every path under the data directory (incl. tasks and the benchmark copy) | §B.4 |
 | `src/time.rs` | `Timestamp`, `Clock`, `SystemClock`, `FixedClock` | §B.3, R03 |
 | `src/role.rs` | `AiRole` | §C |
 | `src/audit.rs` | `AuditKind`, `AuditStatus` and its status machine, `Audit` record | §A.5, §B.5, R13, Q-002 |

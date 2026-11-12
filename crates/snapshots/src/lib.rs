@@ -93,6 +93,42 @@ impl Snapshots {
             .map_err(|_| Error::UnknownRevision(revision.to_owned()))
     }
 
+    /// Commits every file of `dir` — a tree OpenTatu wrote itself, such as the sanitized copy
+    /// of a benchmark app — creating the repository on branch `main` if needed. Returns the
+    /// commit, so the tree can be registered and audited like any app.
+    pub async fn record_tree(&self, dir: &Path, message: &str) -> Result<CommitHash, Error> {
+        let git = Git::in_worktree(dir);
+        if !dir.join(".git").exists() {
+            git.run("init repository", &["init", "--quiet", "-b", "main"])
+                .await?;
+        }
+        // `--force`: the tree's own `.gitignore` must not drop files OpenTatu wrote.
+        git.run("stage tree", &["add", "--all", "--force"]).await?;
+        git.run(
+            "commit tree",
+            &[
+                "-c",
+                "user.name=OpenTatu",
+                "-c",
+                "user.email=opentatu@localhost.invalid",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--quiet",
+                "--allow-empty",
+                "-m",
+                message,
+            ],
+        )
+        .await?;
+        let head = git
+            .run("read commit", &["rev-parse", "--verify", "HEAD"])
+            .await?;
+        head.trim()
+            .parse()
+            .map_err(|_| Error::UnknownRevision("HEAD".to_owned()))
+    }
+
     /// Whether `ancestor` is in the history of `descendant` (both in the mirror). Used by
     /// reverifications: a closed finding's code in a commit that does not contain its fix
     /// is not a regression of that commit (R09).
@@ -259,6 +295,30 @@ mod tests {
         assert!(!snapshots.is_ancestor(&slug, &second, &first).await.unwrap());
         let ghost: CommitHash = "0000000000000000000000000000000000000001".parse().unwrap();
         assert!(snapshots.is_ancestor(&slug, &ghost, &second).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn a_written_tree_becomes_an_auditable_commit() {
+        let tree = tempfile::tempdir().unwrap();
+        let data = tempfile::tempdir().unwrap();
+        std::fs::write(tree.path().join("app.ts"), "export {}\n").unwrap();
+        std::fs::write(tree.path().join(".gitignore"), "vendor.js\n").unwrap();
+        std::fs::write(tree.path().join("vendor.js"), "lib()\n").unwrap();
+        let snapshots = Snapshots::new(DataLayout::new(data.path()));
+        let commit = snapshots
+            .record_tree(tree.path(), "benchmark copy")
+            .await
+            .unwrap();
+        let slug = Slug::new("demo").unwrap();
+        let url = tree.path().to_string_lossy().into_owned();
+        snapshots.refresh_mirror(&slug, &url).await.unwrap();
+        assert_eq!(snapshots.resolve(&slug, "main").await.unwrap(), commit);
+        let snapshot = snapshots.capture(&slug, &commit).await.unwrap();
+        assert!(snapshot.dir.join("app.ts").is_file());
+        assert!(
+            snapshot.dir.join("vendor.js").is_file(),
+            "ignored by the tree's .gitignore, still committed"
+        );
     }
 
     #[tokio::test]

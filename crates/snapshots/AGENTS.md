@@ -1,6 +1,6 @@
 # opentatu-snapshots — the exact code an audit analyzes
 
-Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 1 ✅; ancestry check (phase 5) ✅
+Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 1 ✅; ancestry check (phase 5) ✅; recorded trees (phase 6) ✅
 
 ## Responsibility
 
@@ -14,7 +14,7 @@ Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 1 �
 
 | File | Contents |
 |---|---|
-| `src/lib.rs` | `Snapshots` (`refresh_mirror`, `resolve`, `capture`, `is_ancestor`), `Snapshot`; tests against a real temp repo |
+| `src/lib.rs` | `Snapshots` (`refresh_mirror`, `resolve`, `capture`, `is_ancestor`, `record_tree` — commits a tree OpenTatu wrote, e.g. a benchmark copy), `Snapshot`; tests against a real temp repo |
 | `src/git.rs` | `Git` — the single hardened git invocation (`run` → stdout, `check` → yes/no exit status); `redact_credentials` |
 | `src/testing.rs` | `create_repo`, `commit_files` (feature `test-support`) — the only test-repo helper |
 | `src/error.rs` | `Error` |

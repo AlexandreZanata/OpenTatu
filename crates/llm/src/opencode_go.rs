@@ -76,7 +76,14 @@ impl LlmClient for OpenCodeGoClient {
             .json(&ChatRequest::from(&request))
             .send()
             .await
-            .map_err(|error| Error::Provider(truncate(&format!("request failed: {error}"))))?;
+            .map_err(|error| {
+                let text = truncate(&format!("request failed: {error}"));
+                if error.is_timeout() {
+                    Error::Provider(text)
+                } else {
+                    Error::Transport(text)
+                }
+            })?;
         let status = response.status().as_u16();
         let retry_after = response
             .headers()

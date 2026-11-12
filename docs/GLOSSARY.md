@@ -50,6 +50,8 @@ in backticks in the second column.
 | **Fingerprint** | Fingerprint | `sha256:` identity of a finding across audits (§B.8) | `Fingerprint` |
 | **Budget** | Orçamento (`orcamento`) | Per-audit limits of tokens, calls and minutes (R13) | `[budget]` in `config/models.toml` |
 | **Usage** | Consumo (`consumo`) | Tokens and calls actually spent | `llm_usage` (phase 0) |
+| **Known flaw** | Falha conhecida (`conhecidas`) | A vulnerability a benchmark app marks in its own code; the ground truth of the benchmark | `ExpectedFlaw` |
+| **Scoreboard** | Placar (`placar`) | Found, missed and false positives per run, prompt version and model | `benchmark/SCOREBOARD.md` |
 | **Working memory** | Memória (`memoria`) | `MEMORY.md`, the summary each audit starts from (§B.9) | `opentatu-memory` |
 | **History** | Histórico (`historico`) | `history.jsonl`, mirror of the event log | `opentatu-memory` |
 | **Report** | Relatório (`relatorio`, `relatorios`) | `report.md` (pt-BR) and its exports | `opentatu-reports` |

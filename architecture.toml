@@ -35,6 +35,11 @@ path = "crates/memory"
 layer = "logic"
 may_depend_on = ["opentatu-core"]
 
+[crates.opentatu-benchmark]
+path = "crates/benchmark"
+layer = "logic"
+may_depend_on = ["opentatu-core"]
+
 [crates.opentatu-reports]
 path = "crates/reports"
 layer = "logic"
@@ -114,6 +119,7 @@ may_depend_on = [
     "opentatu-worker",
     "opentatu-dashboard",
     "opentatu-mcp",
+    "opentatu-benchmark",
 ]
 
 [crates.xtask]

@@ -1,0 +1,581 @@
+{
+  "benchmark": "juice-shop",
+  "revision": "v20.4.0",
+  "upstream_commit": "266448aba68cd8ba5915f526a128da4fa7bc3f9f",
+  "source": "`vuln-code-snippet vuln-line` markers of the upstream commit; names and categories from data/static/challenges.yml",
+  "license": "MIT",
+  "flaws": [
+    {
+      "id": "EXP-001",
+      "keys": [
+        "resetPasswordJimChallenge"
+      ],
+      "names": [
+        "Reset Jim''s Password"
+      ],
+      "category": "Broken Authentication",
+      "locations": [
+        {
+          "file": "data/static/securityQuestions.yml",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "EXP-002",
+      "keys": [
+        "resetPasswordBjoernOwaspChallenge"
+      ],
+      "names": [
+        "Bjoern''s Favorite Pet"
+      ],
+      "category": "Broken Authentication",
+      "locations": [
+        {
+          "file": "data/static/securityQuestions.yml",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "EXP-003",
+      "keys": [
+        "resetPasswordBjoernChallenge"
+      ],
+      "names": [
+        "Reset Bjoern''s Password"
+      ],
+      "category": "Broken Authentication",
+      "locations": [
+        {
+          "file": "data/static/securityQuestions.yml",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "EXP-004",
+      "keys": [
+        "resetPasswordBenderChallenge"
+      ],
+      "names": [
+        "Reset Bender''s Password"
+      ],
+      "category": "Broken Authentication",
+      "locations": [
+        {
+          "file": "data/static/securityQuestions.yml",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "EXP-005",
+      "keys": [
+        "resetPasswordUvoginChallenge"
+      ],
+      "names": [
+        "Reset Uvogin''s Password"
+      ],
+      "category": "Sensitive Data Exposure",
+      "locations": [
+        {
+          "file": "data/static/securityQuestions.yml",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "EXP-006",
+      "keys": [
+        "web3WalletChallenge"
+      ],
+      "names": [
+        "Wallet Depletion"
+      ],
+      "category": "Miscellaneous",
+      "locations": [
+        {
+          "file": "data/static/web3-snippets/ETHWalletBank.sol",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "EXP-007",
+      "keys": [
+        "nftMintChallenge"
+      ],
+      "names": [
+        "Mint the Honey Pot"
+      ],
+      "category": "Improper Input Validation",
+      "locations": [
+        {
+          "file": "data/static/web3-snippets/HoneyPotNFT.sol",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "EXP-008",
+      "keys": [
+        "nftUnlockChallenge"
+      ],
+      "names": [
+        "NFT Takeover"
+      ],
+      "category": "Sensitive Data Exposure",
+      "locations": [
+        {
+          "file": "data/static/web3-snippets/JuiceShopSBT.sol",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "EXP-009",
+      "keys": [
+        "adminSectionChallenge"
+      ],
+      "names": [
+        "Admin Section"
+      ],
+      "category": "Broken Access Control",
+      "locations": [
+        {
+          "file": "frontend/src/app/app.routing.ts",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "id": "EXP-010",
+      "keys": [
+        "scoreBoardChallenge"
+      ],
+      "names": [
+        "Score Board"
+      ],
+      "category": "Miscellaneous",
+      "locations": [
+        {
+          "file": "frontend/src/app/app.routing.ts",
+          "line": 187
+        }
+      ]
+    },
+    {
+      "id": "EXP-011",
+      "keys": [
+        "web3SandboxChallenge"
+      ],
+      "names": [
+        "Web3 Sandbox"
+      ],
+      "category": "Broken Access Control",
+      "locations": [
+        {
+          "file": "frontend/src/app/app.routing.ts",
+          "line": 245
+        }
+      ]
+    },
+    {
+      "id": "EXP-012",
+      "keys": [
+        "tokenSaleChallenge"
+      ],
+      "names": [
+        "Blockchain Hype"
+      ],
+      "category": "Security through Obscurity",
+      "locations": [
+        {
+          "file": "frontend/src/app/app.routing.ts",
+          "line": 267
+        },
+        {
+          "file": "frontend/src/app/app.routing.ts",
+          "line": 306
+        }
+      ]
+    },
+    {
+      "id": "EXP-013",
+      "keys": [
+        "restfulXssChallenge"
+      ],
+      "names": [
+        "API-only XSS"
+      ],
+      "category": "XSS",
+      "locations": [
+        {
+          "file": "frontend/src/app/search-result/search-result.component.ts",
+          "line": 113
+        }
+      ]
+    },
+    {
+      "id": "EXP-014",
+      "keys": [
+        "localXssChallenge",
+        "xssBonusChallenge"
+      ],
+      "names": [
+        "DOM XSS",
+        "Bonus Payload"
+      ],
+      "category": "XSS",
+      "locations": [
+        {
+          "file": "frontend/src/app/search-result/search-result.component.ts",
+          "line": 146
+        }
+      ]
+    },
+    {
+      "id": "EXP-015",
+      "keys": [
+        "vulnerableDockerImageChallenge"
+      ],
+      "names": [
+        "Vulnerable Infrastructure"
+      ],
+      "category": "Vulnerable Components",
+      "locations": [
+        {
+          "file": "infrastructure/docker-compose.yml",
+          "line": 59
+        }
+      ]
+    },
+    {
+      "id": "EXP-016",
+      "keys": [
+        "iacLeakedKeyChallenge"
+      ],
+      "names": [
+        "Login Cloud Admin"
+      ],
+      "category": "Sensitive Data Exposure",
+      "locations": [
+        {
+          "file": "infrastructure/terraform/networking.tf",
+          "line": 171
+        },
+        {
+          "file": "terraform/networking.tf",
+          "line": 171
+        }
+      ]
+    },
+    {
+      "id": "EXP-017",
+      "keys": [
+        "redirectCryptoCurrencyChallenge"
+      ],
+      "names": [
+        "Outdated Allowlist"
+      ],
+      "category": "Unvalidated Redirects",
+      "locations": [
+        {
+          "file": "lib/insecurity.ts",
+          "line": 124
+        },
+        {
+          "file": "lib/insecurity.ts",
+          "line": 125
+        },
+        {
+          "file": "lib/insecurity.ts",
+          "line": 126
+        }
+      ]
+    },
+    {
+      "id": "EXP-018",
+      "keys": [
+        "redirectChallenge"
+      ],
+      "names": [
+        "Allowlist Bypass"
+      ],
+      "category": "Unvalidated Redirects",
+      "locations": [
+        {
+          "file": "lib/insecurity.ts",
+          "line": 136
+        }
+      ]
+    },
+    {
+      "id": "EXP-019",
+      "keys": [
+        "weakPasswordChallenge"
+      ],
+      "names": [
+        "Password Strength"
+      ],
+      "category": "Broken Authentication",
+      "locations": [
+        {
+          "file": "models/user.ts",
+          "line": 73
+        }
+      ]
+    },
+    {
+      "id": "EXP-020",
+      "keys": [
+        "chatbotGreedyInjectionChallenge"
+      ],
+      "names": [
+        "Greedy Chatbot Manipulation"
+      ],
+      "category": "Injection",
+      "locations": [
+        {
+          "file": "routes/chat.ts",
+          "line": 180
+        }
+      ]
+    },
+    {
+      "id": "EXP-021",
+      "keys": [
+        "chatbotPromptInjectionChallenge"
+      ],
+      "names": [
+        "Chatbot Prompt Injection"
+      ],
+      "category": "Injection",
+      "locations": [
+        {
+          "file": "routes/chat.ts",
+          "line": 180
+        },
+        {
+          "file": "routes/chat.ts",
+          "line": 185
+        }
+      ]
+    },
+    {
+      "id": "EXP-022",
+      "keys": [
+        "loginAdminChallenge",
+        "loginBenderChallenge",
+        "loginJimChallenge"
+      ],
+      "names": [
+        "Login Admin",
+        "Login Bender",
+        "Login Jim"
+      ],
+      "category": "Injection",
+      "locations": [
+        {
+          "file": "routes/login.ts",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "EXP-023",
+      "keys": [
+        "passkeyCredentialOverwriteChallenge"
+      ],
+      "names": [
+        "Passkey Hijack"
+      ],
+      "category": "Broken Access Control",
+      "locations": [
+        {
+          "file": "routes/passkey.ts",
+          "line": 142
+        }
+      ]
+    },
+    {
+      "id": "EXP-024",
+      "keys": [
+        "passkeySignatureChallenge"
+      ],
+      "names": [
+        "Passkey Bypass"
+      ],
+      "category": "Broken Authentication",
+      "locations": [
+        {
+          "file": "routes/passkey.ts",
+          "line": 222
+        }
+      ]
+    },
+    {
+      "id": "EXP-025",
+      "keys": [
+        "dbSchemaChallenge",
+        "unionSqlInjectionChallenge"
+      ],
+      "names": [
+        "Database Schema",
+        "User Credentials"
+      ],
+      "category": "Injection",
+      "locations": [
+        {
+          "file": "routes/search.ts",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "EXP-026",
+      "keys": [
+        "forgedReviewChallenge"
+      ],
+      "names": [
+        "Forged Review"
+      ],
+      "category": "Broken Access Control",
+      "locations": [
+        {
+          "file": "routes/updateProductReviews.ts",
+          "line": 16
+        },
+        {
+          "file": "routes/updateProductReviews.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "EXP-027",
+      "keys": [
+        "noSqlReviewsChallenge"
+      ],
+      "names": [
+        "NoSQL Manipulation"
+      ],
+      "category": "Injection",
+      "locations": [
+        {
+          "file": "routes/updateProductReviews.ts",
+          "line": 18
+        },
+        {
+          "file": "routes/updateProductReviews.ts",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "EXP-028",
+      "keys": [
+        "directoryListingChallenge"
+      ],
+      "names": [
+        "Confidential Document"
+      ],
+      "category": "Sensitive Data Exposure",
+      "locations": [
+        {
+          "file": "server.ts",
+          "line": 294
+        },
+        {
+          "file": "server.ts",
+          "line": 295
+        }
+      ]
+    },
+    {
+      "id": "EXP-029",
+      "keys": [
+        "accessLogDisclosureChallenge"
+      ],
+      "names": [
+        "Access Log"
+      ],
+      "category": "Observability Failures",
+      "locations": [
+        {
+          "file": "server.ts",
+          "line": 306
+        },
+        {
+          "file": "server.ts",
+          "line": 308
+        }
+      ]
+    },
+    {
+      "id": "EXP-030",
+      "keys": [
+        "resetPasswordMortyChallenge"
+      ],
+      "names": [
+        "Reset Morty''s Password"
+      ],
+      "category": "Broken Anti Automation",
+      "locations": [
+        {
+          "file": "server.ts",
+          "line": 378
+        }
+      ]
+    },
+    {
+      "id": "EXP-031",
+      "keys": [
+        "changeProductChallenge"
+      ],
+      "names": [
+        "Product Tampering"
+      ],
+      "category": "Broken Access Control",
+      "locations": [
+        {
+          "file": "server.ts",
+          "line": 402
+        }
+      ]
+    },
+    {
+      "id": "EXP-032",
+      "keys": [
+        "registerAdminChallenge"
+      ],
+      "names": [
+        "Admin Registration"
+      ],
+      "category": "Improper Input Validation",
+      "locations": [
+        {
+          "file": "server.ts",
+          "line": 550
+        }
+      ]
+    },
+    {
+      "id": "EXP-033",
+      "keys": [
+        "exposedMetricsChallenge"
+      ],
+      "names": [
+        "Exposed Metrics"
+      ],
+      "category": "Observability Failures",
+      "locations": [
+        {
+          "file": "server.ts",
+          "line": 771
+        }
+      ]
+    }
+  ]
+}

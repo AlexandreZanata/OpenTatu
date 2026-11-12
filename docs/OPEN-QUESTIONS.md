@@ -20,7 +20,7 @@ Template:
 Q-001 to Q-010 were answered on 2026-11-12: the owner delegated the decisions ("implement
 them") and asked for the license; the recommended options were adopted (ADR-0019). Q-011 and
 Q-012 were answered by the owner the same day (ADR-0022); Q-013 was also answered.
-Q-030 (phase 5) is open.
+Q-030 (phase 5) and Q-031 (phase 6) are open.
 Sentinel planning adds Q-014 onward below. Answers selecting a planning direction do not
 authorize implementation, deployment or a production action.
 
@@ -284,3 +284,20 @@ authorize implementation, deployment or a production action.
   commit reaches the app's branch ("approved, awaiting merge" until then).
 - **Working interpretation:** (a) in FULL audits (phase 4 behavior unchanged); the ancestry
   rule applies only inside reverifications.
+
+---
+
+## Q-031 — FULL audit budget for large applications
+- **Status:** open · **Blocks:** nothing yet
+- **Context:** the FULL budget in `config/models.toml` (3M tokens, 300 calls, 90 min) was a
+  provisional value to tune with real usage. On OWASP Juice Shop (benchmark run 1, about
+  1,100 files, 60 hypotheses) it ran out during verification: 16 hypotheses were never
+  verified and the skeptic, planner and reporter did not run (audit PARTIAL, R13), at
+  US$0.40. The benchmark runs 2 and 3 raise it for one run only (`--max-tokens`).
+- **Options:** (a) keep 3M and accept PARTIAL audits of large apps; (b) raise the FULL
+  budget (e.g. 10M tokens / 180 min — about US$1–2 per large audit at list prices);
+  (c) cap verification per audit (e.g. the 30 most severe hypotheses) so later steps always
+  run, and report the rest as not verified.
+- **Working interpretation:** (a) — production budgets unchanged; the owner's apps so far
+  fit (Abastevo: 1.95M tokens, 28 calls).
+

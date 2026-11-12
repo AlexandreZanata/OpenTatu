@@ -49,6 +49,12 @@ pub enum Error {
         retry_after_seconds: Option<u64>,
     },
 
+    /// The request could not be sent (connection refused, reset or closed before an answer):
+    /// transient, retried like a rate limit. A timeout is not this (it would double a long
+    /// call); it is [`Error::Provider`].
+    #[error("could not reach the provider: {0}")]
+    Transport(String),
+
     /// The provider rejected the credentials.
     #[error("provider authentication failed (check the API key environment variable)")]
     Authentication,

@@ -313,6 +313,10 @@ Template:
   skeptic); Muse Spark everywhere (would send raw code to training).
 - **Consequences:** findings excerpts and the findings list reach a model that trains on
   them; the phase 6 benchmark re-evaluates the assignment.
+- **Benchmark (2026-11-12, phase 6):** on OWASP Juice Shop the Muse Spark skeptic
+  downgraded 1 of 51 findings and dismissed none; a DeepSeek skeptic changed none of 56
+  (Muse was cheaper per review). One run each: no evidence yet for changing the
+  assignment; see [../benchmark/SCOREBOARD.md](../benchmark/SCOREBOARD.md).
 
 ## ADR-0023 — Static scanners: offline analysis, separate refresh, one adapter per tool
 - **Date:** 2026-11-12 · **Status:** accepted
@@ -582,3 +586,32 @@ Template:
   identifying code is unchanged); `MANIFEST.json` and task files show live states and are
   rewritten when a reverification changes a task. New dependencies: `rmcp`, `schemars`
   (tool schemas), `getrandom` (tokens).
+
+## ADR-0031 — Benchmark: ground truth from the app's own markers, answers removed
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** phase 6 asks for a scoreboard (found, missed, false positives) per prompt
+  version and per model against intentionally vulnerable apps, "isolated only, compared with
+  known flaws". A known-flaw list typed by a person or a model would not be trustworthy, and
+  apps that teach security usually ship their answers next to the code.
+- **Decision:** a pure crate `opentatu-benchmark` (logic layer) plus the
+  `opentatu benchmark prepare|run|scoreboard` command. OWASP Juice Shop v20.4.0 is the first
+  app: its `vuln-code-snippet vuln-line` markers and its challenge catalog are the ground
+  truth (keys on the same lines are one flaw; file paths and line numbers only are
+  committed in `benchmark/expected/`). The audited copy is written by OpenTatu with the
+  marker comments removed (line numbers kept) and the files holding answers left out
+  (listed with reasons in `benchmark/apps/juice-shop.toml`), then committed and audited by
+  the normal FULL pipeline as a fresh app per run (no memory across runs). The app is never
+  built or run. A reported finding (confirmed, not dismissed) on the same file within
+  `match_lines` of a marked line finds the flaw; reported findings outside the list count as
+  false positives; flaws seen only as hypotheses are counted apart. Each run writes
+  `benchmark/results/<AUDIT>.json` (models and prompt versions from `audit.json`, usage,
+  every match) and regenerates `benchmark/SCOREBOARD.md`. Model variants use
+  `--role-model role=model`, still bound by the allowlist and the training consent.
+- **Alternatives considered:** WebGoat (no machine-readable markers: the list would be
+  hand-written); hand-curated expected lists (not reproducible); running the app and
+  testing it dynamically (that is the lab of phase 8); results only in the local database
+  (lost between machines; the scoreboard belongs in the repository).
+- **Consequences:** absolute numbers favor the tool (public apps are known to the models;
+  Juice Shop's runtime code names challenges near vulnerable lines) — compare runs, not
+  targets. The marker parser is specific to comment-style markers; another app needs its
+  own definition and may need another extractor.

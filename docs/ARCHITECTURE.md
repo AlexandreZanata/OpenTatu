@@ -50,17 +50,18 @@ flowchart TB
   subgraph logic["logic (pure)"]
     MEM["memory"]
     REP["reports"]
+    BEN["benchmark"]
   end
   subgraph domain["domain (pure)"]
     CORE["core"]
   end
-  APP --> DASH & MCP & WRK & SVC
+  APP --> DASH & MCP & WRK & SVC & BEN
   DASH --> SVC
   MCP --> SVC
   WRK --> SVC & INV & SCN & SNP & CTX & REP & MEM & DB & LLM
   SVC --> DB & MEM
   INV --> LLM
-  DB & LLM & SCN & SNP & CTX & MEM & REP --> CORE
+  DB & LLM & SCN & SNP & CTX & MEM & REP & BEN --> CORE
 ```
 
 Every crate may also depend on `core`. The authoritative list of allowed edges is
@@ -73,6 +74,7 @@ declared in the root `[workspace.dependencies]`, and on a crate missing from the
 | `opentatu-core` | domain | IDs, `Timestamp`/`Clock`, enums with canonical text, finding state machine, severity, events, fingerprint, secret masking | do IO, know about SQL, HTTP or files |
 | `opentatu-memory` | logic | `MEMORY.md`, `history.jsonl` lines, audit comparison, dedup by fingerprint | do IO |
 | `opentatu-reports` | logic | `audit.json`, `report.md` header, SARIF, `MANIFEST.json` | do IO |
+| `opentatu-benchmark` | logic | benchmark app definitions, known flaws from the app's own markers, stripping them, scoring, scoreboard (ADR-0031) | do IO or decide what a finding is |
 | `opentatu-db` | infrastructure | SQLite connection, migrations, one repository module per table | contain business decisions |
 | `opentatu-llm` | infrastructure | `Llm::generate(context, role, messages, schema)`, OpenCode Go client, model allowlist and training guard, retries, usage recording port | know prompt texts |
 | `opentatu-scanners` | infrastructure | isolated containers, scanner adapters, normalized results | run anything outside the isolation flags |

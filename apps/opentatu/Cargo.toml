@@ -17,6 +17,7 @@ async-trait = { workspace = true }
 clap = { workspace = true }
 dotenvy = { workspace = true }
 getrandom = { workspace = true }
+opentatu-benchmark = { workspace = true }
 opentatu-core = { workspace = true }
 opentatu-dashboard = { workspace = true }
 opentatu-db = { workspace = true }

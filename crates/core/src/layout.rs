@@ -108,6 +108,12 @@ impl DataLayout {
             .join(format!("{}.json", evidence.as_str()))
     }
 
+    /// `benchmark/<slug>/`: the prepared copy of a benchmark app (markers stripped, answer
+    /// files left out), a git repository registered as the app of each run (ADR-0031).
+    pub fn benchmark_tree_dir(&self, upstream: &Slug) -> PathBuf {
+        self.root.join("benchmark").join(upstream.as_str())
+    }
+
     /// `tasks/MANIFEST.json`: the fix tasks planned in an audit (spec §B.4).
     pub fn task_manifest_file(&self, audit: &AuditId) -> PathBuf {
         self.audit_dir(audit).join("tasks").join("MANIFEST.json")

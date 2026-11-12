@@ -1,0 +1,31 @@
+# OWASP Juice Shop — an intentionally insecure web application (MIT). Cloned at the pinned
+# commit and audited only: it is never built or run (ADR-0031).
+name = "juice-shop"
+title = "OWASP Juice Shop"
+repo_url = "https://github.com/juice-shop/juice-shop"
+revision = "v20.4.0"
+commit = "266448aba68cd8ba5915f526a128da4fa7bc3f9f"
+license = "MIT"
+stack = ["TypeScript", "Node.js", "Express", "Angular", "SQLite", "MongoDB", "Solidity"]
+sensitive_data = ["contas e senhas de usuários", "endereços e pedidos de clientes", "dados de pagamento"]
+
+# Juice Shop marks its vulnerable lines for its coding challenges:
+# `// vuln-code-snippet vuln-line <challengeKey>`. Those markers are the known flaws; the
+# catalog gives each key a name and a category.
+marker = "vuln-code-snippet"
+challenges_file = "data/static/challenges.yml"
+
+# Left out of the audited copy because they hold the answers:
+excluded = [
+    "data/static/codefixes/",     # the vulnerable and fixed variants of every snippet
+    "data/static/challenges.yml", # challenge descriptions, hints and mitigation links
+    "data/static/i18n/",          # translations of those descriptions and hints
+    "test/",                      # tests that exploit each challenge
+    "rsn/",                       # tooling that indexes every challenge fix and its lines
+    ".ai/",                       # AI agent skills about challenges and their solutions
+    "AGENTS.md",                  # agent guide that explains the challenge mechanics
+    "SOLUTIONS.md",               # links to walkthroughs
+]
+
+# A finding matches a known flaw when it cites the same file within 3 lines.
+match_lines = 3

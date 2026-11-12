@@ -1330,6 +1330,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "getrandom 0.4.3",
+ "opentatu-benchmark",
  "opentatu-core",
  "opentatu-dashboard",
  "opentatu-db",
@@ -1343,6 +1344,17 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "opentatu-benchmark"
+version = "0.1.0"
+dependencies = [
+ "opentatu-core",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml",
 ]
 
 [[package]]

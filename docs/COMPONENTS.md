@@ -45,6 +45,8 @@ it replaces.
 | Who may close a finding | `Services::record_reverification` (`Reverification::decide`, R06) | closing a finding anywhere else |
 | MCP protocol | `rmcp` inside `opentatu-mcp` (`FixServer`) | hand-written JSON-RPC |
 | Test-file detection | `opentatu_context::is_test_path` | test-name heuristics elsewhere |
+| Benchmark ground truth and scoring | `opentatu_benchmark` (`expected_flaws`, `score`) + `benchmark/` | known flaws typed by hand or by a model |
+| Model of a role or budget for one run | `ModelsConfig::{set_role_model, set_audit_budget}` (then `validate`), via `worker::Overrides` | editing `config/models.toml` for an experiment |
 | sha256 text (`sha256:<hex>`) | `opentatu_core::fingerprint` (crate-private `sha256_text`) | other hashing helpers |
 | Terminal output | `apps/opentatu/src/output.rs` | `println!` elsewhere |
 | Domain vocabulary | `docs/GLOSSARY.md` | synonyms |
@@ -215,13 +217,13 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Llm::ping(&context, model)` | Minimal diagnostic call (`opentatu llm ping`) |
 | `Llm::with_recorder`, `Llm::with_retry_policy` | Usage accounting port; rate-limit backoff |
 | `CallContext::{for_audit, diagnostic}` | Audit + provider session id of a call |
-| `RetryPolicy` | Capped exponential backoff for rate limits |
+| `RetryPolicy` | Capped exponential backoff for rate limits and transport failures (`Error::Transport`; timeouts are not retried) |
 | `UsageRecorder` (trait) | Where every call is recorded (implemented in the binary over services) |
 | `OpenCodeGoClient` | OpenCode Go Chat Completions client (auth, User-Agent, `x-opencode-session`) |
 | `LlmClient` (trait) | Provider port (OpenCode Go today; a local model later) |
 | `FakeClient` | The only LLM test double: scripted answers, recorded requests |
 | `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` | Chat and accounting types |
-| `ModelsConfig::{load, from_toml, validate, role_models}`, `ProviderConfig::{is_allowed, trains_on_prompts}` | Typed `config/models.toml` with allowlist and training guard |
+| `ModelsConfig::{load, from_toml, validate, role_models, set_role_model, set_audit_budget}`, `ProviderConfig::{is_allowed, trains_on_prompts}` | Typed `config/models.toml` with allowlist and training guard; per-run overrides |
 
 ## opentatu-investigator (`crates/investigator`)
 
@@ -276,7 +278,8 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Snapshots::resolve(slug, revision)` → `CommitHash` | Branch/tag/commit → full hash (R02) |
 | `Snapshots::capture(slug, commit)` → `Snapshot { dir, reused }` | Checkout of the exact commit, reused when complete |
 | `Snapshots::is_ancestor(slug, ancestor, descendant)` | Whether a commit is in another's history (R09 in reverifications) |
-| `testing::{create_repo, commit_files}` (feature `test-support`) | The only helper that creates throwaway git repos in tests |
+| `Snapshots::record_tree(dir, message)` | Commits a tree OpenTatu wrote (benchmark copy) so it can be registered and audited |
+| `testing::{create_repo, commit_files, checkout_new_branch}` (feature `test-support`) | The only helper that creates throwaway git repos in tests |
 
 ## opentatu-memory (`crates/memory`)
 
@@ -305,6 +308,17 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `serve(services, layout, &AgentToken, (reader, writer))`, `serve_stdio` | Authenticates the token once, then serves its agent until the client disconnects |
 | `FixServer::new(services, layout, agent)` | The eight tools of §E.6 over `rmcp` (both MCP protocol eras); one event per call |
 
+## opentatu-benchmark (`crates/benchmark`)
+
+| Component | Purpose |
+|---|---|
+| `BenchmarkApp` (`from_toml`, `is_excluded`, `upstream_slug`, `run_slug`) | `benchmark/apps/<name>.toml`: pinned commit, markers, answer files left out |
+| `find_markers`, `strip_markers`, `Marker` | The app's own vulnerability markers (comments only); stripped with line numbers kept |
+| `parse_challenges`, `expected_flaws` → `Expected` (`ExpectedFlaw`, `Location`) | Known flaws from markers + the app's catalog; same lines = one flaw |
+| `score(expected, findings, hypotheses, tolerance)` → `Score` | Found / hypothesis only / missed / outside the list, recall, list precision |
+| `pipeline_counts(findings, hypotheses)` → `PipelineCounts` | What the verifier and the skeptic decided in a run (per-model behavior) |
+| `RunResult`, `render_scoreboard` | `benchmark/results/<AUDIT>.json` and `benchmark/SCOREBOARD.md` |
+
 ## opentatu-worker (`crates/worker`)
 
 | Component | Purpose |
@@ -328,8 +342,9 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | CLI definition | `apps/opentatu/src/cli.rs` | Every subcommand (crate `opentatu`) |
 | Production wiring | `apps/opentatu/src/commands/mod.rs` → `services()` | The one place production `Services` are built |
 | `config::{load_dotenv, init_logging, prepare_data_dir, api_key, owner_name, mcp_token}` | `apps/opentatu/src/config.rs` | Env, logging to stderr, data dir (0700), API key as `Secret`, owner's name, agent token (`OPENTATU_MCP_TOKEN`) |
-| `worker::{Configs, build}` | `apps/opentatu/src/commands/worker.rs` | The one place the production `Worker` (with `AiSettings`) is built |
 | `scanners::build` | `apps/opentatu/src/commands/scanners.rs` | The one place production `Scanners` are built (`--scanners-config`) |
 | `output::{line, error}` | `apps/opentatu/src/output.rs` | Terminal output |
 | `agent::{add, list, revoke}`, `mcp::run`, `task::{list, show}` | `apps/opentatu/src/commands/` | Agent tokens (random bytes from `getrandom`, printed once), the MCP server on stdio, tasks for the owner |
+| `benchmark::{prepare, run, rescore, scoreboard}` | `apps/opentatu/src/commands/benchmark.rs` | The IO of the benchmark (clone, copy, register, audit, score, write; rescore a past run from its data) |
+| `worker::build(data_dir, configs, &Overrides, ai_required)`, `worker::Overrides` (`describe`) | `apps/opentatu/src/commands/worker.rs` | The one place the production `Worker` is built; per-run role models and FULL budget |
 | Repository checks | `xtask/src/` (crate `xtask`) | `architecture`, `docs`, `glossary` |

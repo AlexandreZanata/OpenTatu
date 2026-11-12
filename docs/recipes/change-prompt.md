@@ -16,5 +16,7 @@ Prompts in `prompts/` are normative (spec Part C) and versioned (R17).
    test `every_prompt_file_is_registered` fails otherwise.
 5. If the change affects a rule (severity matrix, evidence standard), update the matching
    section of [../spec/C-investigator.md](../spec/C-investigator.md).
-6. From phase 6 on, run the benchmark and record the scoreboard for the new version.
+6. Run the benchmark (`opentatu benchmark run juice-shop`, see
+   [../../benchmark/README.md](../../benchmark/README.md)) and commit the new result file and
+   `SCOREBOARD.md`; compare with the previous configuration's row.
 7. `cargo xtask check`.

@@ -7,7 +7,8 @@ client, router, guards, retries, accounting port)
 
 - **Does:** the single entry point `Llm::generate(context, role, messages, schema)` (§D.2),
   per-role routing from `config/models.toml`, the model allowlist and the guard against models
-  that train on prompts, rate-limit retries, usage recording (`UsageRecorder`), and provider
+  that train on prompts, retries of rate limits and transport failures (never of timeouts),
+  usage recording (`UsageRecorder`), and provider
   clients behind `LlmClient` (`OpenCodeGoClient`).
 - **Does not:** know prompt texts or output schemas (that is `opentatu-investigator`), read
   environment variables (the binary passes the key in), log request contents.
@@ -19,10 +20,10 @@ client, router, guards, retries, accounting port)
 | `src/router.rs` | `Llm`: `generate`, `ping`, allowlist, training guard, retries, recording |
 | `src/opencode_go.rs` | `OpenCodeGoClient` (Chat Completions, Bearer, User-Agent, `x-opencode-session`) |
 | `src/context.rs` | `CallContext` (audit + provider session id) |
-| `src/retry.rs` | `RetryPolicy` (capped exponential backoff) |
+| `src/retry.rs` | `RetryPolicy` (capped exponential backoff for `RateLimited` and `Transport`) |
 | `src/usage.rs` | `UsageRecorder` port (implemented by `opentatu_worker::ServicesUsageRecorder`) |
 | `src/client.rs` | `LlmClient` trait, `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` |
-| `src/config.rs` | `ModelsConfig` and parts; `validate()`; test that `config/models.toml` parses |
+| `src/config.rs` | `ModelsConfig` and parts; `validate()`; `set_role_model`, `set_audit_budget` (benchmark variants — still validated); test that `config/models.toml` parses |
 | `src/fake.rs` | `FakeClient` — the only test double for model calls |
 | `src/error.rs` | `Error` (`RateLimited`, `Authentication`, ...) |
 

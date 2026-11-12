@@ -24,7 +24,7 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
 | 3 — Cartographer and coverage | ✅ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right (TBG map reviewed; owner approved phase 4 on 2026-11-12) |
 | 4 — Hunter, verifier (static) and skeptic | ✅ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage (verified 2026-11-12 on the owner's app Abastevo) |
 | 5 — Fix trail and MCP | ✅ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own (verified 2026-11-12) |
-| 6 — Benchmark | ⬜ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
+| 6 — Benchmark | ✅ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
 | 7 — Incremental audit | ⬜ | Diff between commits, trigger by push (webhook or schedule) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed |
 | 8 — Dynamic lab | ⬜ (on request) | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab |
 | 9 — Host inspection (read-only) | ⬜ (on request) | Restricted SSH user, closed allowlist of commands, every command recorded | — |
@@ -194,3 +194,33 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   was rejected as a regression (R09); the final fix was approved. That run exposed a false
   regression on branches cut before another fix — now decided by git ancestry, with a test.
 - Open: Q-030 (an approved fix that is never merged).
+- The owner approved moving to phase 6 (2026-11-12).
+
+## Phase 6: what exists
+
+- `opentatu-benchmark` (pure) and `opentatu benchmark prepare|run|rescore|scoreboard`
+  (ADR-0031): OWASP Juice Shop v20.4.0 pinned by commit, cloned and audited only (never
+  run). Its 33 known flaws come from its own `vuln-code-snippet vuln-line` markers and
+  challenge catalog (`benchmark/expected/juice-shop.json`, paths and lines only); the
+  audited copy has the markers stripped (lines kept) and the answer files left out
+  (`codefixes`, catalog, i18n, tests, `rsn`, AI agent files); each run is a fresh app.
+- Scoring by file and ±3 lines; one result file per run with models and prompt versions
+  from `audit.json`, usage, every match and what each role decided; `benchmark/SCOREBOARD.md`
+  per run, per prompt version and model, per category.
+- Per-run overrides recorded in the result: `--role-model role=model` (allowlist and
+  training consent still apply) and `--max-tokens` / `--max-minutes` for the FULL budget.
+- Found by the benchmark and fixed: transport failures of the provider are now retried
+  like rate limits (timeouts are not); recorded trees keep files their `.gitignore` hides.
+- Verified with three real runs (2026-11-12, US$2.52 in total): recall 21–27% (7–9 of 33),
+  Injection 5/5 in every run, Broken Access Control 2–3/5, Broken Authentication 1/6 in one
+  run, every other category 0 — the missed flaws are mostly outside the server routes the
+  hunter is given (security questions YAML, Solidity contracts, Angular routing, Terraform,
+  docker-compose). Run 1 used the default budget, which ran out during verification (Q-031).
+  Runs 2 and 3 compared the skeptic: Muse Spark downgraded 1 of 51 findings and dismissed
+  none; DeepSeek changed none of 56. By file and CWE, most findings outside the list point
+  at Juice Shop flaws it does not mark (eval injection, hard-coded JWT key, SSRF, NoSQL
+  injection…) — not yet reviewed one by one — so list precision (10–18%) is a floor, not a
+  false-positive rate. Runs 1–3 used the binary before the transport retry (run 2 lost 3
+  verifier calls, run 3 one verifier and one planner call) and run 1 a copy without 9
+  vendored frontend libraries.
+- Open: Q-031 (FULL budget for large apps).

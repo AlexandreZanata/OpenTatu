@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context as _;
+use opentatu_core::{AiRole, AuditKind};
 use opentatu_dashboard::DashboardConfig;
 use opentatu_llm::{Llm, ModelsConfig, OpenCodeGoClient};
 use opentatu_services::Services;
@@ -26,7 +27,7 @@ pub struct Configs<'a> {
 
 /// `opentatu worker [--once]`.
 pub async fn run(data_dir: &Path, configs: Configs<'_>, args: &WorkerArgs) -> anyhow::Result<()> {
-    let worker = build(data_dir, configs).await?;
+    let worker = build(data_dir, configs, &Overrides::default(), false).await?;
     if args.once {
         let done = worker.drain().await?;
         output::line(&format!("processed {} audit(s)", done.len()));
@@ -49,7 +50,7 @@ pub async fn serve(
 ) -> anyhow::Result<()> {
     let config = DashboardConfig::local(address)?;
     let services = super::services(data_dir).await?;
-    let worker = build(data_dir, configs).await?;
+    let worker = build(data_dir, configs, &Overrides::default(), false).await?;
     output::line(&format!(
         "OpenTatu: http://{address}/ — dashboard and worker running (Ctrl+C to stop)"
     ));
@@ -68,7 +69,46 @@ pub async fn serve(
     Ok(())
 }
 
-async fn build(data_dir: &Path, configs: Configs<'_>) -> anyhow::Result<Worker> {
+/// Changes to `config/models.toml` for one run (benchmark variants); the allowlist and the
+/// training consent still apply.
+#[derive(Debug, Clone, Default)]
+pub struct Overrides {
+    /// Another allowed model for some roles.
+    pub roles: Vec<(AiRole, String)>,
+    /// FULL audit token limit.
+    pub max_tokens: Option<u64>,
+    /// FULL audit minute limit.
+    pub max_minutes: Option<u32>,
+}
+
+impl Overrides {
+    /// `role=model` and `budget.FULL.<limit>=<value>` lines, for results.
+    pub fn describe(&self) -> Vec<String> {
+        let mut lines: Vec<String> = self
+            .roles
+            .iter()
+            .map(|(role, model)| format!("{role}={model}"))
+            .collect();
+        lines.extend(
+            self.max_tokens
+                .map(|t| format!("budget.FULL.max_tokens={t}")),
+        );
+        lines.extend(
+            self.max_minutes
+                .map(|m| format!("budget.FULL.max_minutes={m}")),
+        );
+        lines
+    }
+}
+
+/// The production worker, with `overrides` applied. Without AI the audits still run with
+/// limitations, unless `ai_required`.
+pub async fn build(
+    data_dir: &Path,
+    configs: Configs<'_>,
+    overrides: &Overrides,
+    ai_required: bool,
+) -> anyhow::Result<Worker> {
     let layout = super::layout(data_dir)?;
     let services = super::services(data_dir).await?;
     let scanners = super::scanners::build(data_dir, configs.scanners)?;
@@ -78,8 +118,9 @@ async fn build(data_dir: &Path, configs: Configs<'_>) -> anyhow::Result<Worker> 
         Arc::new(scanners),
         layout,
     );
-    match ai(configs.models, &services) {
+    match ai(configs.models, overrides, &services) {
         Ok(ai) => Ok(worker.with_ai(ai)),
+        Err(error) if ai_required => Err(error),
         Err(error) => {
             // Audits still run; the AI steps become limitations (R13).
             tracing::warn!("AI steps disabled: {error:#}");
@@ -90,9 +131,17 @@ async fn build(data_dir: &Path, configs: Configs<'_>) -> anyhow::Result<Worker> 
 }
 
 /// The model router of the AI roles: config, API key (R16), usage accounting.
-fn ai(models_config: &Path, services: &Services) -> anyhow::Result<AiSettings> {
-    let config = ModelsConfig::load(models_config)
+fn ai(
+    models_config: &Path,
+    overrides: &Overrides,
+    services: &Services,
+) -> anyhow::Result<AiSettings> {
+    let mut config = ModelsConfig::load(models_config)
         .with_context(|| format!("loading {}", models_config.display()))?;
+    for (role, model) in &overrides.roles {
+        config.set_role_model(*role, model)?;
+    }
+    config.set_audit_budget(AuditKind::Full, overrides.max_tokens, overrides.max_minutes)?;
     let problems = config.validate();
     anyhow::ensure!(problems.is_empty(), "{}", problems.join("; "));
     let api_key = crate::config::api_key(&config.provider.api_key_env)?;
