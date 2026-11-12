@@ -6,6 +6,7 @@ use std::path::Path;
 use opentatu_core::Audit;
 use opentatu_memory::{MemoryInput, render_history, render_memory};
 use opentatu_reports::AuditRecord;
+use opentatu_services::ScannerOutcome;
 
 use crate::{Error, Worker};
 
@@ -21,7 +22,18 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
     let profile = serde_json::to_string_pretty(&app)? + "\n";
     write_atomic(&layout.app_profile_file(app.slug()), &profile).await?;
 
-    let record = AuditRecord::from_audit(audit).to_json()?;
+    let scanner_versions = services
+        .scanner_runs(&audit.id)
+        .await?
+        .into_iter()
+        .filter_map(|run| match run.outcome {
+            ScannerOutcome::Ran { version, .. } => Some((run.scanner.to_string(), version)),
+            ScannerOutcome::Failed { .. } => None,
+        })
+        .collect();
+    let record = AuditRecord::from_audit(audit)
+        .with_scanners(scanner_versions)
+        .to_json()?;
     write_atomic(&layout.audit_record_file(&audit.id), &record).await?;
 
     let history = render_history(&services.app_history(app.slug()).await?)?;

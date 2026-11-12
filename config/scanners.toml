@@ -1,0 +1,39 @@
+# Deterministic scanners (spec §A.3, §E.5). Parsed by opentatu_scanners::ScannersConfig.
+#
+# - Images are official and pinned by digest; `version` is the tool version of that digest
+#   (recorded in audit.json, R17). Update both together, then run the ignored container
+#   tests: `cargo test -p opentatu-scanners -- --ignored`.
+# - Analysis always runs with --network=none. Rules and vulnerability databases are
+#   refreshed by `opentatu scanners update`, in containers that have network but never see
+#   application code. A test keeps this file valid.
+
+[engine]
+# Container CLI: "docker" or "podman" (rootless Podman is recommended, docs/SECURITY.md).
+command = "docker"
+# Wall-clock limit of one container run.
+timeout_minutes = 20
+
+[scanners.semgrep]
+enabled = true
+image = "semgrep/semgrep@sha256:cc1b68266f267878b39739373ea9985b9a78e5d64497dd875c8de100b22695ed"
+version = "1.184.0"
+# Registry ruleset downloaded by `opentatu scanners update` (Semgrep Rules License: internal
+# use; the downloaded rules stay in the local data directory and are never committed).
+ruleset = "p/default"
+
+[scanners.gitleaks]
+enabled = true
+image = "ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
+version = "8.30.1"
+
+[scanners.trivy]
+enabled = true
+image = "aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb"
+version = "0.76.2"
+
+[scanners.osv-scanner]
+enabled = true
+image = "ghcr.io/google/osv-scanner@sha256:a70ffffc2bfd33482953e5d6b64c6fcdb30239717a07b0f0d3ab2859ce3e4cde"
+version = "2.7.1"
+# Offline vulnerability databases downloaded by `opentatu scanners update`.
+ecosystems = ["npm", "PyPI", "crates.io", "Go", "RubyGems", "Packagist"]

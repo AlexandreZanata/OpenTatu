@@ -48,6 +48,7 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `tasks` | id, finding_id, state, priority, content (JSON), claimed_by, branch, fix_commit | 5 |
 | `verifications` | id, task_id, audit_id, result, occurred_at | 5 |
 | `decisions` | id, kind, target, justification, expires_at, occurred_at | 4 |
+| `scanner_results` | id, audit_id, scanner, result_id, rule_id, message, file, start_line, end_line, reported_severity, cwe — append-only | 2 ✅ |
 
 ## E.5 Safe execution of scanners
 
@@ -58,6 +59,10 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 - Databases that need the internet (Semgrep rules, Trivy/OSV vulnerability databases) are
   updated in a separate step, with network, and used offline during analysis.
 - Disable the tools' telemetry.
+- Implementation notes (ADR-0023): a `--tmpfs=/tmp` and `HOME=/tmp` (read-only root),
+  `--user=<uid>:<gid>` of the data directory's owner; refresh runs
+  (`opentatu scanners update`) have network and never mount the code; offline data in
+  `<data>/scanner-cache/<tool>/`; images, versions and rulesets in `config/scanners.toml`.
 - Record the version and digest of each image in `audit.json`.
 - Access to the container engine is a high privilege on the host: prefer rootless Podman
   locally; never run OpenTatu on the same machine as production applications.

@@ -1,7 +1,8 @@
 # opentatu-worker — audit pipeline
 
 Layer: **application** · May depend on: core, db, memory, reports, llm, investigator,
-scanners, snapshots, context, services · Status: phase 1 ✅ (queue, snapshot, artifacts)
+scanners, snapshots, context, services · Status: phase 1 ✅ (queue, snapshot, artifacts);
+phase 2 ✅ (scanners step)
 
 ## Responsibility
 
@@ -14,10 +15,10 @@ scanners, snapshots, context, services · Status: phase 1 ✅ (queue, snapshot, 
 
 | File | Contents | Phase |
 |---|---|---|
-| `src/lib.rs` | ✅ `Worker` (`run_once`, `drain`, `run`) — queue = audits table (ADR-0021) | 1 |
-| `src/pipeline.rs` | ✅ `run`, `Step`, `PENDING_STEPS`; snapshot step implemented | 1–5 |
+| `src/lib.rs` | ✅ `Worker` (`new` takes an `Arc<dyn ScannerSuite>`, `run_once`, `drain`, `run`) — queue = audits table (ADR-0021) | 1–2 |
+| `src/pipeline.rs` | ✅ `run`, `Step`, `PENDING_STEPS`; snapshot and scanners steps implemented (a scanner that cannot run becomes a limitation) | 1–5 |
 | `src/artifacts.rs` | ✅ atomic writes of `app.json`, `audit.json`, `history.jsonl`, `MEMORY.md` | 1 |
-| `tests/phase1_audit.rs` | ✅ end-to-end: register → create → run → artifacts; unreachable repo → FAILED | 1 |
+| `tests/audit_pipeline.rs` | ✅ end-to-end with `FakeSuite`: register → create → snapshot → scanners → artifacts; failing/not-ready scanners → limitations; unreachable repo → FAILED | 1–2 |
 | `src/budget.rs` | per-audit limits from `config/models.toml`; pause on exhaustion | 4 |
 
 ## Local rules

@@ -15,6 +15,7 @@ workspace = true
 opentatu-core = { workspace = true }
 opentatu-memory = { workspace = true }
 opentatu-reports = { workspace = true }
+opentatu-scanners = { workspace = true }
 opentatu-services = { workspace = true }
 opentatu-snapshots = { workspace = true }
 serde_json = { workspace = true }
@@ -23,5 +24,6 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
+opentatu-scanners = { workspace = true, features = ["test-support"] }
 opentatu-snapshots = { workspace = true, features = ["test-support"] }
 tempfile = { workspace = true }

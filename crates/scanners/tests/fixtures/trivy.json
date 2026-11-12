@@ -1,0 +1,260 @@
+{
+ "SchemaVersion": 2,
+ "Results": [
+  {
+   "Target": "package-lock.json",
+   "Class": "lang-pkgs",
+   "Type": "npm",
+   "Packages": [
+    {
+     "ID": "express@4.17.1",
+     "Name": "express",
+     "Identifier": {
+      "PURL": "pkg:npm/express@4.17.1",
+      "UID": "b33733bd342d11f9"
+     },
+     "Version": "4.17.1",
+     "Relationship": "direct",
+     "Locations": [
+      {
+       "StartLine": 6,
+       "EndLine": 6
+      }
+     ],
+     "AnalyzedBy": "npm"
+    },
+    {
+     "ID": "lodash@4.17.15",
+     "Name": "lodash",
+     "Identifier": {
+      "PURL": "pkg:npm/lodash@4.17.15",
+      "UID": "e74e4d9b77e1ade3"
+     },
+     "Version": "4.17.15",
+     "Relationship": "direct",
+     "Locations": [
+      {
+       "StartLine": 5,
+       "EndLine": 5
+      }
+     ],
+     "AnalyzedBy": "npm"
+    }
+   ],
+   "Vulnerabilities": [
+    {
+     "VulnerabilityID": "CVE-2024-29041",
+     "VendorIDs": [
+      "GHSA-rv95-896h-c2vc"
+     ],
+     "PkgID": "express@4.17.1",
+     "PkgName": "express",
+     "InstalledVersion": "4.17.1",
+     "FixedVersion": "4.19.2, 5.0.0-beta.3",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-29041",
+     "Fingerprint": "sha256:a06723f01747f4da6cfcfee02e22ee005b817ad2ba10abaf171582bd3c7c1f1d",
+     "Title": "express: cause malformed URLs to be evaluated",
+     "Severity": "MEDIUM",
+     "CweIDs": [
+      "CWE-601",
+      "CWE-1286"
+     ],
+     "PublishedDate": "2024-03-25T21:15:46.847Z",
+     "LastModifiedDate": "2026-06-17T07:22:18.493Z"
+    },
+    {
+     "VulnerabilityID": "CVE-2024-43796",
+     "VendorIDs": [
+      "GHSA-qw6h-vgh9-j6wx"
+     ],
+     "PkgID": "express@4.17.1",
+     "PkgName": "express",
+     "InstalledVersion": "4.17.1",
+     "FixedVersion": "4.20.0, 5.0.0",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-43796",
+     "Fingerprint": "sha256:878b726557b2ceae1d9219dfb4b1f5f9e1d37dd00672cefbba70906b795f1c01",
+     "Title": "express: Improper Input Handling in Express Redirects",
+     "Severity": "LOW",
+     "CweIDs": [
+      "CWE-79"
+     ],
+     "PublishedDate": "2024-09-10T15:15:17.51Z",
+     "LastModifiedDate": "2026-06-17T07:51:43.847Z"
+    },
+    {
+     "VulnerabilityID": "CVE-2020-8203",
+     "VendorIDs": [
+      "GHSA-p6mc-m468-83gw"
+     ],
+     "PkgID": "lodash@4.17.15",
+     "PkgName": "lodash",
+     "InstalledVersion": "4.17.15",
+     "FixedVersion": "4.17.19",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2020-8203",
+     "Fingerprint": "sha256:d34dcabd3c6406014a3ee53a203d5655679769900caee064ff12a6490d36c8cc",
+     "Title": "nodejs-lodash: prototype pollution in zipObjectDeep function",
+     "Severity": "HIGH",
+     "CweIDs": [
+      "CWE-770",
+      "CWE-1321"
+     ],
+     "PublishedDate": "2020-07-15T17:15:11.797Z",
+     "LastModifiedDate": "2026-11-02T18:18:29.9Z"
+    },
+    {
+     "VulnerabilityID": "CVE-2021-23337",
+     "VendorIDs": [
+      "GHSA-35jh-r3h4-6jhm"
+     ],
+     "PkgID": "lodash@4.17.15",
+     "PkgName": "lodash",
+     "InstalledVersion": "4.17.15",
+     "FixedVersion": "4.17.21",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2021-23337",
+     "Fingerprint": "sha256:60b35296751c42b817dca8d04d786c6f1820e6447a52c35660ca8a1cc1327c13",
+     "Title": "nodejs-lodash: command injection via template",
+     "Severity": "HIGH",
+     "CweIDs": [
+      "CWE-94"
+     ],
+     "PublishedDate": "2021-02-15T13:15:12.56Z",
+     "LastModifiedDate": "2026-10-08T22:17:07.363Z"
+    },
+    {
+     "VulnerabilityID": "CVE-2026-4800",
+     "VendorIDs": [
+      "GHSA-r5fr-rjxr-66jc"
+     ],
+     "PkgID": "lodash@4.17.15",
+     "PkgName": "lodash",
+     "InstalledVersion": "4.17.15",
+     "FixedVersion": "4.18.0",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-4800",
+     "Fingerprint": "sha256:0342b699c598d5b167610788b1a90819018c0afc003466454e92b8c765c8131f",
+     "Title": "lodash: lodash: Arbitrary code execution via untrusted input in template imports",
+     "Severity": "HIGH",
+     "CweIDs": [
+      "CWE-94"
+     ],
+     "PublishedDate": "2026-03-31T20:16:29.66Z",
+     "LastModifiedDate": "2026-10-15T07:18:00.61Z"
+    },
+    {
+     "VulnerabilityID": "NSWG-ECO-516",
+     "PkgID": "lodash@4.17.15",
+     "PkgName": "lodash",
+     "InstalledVersion": "4.17.15",
+     "FixedVersion": ">=4.17.19",
+     "Status": "fixed",
+     "SeveritySource": "nodejs-security-wg",
+     "PrimaryURL": "https://www.npmjs.com/advisories/1523",
+     "Fingerprint": "sha256:2ab07d748642b2b0e3507ca5c27367d947d4b443173d5831c6b9f18b5f16a0f9",
+     "Title": "Allocation of Resources Without Limits or Throttling",
+     "Severity": "HIGH"
+    },
+    {
+     "VulnerabilityID": "CVE-2020-28500",
+     "VendorIDs": [
+      "GHSA-29mw-wpgm-hmr9"
+     ],
+     "PkgID": "lodash@4.17.15",
+     "PkgName": "lodash",
+     "InstalledVersion": "4.17.15",
+     "FixedVersion": "4.17.21",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2020-28500",
+     "Fingerprint": "sha256:9380ee42fcfd86a96a0460c2cca129998559048297fb595f001d190a5a7d6cd1",
+     "Title": "nodejs-lodash: ReDoS via the toNumber, trim and trimEnd functions",
+     "Severity": "MEDIUM",
+     "PublishedDate": "2021-02-15T11:15:12.397Z",
+     "LastModifiedDate": "2026-10-08T22:16:59.333Z"
+    },
+    {
+     "VulnerabilityID": "CVE-2025-13465",
+     "VendorIDs": [
+      "GHSA-xxjr-mmjv-4gpg"
+     ],
+     "PkgID": "lodash@4.17.15",
+     "PkgName": "lodash",
+     "InstalledVersion": "4.17.15",
+     "FixedVersion": "4.17.23",
+     "Status": "fixed",
+     "SeveritySource": "ghsa",
+     "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-13465",
+     "Fingerprint": "sha256:204fe349c388802cbacaa8ea527a941b5ebefa6cc1aa98c0dfb3aeca06e5ea8b",
+     "Title": "lodash: prototype pollution in _.unset and _.omit functions",
+     "Severity": "MEDIUM",
+     "CweIDs": [
+      "CWE-1321"
+     ],
+     "PublishedDate": "2026-01-21T20:16:05.25Z",
+     "LastModifiedDate": "2026-10-15T07:17:53.62Z"
+    }
+   ]
+  },
+  {
+   "Target": "Dockerfile",
+   "Class": "config",
+   "Type": "dockerfile",
+   "MisconfSummary": {
+    "Successes": 25,
+    "Failures": 2
+   },
+   "Misconfigurations": [
+    {
+     "Type": "Dockerfile Security Check",
+     "ID": "DS-0002",
+     "Title": "Image user should not be 'root'",
+     "Description": "Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.",
+     "Message": "Specify at least 1 USER command in Dockerfile with non-root user as argument",
+     "Namespace": "builtin.dockerfile.DS002",
+     "Query": "data.builtin.dockerfile.DS002.deny",
+     "Resolution": "Add 'USER <non root user name>' line to the Dockerfile",
+     "Severity": "HIGH",
+     "PrimaryURL": "https://avd.aquasec.com/misconfig/ds-0002",
+     "References": [
+      "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+      "https://avd.aquasec.com/misconfig/ds-0002"
+     ],
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Provider": "Dockerfile",
+      "Service": "general"
+     }
+    },
+    {
+     "Type": "Dockerfile Security Check",
+     "ID": "DS-0026",
+     "Title": "No HEALTHCHECK defined",
+     "Description": "You should add HEALTHCHECK instruction in your docker container images to perform the health check on running containers.",
+     "Message": "Add HEALTHCHECK instruction in your Dockerfile",
+     "Namespace": "builtin.dockerfile.DS026",
+     "Query": "data.builtin.dockerfile.DS026.deny",
+     "Resolution": "Add HEALTHCHECK instruction in Dockerfile",
+     "Severity": "LOW",
+     "PrimaryURL": "https://avd.aquasec.com/misconfig/ds-0026",
+     "References": [
+      "https://blog.aquasec.com/docker-security-best-practices",
+      "https://avd.aquasec.com/misconfig/ds-0026"
+     ],
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Provider": "Dockerfile",
+      "Service": "general"
+     }
+    }
+   ]
+  }
+ ]
+}

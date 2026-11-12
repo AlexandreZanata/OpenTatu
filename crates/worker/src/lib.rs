@@ -4,8 +4,9 @@
 //! flow of spec §C.7. The audits table is the queue (ADR-0021): [`Worker::run_once`] claims
 //! the oldest `CREATED` audit through `opentatu-services` and runs [`pipeline`].
 //!
-//! Implemented steps (phase 1): create (services), snapshot of the exact commit (R02),
-//! artifacts — `app.json`, `audit.json`, `history.jsonl`, `MEMORY.md` (§B.4). Every step
+//! Implemented steps: create (services), snapshot of the exact commit (R02, phase 1),
+//! deterministic scanners through the [`ScannerSuite`] port (phase 2), artifacts —
+//! `app.json`, `audit.json`, `history.jsonl`, `MEMORY.md` (§B.4). Every step
 //! that is not implemented yet is listed in the audit's limitations and the audit ends
 //! `PARTIAL`: an audit that did not analyze anything is never reported as complete
 //! (R13, R14). Later phases replace limitations with real steps.
@@ -15,9 +16,11 @@ mod error;
 pub mod pipeline;
 
 use std::future::Future;
+use std::sync::Arc;
 use std::time::Duration;
 
 use opentatu_core::{AuditId, DataLayout};
+use opentatu_scanners::ScannerSuite;
 use opentatu_services::Services;
 use opentatu_snapshots::Snapshots;
 
@@ -28,15 +31,23 @@ pub use error::Error;
 pub struct Worker {
     services: Services,
     snapshots: Snapshots,
+    scanners: Arc<dyn ScannerSuite>,
     layout: DataLayout,
 }
 
 impl Worker {
-    /// Worker over the use cases, the repository snapshots and the data directory.
-    pub fn new(services: Services, snapshots: Snapshots, layout: DataLayout) -> Self {
+    /// Worker over the use cases, the repository snapshots, the scanners and the data
+    /// directory.
+    pub fn new(
+        services: Services,
+        snapshots: Snapshots,
+        scanners: Arc<dyn ScannerSuite>,
+        layout: DataLayout,
+    ) -> Self {
         Self {
             services,
             snapshots,
+            scanners,
             layout,
         }
     }

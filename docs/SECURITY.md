@@ -11,7 +11,9 @@ list of controls; the requirements are in the spec (R10–R16, §E.5, §E.8).
 | Malicious website attacks the local dashboard (DNS rebinding, CSRF, clickjacking) | Loopback bind only; `Host` allowlist; `Origin` check on every state-changing request; CSP without scripts, `frame-ancestors 'none'`; `Referrer-Policy: same-origin`; `SameSite=Strict` cookies and CSRF tokens on every form (when forms arrive) — Q-005 |
 | Other local users read data | Data directory created `0700`; database inside it |
 | Analyzed code attacks the AI (prompt injection, R11) | Inputs only in fenced blocks (`fence`); base prompt principle 2; suspicious instructions recorded as events; AI has no tools beyond what OpenTatu exposes (R12) |
-| Analyzed code attacks the host through scanners | Containers with `--network=none`, read-only root FS, no capabilities, `no-new-privileges`, memory/CPU/PID limits, code mounted read-only; images pinned by digest; rootless Podman recommended |
+| Analyzed code attacks the host through scanners | Containers with `--network=none`, read-only root FS (small `/tmp` tmpfs), no capabilities, `no-new-privileges`, memory/CPU/PID limits, non-root user (owner of the data directory), code mounted read-only; images pinned by digest; rootless Podman recommended (ADR-0023) |
+| Code or results leak while refreshing scanner data | Refresh runs (`opentatu scanners update`) are separate containers with network that can never mount the application code (`ContainerRun::command_line` refuses); analysis runs are offline; scanner telemetry disabled |
+| Secrets found by scanners are stored or shown | Gitleaks runs with `--redact` (raw output holds `REDACTED`); normalized results never use the matched text; the dashboard escapes every message |
 | Secret leakage (R15, R16) | API key only in the environment (`.env`, git-ignored, `0600`), read in one place into `Secret` (prints `****`), never logged or stored; secrets in findings masked with `mask_secret`; no prompt/code content in logs or provider errors |
 | Application code used to train third-party models | Models that train on prompts are listed in `models_that_train_on_prompts` and refused for AI roles; roles use DeepSeek V4.1 Flash (no training, zero retention renewed monthly — re-check after 2026-11-30) |
 | Unexpected provider spending | `allowed_models` enforced locally (the key is not restricted server-side); per-audit budgets and the 60% monthly share from `llm_usage.cost_usd`; owner advised to disable the pay-as-you-go fallback (Q-012) |
@@ -33,6 +35,7 @@ list of controls; the requirements are in the spec (R10–R16, §E.5, §E.8).
 | Fencing untrusted content | `opentatu_investigator::fence` |
 | Secret masking | `opentatu_core::mask_secret` |
 | Container isolation | `opentatu_scanners::{ISOLATION_FLAGS, ContainerRun}` |
+| Scanner arguments (offline, redaction, telemetry off) | `crates/scanners/src/adapters/` |
 | Hardened git | `crates/snapshots/src/git.rs` |
 | Append-only events | `crates/db/migrations/0001_foundation.sql` triggers |
 | Env reads / process spawning / clock reads banned elsewhere | `clippy.toml` |

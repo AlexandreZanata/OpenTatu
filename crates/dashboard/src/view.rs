@@ -2,7 +2,10 @@
 //! `templates/components/ui.html`, and the ONLY mapping of domain values to owner-facing
 //! (pt-BR) text and CSS modifiers.
 
-use opentatu_core::{App, Audit, AuditKind, AuditStatus, Event, EventKind, Severity, Timestamp};
+use opentatu_core::{
+    App, Audit, AuditKind, AuditStatus, Event, EventKind, ScannerResult, Severity, Timestamp,
+};
+use opentatu_services::{ScannerOutcome, ScannerRunSummary};
 
 /// Data every page passes to `base.html`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -133,6 +136,155 @@ pub fn audit_row(audit: &Audit) -> AuditRow {
     }
 }
 
+/// `75` → `"1 min 15 s"`.
+pub fn duration_label(seconds: i64) -> String {
+    match (seconds / 60, seconds % 60) {
+        (0, s) => format!("{s} s"),
+        (m, 0) => format!("{m} min"),
+        (m, s) => format!("{m} min {s} s"),
+    }
+}
+
+/// Header data of the audit page.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuditSummary {
+    /// Audit ID.
+    pub id: String,
+    /// App slug (link target).
+    pub app: String,
+    /// Kind label.
+    pub kind: &'static str,
+    /// Status badge.
+    pub status: Badge,
+    /// Full commit hash (R02).
+    pub commit: String,
+    /// Branch or revision, or `—`.
+    pub branch: String,
+    /// Creation time.
+    pub created_at: Timestamp,
+    /// Start time.
+    pub started_at: Option<Timestamp>,
+    /// Completion time.
+    pub completed_at: Option<Timestamp>,
+    /// Duration label, or `—`.
+    pub duration: String,
+    /// What the audit did not cover (pt-BR).
+    pub limitations: Vec<String>,
+}
+
+/// Header data of an audit.
+pub fn audit_summary(audit: &Audit) -> AuditSummary {
+    AuditSummary {
+        id: audit.id.to_string(),
+        app: audit.app.to_string(),
+        kind: audit_kind_label(audit.kind),
+        status: audit_status_badge(audit.status),
+        commit: audit.commit.to_string(),
+        branch: audit.branch.clone().unwrap_or_else(|| "—".to_owned()),
+        created_at: audit.created_at,
+        started_at: audit.started_at,
+        completed_at: audit.completed_at,
+        duration: audit
+            .duration_seconds()
+            .map_or_else(|| "—".to_owned(), duration_label),
+        limitations: audit.limitations.clone(),
+    }
+}
+
+/// One row of the `ui::scanner_runs_table` component.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScannerRunRow {
+    /// Scanner name.
+    pub scanner: String,
+    /// Outcome badge.
+    pub outcome: Badge,
+    /// Tool version, or `—`.
+    pub version: String,
+    /// Number of results, or `—`.
+    pub results: String,
+    /// Duration, or `—`.
+    pub duration: String,
+    /// Image pinned by digest, or the failure reason.
+    pub detail: String,
+    /// When it ended.
+    pub at: Timestamp,
+}
+
+/// Row data of a scanner execution.
+pub fn scanner_run_row(run: &ScannerRunSummary) -> ScannerRunRow {
+    let (outcome, version, results, duration, detail) = match &run.outcome {
+        ScannerOutcome::Ran {
+            version,
+            image,
+            duration_ms,
+            results,
+        } => (
+            Badge {
+                label: "Executado",
+                modifier: "ok",
+            },
+            version.clone(),
+            results.to_string(),
+            format!("{},{} s", duration_ms / 1000, duration_ms % 1000 / 100),
+            image.clone(),
+        ),
+        ScannerOutcome::Failed { reason } => (
+            Badge {
+                label: "Não executado",
+                modifier: "failed",
+            },
+            "—".to_owned(),
+            "—".to_owned(),
+            "—".to_owned(),
+            reason.clone(),
+        ),
+    };
+    ScannerRunRow {
+        scanner: run.scanner.to_string(),
+        outcome,
+        version,
+        results,
+        duration,
+        detail,
+        at: run.occurred_at,
+    }
+}
+
+/// One row of the `ui::scanner_results_table` component.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScannerResultRow {
+    /// Result id (`semgrep:3`).
+    pub id: String,
+    /// Rule, check or advisory id.
+    pub rule_id: String,
+    /// `file:line`, `file` or `—`.
+    pub location: String,
+    /// Severity as reported by the scanner (not OpenTatu's, R18), or `—`.
+    pub reported_severity: String,
+    /// CWE, or `—`.
+    pub cwe: String,
+    /// Scanner message.
+    pub message: String,
+}
+
+/// Row data of a normalized scanner result.
+pub fn scanner_result_row(result: &ScannerResult) -> ScannerResultRow {
+    let location = match (&result.file, result.start_line) {
+        (Some(file), Some(line)) => format!("{file}:{line}"),
+        (Some(file), None) => file.clone(),
+        (None, _) => "—".to_owned(),
+    };
+    let dash = || "—".to_owned();
+    ScannerResultRow {
+        id: result.id.clone(),
+        rule_id: result.rule_id.clone(),
+        location,
+        reported_severity: result.reported_severity.clone().unwrap_or_else(dash),
+        cwe: result.cwe.clone().unwrap_or_else(dash),
+        message: result.message.clone(),
+    }
+}
+
 /// One item of the `ui::timeline` component.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TimelineEntry {
@@ -197,6 +349,26 @@ mod tests {
             .map(|s| audit_status_badge(*s).modifier)
             .collect();
         assert_eq!(statuses.len(), AuditStatus::ALL.len());
+    }
+
+    #[test]
+    fn durations_and_scanner_rows_read_naturally_in_pt_br() {
+        assert_eq!(duration_label(42), "42 s");
+        assert_eq!(duration_label(120), "2 min");
+        assert_eq!(duration_label(4507), "75 min 7 s");
+        let run = ScannerRunSummary {
+            scanner: opentatu_core::ScannerKind::Semgrep,
+            occurred_at: "2026-11-29T14:33:00-03:00".parse().unwrap(),
+            outcome: ScannerOutcome::Ran {
+                version: "1.184.0".into(),
+                image: "semgrep/semgrep@sha256:0".into(),
+                duration_ms: 14_596,
+                results: 4,
+            },
+        };
+        let row = scanner_run_row(&run);
+        assert_eq!(row.duration, "14,5 s");
+        assert_eq!(row.outcome.label, "Executado");
     }
 
     #[test]

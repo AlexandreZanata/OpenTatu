@@ -11,8 +11,8 @@ safe change by AI agents.
    (`core`, `memory`, `reports`); IO lives at the edges (`db`, `llm`, `scanners`,
    `context`). Pure code is trivial to test and to reason about.
 2. **Ports and adapters.** Anything external sits behind a trait in the crate that needs it:
-   `Clock` (core), `LlmClient` (llm), `Scanner` (scanners). Tests use the in-repo fakes
-   (`FixedClock`, `FakeClient`).
+   `Clock` (core), `LlmClient` (llm), `ScannerSuite` (scanners). Tests use the in-repo
+   fakes (`FixedClock`, `FakeClient`, `FakeSuite`).
 3. **One implementation per use case.** Dashboard, MCP, CLI and worker all call
    `opentatu-services`. Interfaces never reach the database.
 4. **Single source of truth for every fact.** Each table below names the one place a fact
@@ -20,7 +20,7 @@ safe change by AI agents.
 5. **Guardrails over guidelines.** Rules that matter are enforced by the compiler, clippy,
    tests or `cargo xtask` — not only written down.
 6. **Local-first and minimal.** One process by default, no runtime services to install
-   besides a container engine for scanners (phase 2), no JavaScript, no CDN.
+   besides a container engine for scanners, no JavaScript, no CDN.
 
 ## Layers
 
@@ -156,6 +156,7 @@ sequenceDiagram
 |---|---|
 | Secrets and local overrides | environment / `.env` (read only in `apps/opentatu/src/config.rs`) |
 | Provider, models per role, allowlist, budgets | [`config/models.toml`](../config/models.toml) (path: `--models-config` / `OPENTATU_MODELS_CONFIG`) |
+| Scanner images, versions, ruleset, ecosystems | [`config/scanners.toml`](../config/scanners.toml) (path: `--scanners-config` / `OPENTATU_SCANNERS_CONFIG`) |
 | Dependency versions | root `Cargo.toml` `[workspace.dependencies]` |
 | Allowed crate dependencies | [`architecture.toml`](../architecture.toml) |
 | Lints and banned calls | root `Cargo.toml` `[workspace.lints]` + [`clippy.toml`](../clippy.toml) |
@@ -169,7 +170,7 @@ sequenceDiagram
 | a table or column | new file in `crates/db/migrations/` + repository module | [add-migration](recipes/add-migration.md) |
 | a dashboard page | `crates/dashboard/src/pages/` + template + route | [add-dashboard-page](recipes/add-dashboard-page.md) |
 | a UI component | macro in `templates/components/ui.html` (+ `view.rs`, CSS) | [add-ui-component](recipes/add-ui-component.md) |
-| a scanner | `Scanner` impl in `crates/scanners/src/` | [add-scanner](recipes/add-scanner.md) |
+| a scanner | adapter in `crates/scanners/src/adapters/` + `ScannerKind` variant | [add-scanner](recipes/add-scanner.md) |
 | an LLM provider | `LlmClient` impl in `crates/llm/src/` (model: `opencode_go.rs`) | [add-dependency](recipes/add-dependency.md) + an ADR |
 | a prompt change | `prompts/<name>.md` + version bump | [change-prompt](recipes/change-prompt.md) |
 | an MCP tool | `crates/mcp/src/` over a use case | [add-mcp-tool](recipes/add-mcp-tool.md) |

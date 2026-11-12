@@ -37,12 +37,60 @@
   <tbody>
   {%- for row in rows %}
     <tr>
-      <td><code>{{ row.id }}</code></td>
+      <td><a href="/audits/{{ row.id }}"><code>{{ row.id }}</code></a></td>
       <td><a href="/apps/{{ row.app }}">{{ row.app }}</a></td>
       <td>{{ row.kind }}</td>
       <td>{% call badge(row.status) %}{% endcall %}</td>
       <td>{% call datetime(row.created_at) %}{% endcall %}</td>
       <td><code>{{ row.commit }}</code></td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{#- scanner_runs_table(rows): one row per scanner execution of an audit;
+    `rows` are view::ScannerRunRow (view::scanner_run_row). -#}
+{% macro scanner_runs_table(rows) %}
+{% if rows.is_empty() %}
+{% call empty_state("Nenhum scanner executado nesta auditoria.", "Os scanners rodam logo após o snapshot do commit.") %}{% endcall %}
+{% else %}
+<table class="c-table">
+  <thead><tr><th>Scanner</th><th>Situação</th><th>Versão</th><th>Resultados</th><th>Duração</th><th>Detalhe</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.scanner }}</code></td>
+      <td>{% call badge(row.outcome) %}{% endcall %}</td>
+      <td>{{ row.version }}</td>
+      <td>{{ row.results }}</td>
+      <td>{{ row.duration }}</td>
+      <td class="c-table__detail">{{ row.detail }}</td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{#- scanner_results_table(rows): normalized scanner results (not findings: the hunter
+    triages them later); `rows` are view::ScannerResultRow (view::scanner_result_row). -#}
+{% macro scanner_results_table(rows) %}
+{% if rows.is_empty() %}
+{% call empty_state("Nenhum resultado de scanner.", "Scanners sem resultados ou que não executaram aparecem na tabela acima.") %}{% endcall %}
+{% else %}
+<table class="c-table">
+  <thead><tr><th>ID</th><th>Regra</th><th>Local</th><th>Severidade informada</th><th>CWE</th><th>Mensagem</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.id }}</code></td>
+      <td class="c-table__detail"><code>{{ row.rule_id }}</code></td>
+      <td class="c-table__detail"><code>{{ row.location }}</code></td>
+      <td>{{ row.reported_severity }}</td>
+      <td>{{ row.cwe }}</td>
+      <td>{{ row.message }}</td>
     </tr>
   {%- endfor %}
   </tbody>

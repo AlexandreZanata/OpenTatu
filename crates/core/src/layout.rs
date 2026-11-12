@@ -8,13 +8,15 @@
 //! <root>/apps/<slug>/OWNER-NOTES.md          owner's free notes (hand-edited, read into MEMORY.md)
 //! <root>/apps/<slug>/history.jsonl           mirror of the app's events
 //! <root>/apps/<slug>/audits/<audit>/audit.json
+//! <root>/apps/<slug>/audits/<audit>/scanners/<tool>.json   raw scanner outputs
+//! <root>/scanner-cache/<tool>/             offline rules and vulnerability databases
 //! <root>/repos/<slug>.git                    bare mirror of the app's repository
 //! <root>/snapshots/<slug>/<commit>/          checkout of one exact commit (R02)
 //! ```
 
 use std::path::{Path, PathBuf};
 
-use crate::{AuditId, CommitHash, Slug};
+use crate::{AuditId, CommitHash, ScannerKind, Slug};
 
 /// Paths of every artifact under the data directory.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,6 +75,16 @@ impl DataLayout {
     /// `audit.json` (spec §B.5).
     pub fn audit_record_file(&self, audit: &AuditId) -> PathBuf {
         self.audit_dir(audit).join("audit.json")
+    }
+
+    /// Raw scanner outputs of one audit (`scanners/<tool>.json`).
+    pub fn scanner_output_dir(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("scanners")
+    }
+
+    /// Offline databases and rules of one scanner, refreshed by `opentatu scanners update`.
+    pub fn scanner_cache_dir(&self, scanner: ScannerKind) -> PathBuf {
+        self.root.join("scanner-cache").join(scanner.as_str())
     }
 
     /// Bare mirror of the app's repository.

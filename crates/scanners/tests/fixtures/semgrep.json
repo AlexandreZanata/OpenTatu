@@ -1,0 +1,137 @@
+{
+ "results": [
+  {
+   "check_id": "rules.dockerfile.security.missing-user.missing-user",
+   "path": "/src/Dockerfile",
+   "start": {
+    "line": 3,
+    "col": 1,
+    "offset": 25
+   },
+   "end": {
+    "line": 3,
+    "col": 35,
+    "offset": 59
+   },
+   "extra": {
+    "message": "By not specifying a USER, a program in the container may run as 'root'. This is a security hazard. If an attacker can control a process running as root, they may have control over the container. Ensure that the last USER in a Dockerfile is a USER other than 'root'.",
+    "fix": "USER non-root\nCMD [\"node\", \"/app/src/orders.js\"]",
+    "metadata": {
+     "cwe": [
+      "CWE-250: Execution with Unnecessary Privileges"
+     ]
+    },
+    "severity": "ERROR",
+    "fingerprint": "requires login",
+    "validation_state": "NO_VALIDATOR",
+    "engine_kind": "OSS"
+   }
+  },
+  {
+   "check_id": "rules.javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage",
+   "path": "/src/src/orders.js",
+   "start": {
+    "line": 3,
+    "col": 7,
+    "offset": 70
+   },
+   "end": {
+    "line": 3,
+    "col": 22,
+    "offset": 85
+   },
+   "extra": {
+    "message": "A CSRF middleware was not detected in your express application. Ensure you are either using one such as `csurf` or `csrf` (see rule references) and/or you are properly doing CSRF validation in your routes with a token or cookies.",
+    "metadata": {
+     "cwe": [
+      "CWE-352: Cross-Site Request Forgery (CSRF)"
+     ]
+    },
+    "severity": "INFO",
+    "fingerprint": "requires login",
+    "validation_state": "NO_VALIDATOR",
+    "engine_kind": "OSS"
+   }
+  },
+  {
+   "check_id": "rules.javascript.express.security.audit.xss.direct-response-write.direct-response-write",
+   "path": "/src/src/orders.js",
+   "start": {
+    "line": 6,
+    "col": 12,
+    "offset": 226
+   },
+   "end": {
+    "line": 6,
+    "col": 16,
+    "offset": 230
+   },
+   "extra": {
+    "message": "Detected directly writing to a Response object from user-defined input. This bypasses any HTML escaping and may expose your application to a Cross-Site-scripting (XSS) vulnerability. Instead, use 'resp.render()' to render safely escaped HTML.",
+    "metadata": {
+     "cwe": [
+      "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+     ]
+    },
+    "severity": "WARNING",
+    "fingerprint": "requires login",
+    "validation_state": "NO_VALIDATOR",
+    "engine_kind": "OSS"
+   }
+  },
+  {
+   "check_id": "rules.javascript.express.security.injection.raw-html-format.raw-html-format",
+   "path": "/src/src/orders.js",
+   "start": {
+    "line": 9,
+    "col": 12,
+    "offset": 282
+   },
+   "end": {
+    "line": 9,
+    "col": 41,
+    "offset": 311
+   },
+   "extra": {
+    "message": "User data flows into the host portion of this manually-constructed HTML. This can introduce a Cross-Site-Scripting (XSS) vulnerability if this comes from user-provided input. Consider using a sanitization library such as DOMPurify to sanitize the HTML within.",
+    "metadata": {
+     "cwe": [
+      "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+     ]
+    },
+    "severity": "WARNING",
+    "fingerprint": "requires login",
+    "validation_state": "NO_VALIDATOR",
+    "engine_kind": "OSS"
+   }
+  },
+  {
+   "check_id": "rules.javascript.express.security.audit.xss.direct-response-write.direct-response-write",
+   "path": "/src/src/orders.js",
+   "start": {
+    "line": 9,
+    "col": 12,
+    "offset": 282
+   },
+   "end": {
+    "line": 9,
+    "col": 51,
+    "offset": 321
+   },
+   "extra": {
+    "message": "Detected directly writing to a Response object from user-defined input. This bypasses any HTML escaping and may expose your application to a Cross-Site-scripting (XSS) vulnerability. Instead, use 'resp.render()' to render safely escaped HTML.",
+    "metadata": {
+     "cwe": [
+      "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+     ]
+    },
+    "severity": "WARNING",
+    "fingerprint": "requires login",
+    "validation_state": "NO_VALIDATOR",
+    "engine_kind": "OSS"
+   }
+  }
+ ],
+ "errors": [],
+ "version": "1.184.0"
+}

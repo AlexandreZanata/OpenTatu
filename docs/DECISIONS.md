@@ -313,3 +313,46 @@ Template:
   skeptic); Muse Spark everywhere (would send raw code to training).
 - **Consequences:** findings excerpts and the findings list reach a model that trains on
   them; the phase 6 benchmark re-evaluates the assignment.
+
+## ADR-0023 — Static scanners: offline analysis, separate refresh, one adapter per tool
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** phase 2 runs Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner (§A.3) on the
+  audited commit. §E.5 demands disposable containers without network, while three of the
+  tools need rules or vulnerability databases from the internet.
+- **Decision:**
+  - `config/scanners.toml` (parsed by `opentatu_scanners::ScannersConfig`) holds the engine,
+    the run timeout and, per tool, the official image **pinned by digest**, its version
+    (R17), the Semgrep registry ruleset and the OSV ecosystems. Unknown keys are rejected.
+  - Two kinds of container runs, never mixed, enforced by `ContainerRun::command_line()`:
+    **analysis** (`--network=none`, snapshot read-only at `/src`, offline data read-only)
+    and **update** (`opentatu scanners update`: network allowed, application code never
+    mounted — a run with network that mounts `/src` is an error). Offline data lives in
+    `<data>/scanner-cache/<tool>/` (`DataLayout::scanner_cache_dir`). Semgrep rules come
+    from the registry URL of the configured ruleset (downloaded, then renamed into place);
+    Trivy refreshes its database and checks bundle; OSV-Scanner downloads the databases of
+    the configured ecosystems by scanning a generated seed directory of tiny lockfiles;
+    Gitleaks needs nothing.
+  - §E.5 additions: `--tmpfs=/tmp` (the tools need a writable temp dir on a read-only root),
+    `HOME=/tmp`, and `--user=<uid>:<gid>` of the data directory's owner, so no tool runs as
+    root and outputs stay owned by the owner. Telemetry off (`--metrics=off`,
+    `SEMGREP_SEND_METRICS=off`, `--disable-version-check`). Gitleaks runs with `--redact`
+    and `--log-opts=HEAD` (history reachable from the audited commit only, R02).
+  - One adapter per tool (`crates/scanners/src/adapters/`): analysis run, success codes,
+    update runs, readiness, and normalization into `opentatu_core::ScannerResult` (ids
+    `<tool>:<n>`, paths relative to the repository root, first CWE, the tool's own severity
+    kept as reported, R18). The worker depends on the `ScannerSuite` port (`Scanners` with
+    containers, `testing::FakeSuite` in tests).
+  - A scanner that is disabled, not ready or failing does not fail the audit: it becomes a
+    `SCANNER_FAILED` event and a pt-BR limitation (R13). Each run that worked is one
+    `SCANNER_RAN` event (version, image, duration, count) with its normalized results in the
+    append-only `scanner_results` table (migration 0004), in the same transaction; the run
+    list of an audit is derived from those events. Raw outputs are kept in
+    `audits/<audit>/scanners/<tool>.json` (§B.4) and versions in `audit.json`.
+- **Alternatives considered:** running the tools' own update during analysis (would need
+  network next to the code); bundling databases into custom images (heavy, stale, a build
+  step to maintain); Semgrep `--config auto` (needs network and sends project metadata);
+  normalizing into findings directly (scanner output is input for the hunter, not a finding).
+- **Consequences:** the first `opentatu scanners update` downloads about 2 GB (mostly the
+  Trivy database); audits list "run `opentatu scanners update`" until it ran. Semgrep
+  registry rules have their own license (Semgrep Rules License): used locally, never
+  redistributed — the ruleset is downloaded on the owner's machine, not committed.

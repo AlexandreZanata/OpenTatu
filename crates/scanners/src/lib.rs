@@ -1,17 +1,30 @@
 //! # opentatu-scanners — deterministic scanners in isolated containers
 //!
-//! The only crate allowed to start external processes (R12; enforced by `clippy.toml`).
-//! Every scanner runs in a disposable container built by [`ContainerRun`], whose flags
-//! implement spec §E.5 in ONE place. Adapters implement [`Scanner`] and normalize raw
-//! output into [`NormalizedResult`], masking secrets with `opentatu_core::mask_secret` (R15).
+//! The only crate allowed to start scanner processes (R12; enforced by `clippy.toml`).
+//! Every run is a disposable container built by [`ContainerRun`], whose flags implement
+//! spec §E.5 in ONE place. Each scanner has one adapter (`src/adapters/`) that knows how to
+//! run it offline, refresh its rules/databases, and normalize its raw output into
+//! [`opentatu_core::ScannerResult`] (secrets never leave a tool unredacted, R15).
 //!
-//! Phase 2 adds the adapters: `semgrep`, `gitleaks`, `trivy` (fs) and `osv`
-//! (docs/recipes/add-scanner.md).
+//! The worker depends on the [`ScannerSuite`] port; [`Scanners`] implements it with
+//! containers and `testing::FakeSuite` (feature `test-support`) without them.
+//!
+//! Two kinds of runs, never mixed (ADR-0023):
+//! - **analysis** — `--network=none`, snapshot mounted read-only at `/src`;
+//! - **update** (`opentatu scanners update`) — network allowed, the source is never mounted.
 
+mod adapters;
+mod config;
+mod engine;
 mod error;
 mod isolation;
-mod scanner;
+mod suite;
+#[cfg(feature = "test-support")]
+pub mod testing;
 
+pub use config::{EngineConfig, ScannersConfig, ToolConfig};
 pub use error::Error;
-pub use isolation::{ContainerEngine, ContainerRun, ISOLATION_FLAGS};
-pub use scanner::{NormalizedResult, ScanContext, Scanner, ScannerOutput};
+pub use isolation::{
+    ContainerEngine, ContainerRun, ISOLATION_FLAGS, Mount, Network, SOURCE_TARGET,
+};
+pub use suite::{ScannerSuite, Scanners};

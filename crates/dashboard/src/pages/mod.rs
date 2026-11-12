@@ -1,5 +1,6 @@
 //! One module per page: handler + template struct (docs/recipes/add-dashboard-page.md).
 
 pub mod app;
+pub mod audit;
 pub mod health;
 pub mod home;

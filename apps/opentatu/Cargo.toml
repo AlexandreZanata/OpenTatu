@@ -20,6 +20,7 @@ opentatu-core = { workspace = true }
 opentatu-dashboard = { workspace = true }
 opentatu-db = { workspace = true }
 opentatu-llm = { workspace = true }
+opentatu-scanners = { workspace = true }
 opentatu-services = { workspace = true }
 opentatu-snapshots = { workspace = true }
 opentatu-worker = { workspace = true }

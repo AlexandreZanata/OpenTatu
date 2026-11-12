@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
-use opentatu_core::AuditKind;
+use opentatu_core::{AuditKind, ScannerKind};
 
 /// OpenTatu — personal security investigation agent (local and private).
 #[derive(Debug, Parser)]
@@ -26,6 +26,15 @@ pub struct Cli {
         default_value = "config/models.toml"
     )]
     pub models_config: PathBuf,
+
+    /// Scanner images, versions and rulesets (ADR-0023).
+    #[arg(
+        long,
+        global = true,
+        env = "OPENTATU_SCANNERS_CONFIG",
+        default_value = "config/scanners.toml"
+    )]
+    pub scanners_config: PathBuf,
 
     /// Command to run.
     #[command(subcommand)]
@@ -56,6 +65,9 @@ pub enum Command {
     Audit(AuditCommand),
     /// Run the MCP server over stdio for fixing agents [roadmap phase 5].
     Mcp,
+    /// Deterministic scanners (Semgrep, Gitleaks, Trivy, OSV-Scanner).
+    #[command(subcommand)]
+    Scanners(ScannersCommand),
     /// LLM provider commands.
     #[command(subcommand)]
     Llm(LlmCommand),
@@ -140,6 +152,25 @@ fn parse_kind(text: &str) -> Result<AuditKind, String> {
     text.to_ascii_uppercase()
         .parse()
         .map_err(|_| format!("unknown audit kind {text:?} (full, incremental, reverification, pr)"))
+}
+
+/// `opentatu scanners ...`
+#[derive(Debug, Subcommand)]
+pub enum ScannersCommand {
+    /// Download or refresh the offline rules and vulnerability databases. Runs containers
+    /// WITH network access that never see application code; audits stay offline.
+    Update {
+        /// Only this scanner: semgrep, gitleaks, trivy or osv-scanner.
+        #[arg(long, value_parser = parse_scanner)]
+        only: Option<ScannerKind>,
+    },
+    /// Show each scanner's version, image and whether its offline data is ready.
+    Status,
+}
+
+fn parse_scanner(text: &str) -> Result<ScannerKind, String> {
+    text.parse()
+        .map_err(|_| format!("unknown scanner {text:?} (semgrep, gitleaks, trivy, osv-scanner)"))
 }
 
 /// `opentatu llm ...`

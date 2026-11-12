@@ -6,6 +6,7 @@ mod dashboard;
 mod db;
 mod llm;
 mod pending;
+mod scanners;
 mod worker;
 
 use std::path::Path;
@@ -15,15 +16,22 @@ use opentatu_core::{DataLayout, SystemClock};
 use opentatu_db::Database;
 use opentatu_services::Services;
 
-use crate::cli::{AppCommand, AuditCommand, Cli, Command, DbCommand, LlmCommand};
+use crate::cli::{AppCommand, AuditCommand, Cli, Command, DbCommand, LlmCommand, ScannersCommand};
 
 /// Runs the parsed command.
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
     let data_dir = cli.data_dir.as_path();
+    let scanners_config = cli.scanners_config.as_path();
     match cli.command {
-        Command::Serve { listen, worker } => worker::serve(data_dir, listen.address, &worker).await,
+        Command::Serve { listen, worker } => {
+            worker::serve(data_dir, scanners_config, listen.address, &worker).await
+        }
         Command::Dashboard(args) => dashboard::run(data_dir, args.address).await,
-        Command::Worker(args) => worker::run(data_dir, &args).await,
+        Command::Worker(args) => worker::run(data_dir, scanners_config, &args).await,
+        Command::Scanners(ScannersCommand::Update { only }) => {
+            scanners::update(data_dir, scanners_config, only).await
+        }
+        Command::Scanners(ScannersCommand::Status) => scanners::status(data_dir, scanners_config),
         Command::App(AppCommand::Add(args)) => app::add(data_dir, args).await,
         Command::App(AppCommand::List) => app::list(data_dir).await,
         Command::Audit(AuditCommand::Create {

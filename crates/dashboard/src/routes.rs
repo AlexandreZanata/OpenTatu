@@ -29,6 +29,7 @@ pub fn router(state: DashboardState, config: &DashboardConfig) -> Router {
     Router::new()
         .route("/", get(pages::home::page))
         .route("/apps/{slug}", get(pages::app::page))
+        .route("/audits/{id}", get(pages::audit::page))
         .route("/health", get(pages::health::json))
         .route("/assets/app.css", get(assets::stylesheet))
         .layer(middleware::from_fn_with_state(
@@ -144,6 +145,85 @@ mod tests {
         assert!(home.contains("href=\"/apps/demo\""), "{home}");
         let (missing, _, _) = get_from(router, "/apps/ghost", "127.0.0.1:7878").await;
         assert_eq!(missing, StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn audit_page_shows_scanner_runs_and_normalized_results() {
+        use opentatu_core::{ScannerKind, ScannerResult, ScannerRun};
+
+        let services = services().await;
+        services
+            .register_app(opentatu_core::NewApp {
+                slug: opentatu_core::Slug::new("demo").unwrap(),
+                name: "Demo".into(),
+                repo_url: "/srv/demo".into(),
+                branch: "main".into(),
+                stack: vec![],
+                sensitive_data: vec![],
+                lab_url: None,
+            })
+            .await
+            .unwrap();
+        let audit = services
+            .create_audit(opentatu_services::NewAudit {
+                app: opentatu_core::Slug::new("demo").unwrap(),
+                kind: opentatu_core::AuditKind::Full,
+                commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+                branch: Some("main".into()),
+                requested_by: opentatu_core::Actor::Owner,
+            })
+            .await
+            .unwrap();
+        let run = ScannerRun {
+            scanner: ScannerKind::Semgrep,
+            version: "1.184.0".into(),
+            image: "semgrep/semgrep@sha256:0".into(),
+            duration_ms: 14_596,
+            results: vec![ScannerResult {
+                scanner: ScannerKind::Semgrep,
+                id: "semgrep:1".into(),
+                rule_id: "javascript.express.raw-html-format".into(),
+                message: "User data flows into <h1> HTML".into(),
+                file: Some("src/orders.js".into()),
+                start_line: Some(9),
+                end_line: Some(9),
+                reported_severity: Some("WARNING".into()),
+                cwe: Some("CWE-79".into()),
+            }],
+        };
+        services.record_scanner_run(&audit.id, &run).await.unwrap();
+        services
+            .record_scanner_failure(&audit.id, ScannerKind::Trivy, "no offline data")
+            .await
+            .unwrap();
+        let router = router_over(services);
+
+        let (status, _, body) = get_from(
+            router.clone(),
+            "/audits/AUD-DEMO-20261129-1432",
+            "127.0.0.1:7878",
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        for expected in [
+            "4c4a5df92ace8d8068e57362a7308e8b9d031b3a",
+            "1.184.0",
+            "Executado",
+            "Não executado",
+            "no offline data",
+            "src/orders.js:9",
+            "CWE-79",
+            "User data flows into &#60;h1&#62; HTML", // escaped, never raw HTML
+            "não são achados confirmados",
+        ] {
+            assert!(body.contains(expected), "missing {expected:?}");
+        }
+        let (_, _, app_page) = get_from(router.clone(), "/apps/demo", "127.0.0.1:7878").await;
+        assert!(app_page.contains("href=\"/audits/AUD-DEMO-20261129-1432\""));
+        for missing in ["/audits/AUD-DEMO-20261129-1433", "/audits/not-an-id"] {
+            let (status, _, _) = get_from(router.clone(), missing, "127.0.0.1:7878").await;
+            assert_eq!(status, StatusCode::NOT_FOUND, "{missing}");
+        }
     }
 
     #[tokio::test]

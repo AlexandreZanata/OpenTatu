@@ -12,7 +12,7 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
 | Base | ✅ | Workspace, layered crates, domain core, database foundation (events append-only), dashboard skeleton, prompts, guardrails (`cargo xtask check`), documentation | `cargo xtask check` passes; `opentatu db migrate` and `opentatu dashboard` work |
 | 0 — Foundation and research | ✅ | Part D research recorded in [opencode-go.md](opencode-go.md); `config/models.toml` filled; OpenCode Go client in `opentatu-llm`; `llm_usage` table and accounting | `cargo run -p opentatu -- llm ping` answers with DeepSeek Flash and records tokens (verified 2026-11-12) |
 | 1 — Apps, audits and memory | ✅ | App registration, snapshot by commit, audit creation with ID and dates, append-only event log use cases, `MEMORY.md` generation, timeline in the dashboard, `opentatu serve` and `opentatu worker` | Creating an "empty" audit produces `AUD-<SLUG>-<YYYYMMDD>-<HHMM>`, the right events, and shows in the timeline with date and time in Brasília time (verified 2026-11-12) |
-| 2 — Static scanners | ⬜ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard |
+| 2 — Static scanners | ✅ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard (verified 2026-11-12) |
 | 3 — Cartographer and coverage | ⬜ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right |
 | 4 — Hunter, verifier (static) and skeptic | ⬜ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage |
 | 5 — Fix trail and MCP | ⬜ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own |
@@ -69,4 +69,27 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
   timeline in Brasília time; 404 page.
 - Verified end to end: OpenTatu registered as an app, audits `AUD-OPENTATU-20261112-0823`
   and `-0823-2` queued, run by `worker --once` and by `serve`, shown in the timeline.
-- Next: phase 2 (static scanners) — waits for the owner's approval.
+
+## Phase 2: what exists
+
+- `config/scanners.toml`: images pinned by digest, versions, Semgrep ruleset (`p/default`),
+  OSV ecosystems, engine and timeout (ADR-0023).
+- `opentatu-scanners`: one adapter per tool (Semgrep, Gitleaks, Trivy fs, OSV-Scanner) with
+  offline analysis runs, refresh runs, readiness and normalization; `ScannerSuite` port,
+  `Scanners` (containers) and `testing::FakeSuite`; runs as the data directory's owner with
+  a `/tmp` tmpfs; network runs can never mount the source.
+- `opentatu scanners update [--only <tool>]` and `opentatu scanners status`.
+- Core `ScannerKind`, `ScannerResult`, `ScannerRun`; `DataLayout::{scanner_output_dir,
+  scanner_cache_dir}`; append-only `scanner_results` table (migration 0004).
+- Use cases: `record_scanner_run`, `record_scanner_failure`, `scanner_results`,
+  `scanner_runs` (derived from `SCANNER_RAN`/`SCANNER_FAILED` events).
+- Worker step `SCANNERS` after the snapshot: raw outputs in `scanners/<tool>.json`, results
+  stored, scanner versions in `audit.json`; a scanner that cannot run becomes a limitation.
+- Dashboard: audit page `/audits/{id}` (summary, limitations, scanner runs, normalized
+  results, events), linked from every audits table.
+- Verified end to end with real containers: `opentatu scanners update` (73 s, ~2 GB) then
+  audit `AUD-DEMO-20261112-0855` of a synthetic vulnerable repository — four raw outputs
+  saved, 23 normalized results (Semgrep 5, Gitleaks 1, Trivy 10, OSV-Scanner 7) on the audit
+  page, versions in `audit.json`, the planted token absent from every output; the audit took
+  21 s.
+- Next: phase 3 (cartographer and coverage) — waits for the owner's approval.

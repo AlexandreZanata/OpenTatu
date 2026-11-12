@@ -29,6 +29,7 @@ Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · St
 | `src/fingerprint.rs` | `Fingerprint`, `FingerprintInput`, `normalize_snippet` | §B.8 |
 | `src/secrets.rs` | `mask_secret`, `Secret` | R15, R16 |
 | `src/usage.rs` | `LlmUsage`, `UsageTotals` | §D.2, R17 |
+| `src/scanner.rs` | `ScannerKind`, `ScannerResult`, `ScannerRun` | §A.3, §C.7, R18 |
 
 Planned: per-audit budget tracking types (phase 4), finding records (phase 4).
 

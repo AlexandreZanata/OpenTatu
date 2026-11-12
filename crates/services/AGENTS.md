@@ -1,7 +1,8 @@
 # opentatu-services — use cases
 
 Layer: **application** · May depend on: `opentatu-core`, `opentatu-db`, `opentatu-memory` ·
-Status: health, accounting (phase 0) ✅; apps, audits, timelines (phase 1) ✅
+Status: health, accounting (phase 0) ✅; apps, audits, timelines (phase 1) ✅; scanner runs
+(phase 2) ✅
 
 ## Responsibility
 
@@ -20,6 +21,7 @@ Status: health, accounting (phase 0) ✅; apps, audits, timelines (phase 1) ✅
 | `src/apps.rs` | `register_app`, `app`, `apps` |
 | `src/audits.rs` | `NewAudit`, `create_audit`, `start_next_audit`, `record_snapshot`, `set_audit_checkpoint`, `finish_audit`, `fail_audit`, audit queries |
 | `src/timeline.rs` | `app_timeline`, `app_history`, `audit_events`, `now` |
+| `src/scanners.rs` | `record_scanner_run`, `record_scanner_failure`, `scanner_results`, `scanner_runs` → `ScannerRunSummary` / `ScannerOutcome` (derived from events) |
 | `src/error.rs` | `Error` (wraps db and domain errors) |
 
 Planned modules (one per aggregate): `findings.rs`, `decisions.rs` (phase 4), `tasks.rs`

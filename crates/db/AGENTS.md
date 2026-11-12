@@ -16,6 +16,7 @@ Layer: **infrastructure** · May depend on: `opentatu-core` · Status: base ✅
 | `migrations/0001_foundation.sql` | `apps`, `snapshots`, `audits`, `events` + append-only triggers |
 | `migrations/0002_llm_usage.sql` | `llm_usage` (model-call accounting) + append-only triggers |
 | `migrations/0003_audit_progress.sql` | `audits.checkpoint`, `audits.limitations` |
+| `migrations/0004_scanner_results.sql` | `scanner_results` (normalized scanner results) + append-only triggers |
 | `src/database.rs` | `Database` (`open`, `in_memory`, `connection`, `begin`), `Connection`, `Transaction` |
 | `src/rows.rs` | `parsed`, `parsed_opt`, `json`, `unsigned`, `to_i64` — use them in every repository |
 | `src/events.rs` | `append`, `list_by_app`, `recent_by_app`, `list_by_audit` (no update/delete, R04) |
@@ -23,6 +24,7 @@ Layer: **infrastructure** · May depend on: `opentatu-core` · Status: base ✅
 | `src/audits.rs` | `insert`, `get`, `exists`, `list_by_app`, `list_recent`, `next_queued`, `last_final`, `update_status` (validated, with event), `set_checkpoint` |
 | `src/snapshots.rs` | `record` (once per commit, event per capture) |
 | `src/llm_usage.rs` | `record`, `totals_since` (append-only) |
+| `src/scanner_results.rs` | `insert_run` (results + `SCANNER_RAN`), `list_by_audit` (append-only) |
 | `src/health.rs` | `schema_version` |
 | `src/error.rs` | `Error` |
 

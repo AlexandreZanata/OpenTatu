@@ -1,7 +1,8 @@
 # opentatu — the single executable (composition root)
 
-Layer: **binary** · May depend on: core, db, llm, services, worker, dashboard, mcp ·
-Status: `serve`, `dashboard`, `worker`, `app`, `audit`, `db migrate`, `llm ping` ✅; `mcp` = phase 5
+Layer: **binary** · May depend on: core, db, llm, scanners, services, snapshots, worker,
+dashboard, mcp · Status: `serve`, `dashboard`, `worker`, `app`, `audit`, `scanners`,
+`db migrate`, `llm ping` ✅; `mcp` = phase 5
 
 ## Responsibility
 
@@ -23,6 +24,7 @@ Status: `serve`, `dashboard`, `worker`, `app`, `audit`, `db migrate`, `llm ping`
 | `src/commands/app.rs` | `app add`, `app list` |
 | `src/commands/audit.rs` | `audit create` (resolves the commit, R02), `audit list` |
 | `src/commands/worker.rs` | `worker [--once]`, `serve` (dashboard + worker) |
+| `src/commands/scanners.rs` | `scanners update [--only]`, `scanners status`; `build()` — the only production wiring of `Scanners` |
 | `src/commands/pending.rs` | `not_implemented(cmd, phase)` for planned commands |
 | `src/usage.rs` | `ServicesUsageRecorder` — the `UsageRecorder` port over `Services` |
 | `src/config.rs` | `.env`, logging, `prepare_data_dir` → `DataLayout` (0700), `api_key` → `Secret` — the only env reader (R16) |

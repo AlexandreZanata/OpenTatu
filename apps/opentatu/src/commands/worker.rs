@@ -2,6 +2,7 @@
 
 use std::net::SocketAddr;
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 
 use opentatu_dashboard::DashboardConfig;
@@ -12,8 +13,8 @@ use crate::cli::WorkerArgs;
 use crate::output;
 
 /// `opentatu worker [--once]`.
-pub async fn run(data_dir: &Path, args: &WorkerArgs) -> anyhow::Result<()> {
-    let worker = build(data_dir).await?;
+pub async fn run(data_dir: &Path, scanners_config: &Path, args: &WorkerArgs) -> anyhow::Result<()> {
+    let worker = build(data_dir, scanners_config).await?;
     if args.once {
         let done = worker.drain().await?;
         output::line(&format!("processed {} audit(s)", done.len()));
@@ -28,10 +29,15 @@ pub async fn run(data_dir: &Path, args: &WorkerArgs) -> anyhow::Result<()> {
 }
 
 /// `opentatu serve`: dashboard and worker in one process (default local mode).
-pub async fn serve(data_dir: &Path, address: SocketAddr, args: &WorkerArgs) -> anyhow::Result<()> {
+pub async fn serve(
+    data_dir: &Path,
+    scanners_config: &Path,
+    address: SocketAddr,
+    args: &WorkerArgs,
+) -> anyhow::Result<()> {
     let config = DashboardConfig::local(address)?;
     let services = super::services(data_dir).await?;
-    let worker = build(data_dir).await?;
+    let worker = build(data_dir, scanners_config).await?;
     output::line(&format!(
         "OpenTatu: http://{address}/ — dashboard and worker running (Ctrl+C to stop)"
     ));
@@ -50,12 +56,14 @@ pub async fn serve(data_dir: &Path, address: SocketAddr, args: &WorkerArgs) -> a
     Ok(())
 }
 
-async fn build(data_dir: &Path) -> anyhow::Result<Worker> {
+async fn build(data_dir: &Path, scanners_config: &Path) -> anyhow::Result<Worker> {
     let layout = super::layout(data_dir)?;
     let services = super::services(data_dir).await?;
+    let scanners = super::scanners::build(data_dir, scanners_config)?;
     Ok(Worker::new(
         services,
         Snapshots::new(layout.clone()),
+        Arc::new(scanners),
         layout,
     ))
 }

@@ -24,6 +24,8 @@ it replaces.
 | Prompt texts and versions | `prompts/*.md` | prompt text in Rust strings |
 | Prompt variables | `opentatu_investigator::prompts::VARIABLES` | new `{{x}}` without registering it |
 | Container isolation flags | `opentatu_scanners::ISOLATION_FLAGS` | hand-built `docker run` args |
+| Scanner images, versions, rulesets | `config/scanners.toml` (`ScannersConfig`) | image tags or versions in code |
+| How each scanner runs and is normalized | `crates/scanners/src/adapters/<tool>.rs` | tool arguments or output parsing elsewhere |
 | Dashboard routes | `opentatu_dashboard::routes::router` | `.route(...)` elsewhere |
 | UI markup | `crates/dashboard/templates/components/ui.html` | copy markup into pages |
 | Severity labels/colors | `opentatu_dashboard::view::severity_badge` | `"Crítica"` literals in templates |
@@ -51,7 +53,8 @@ it replaces.
 | `CommitHash` (`short()`) | Full 40/64-hex commit (R02) | branch names or short hashes in records |
 | `NewApp` (`validate()`), `App` | App profile, git-option injection rejected (R01) | ad-hoc profile structs |
 | `Audit` (`duration_seconds()`) | Audit record / queue item (§B.5) | custom audit structs |
-| `DataLayout` | Every path of §B.4 (db, app files, audits, mirrors, snapshots) | building paths by hand |
+| `DataLayout` | Every path of §B.4 (db, app files, audits, raw scanner outputs, scanner caches, mirrors, snapshots) | building paths by hand |
+| `ScannerKind`, `ScannerResult`, `ScannerRun` | The four scanners and their normalized results (§A.3) | per-tool result structs outside `opentatu-scanners` |
 | `Timestamp` | Whole-second instant; `iso()`, `display_pt_br()`, `local_minute()`, `local_month()`, `seconds_since()`, `start_of_month()` | `jiff`/`chrono` types outside core |
 | `Clock`, `SystemClock`, `FixedClock` | Injectable "now" (R03); fixed clock for tests | system time calls |
 | `AuditKind`, `AuditStatus` + `allowed_transitions()`, `validate_transition()`, `reached_by(EventKind)` | Audit enums and status machine (§A.5, R13, Q-002) | ad-hoc status checks |
@@ -78,10 +81,12 @@ it replaces.
 | `audits::{insert, get, exists, list_by_app, list_recent, next_queued, last_final, update_status, set_checkpoint}` | Audits and the worker queue; `update_status` validates the transition and appends the event |
 | `snapshots::record` | Captured commits (once per commit) + `SNAPSHOT_CAPTURED` |
 | `events::{recent_by_app, list_by_audit}` | Timelines |
+| `scanner_results::{insert_run, list_by_audit}` | Normalized scanner results (append-only) + `SCANNER_RAN` |
 | `health::schema_version` | Highest applied migration |
 | `rows::{parsed, parsed_opt, json, unsigned, to_i64}` (crate-private) | Typed column reading with column-named errors — use in every repository |
 
-Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage` (see `migrations/`).
+Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results` (see
+`migrations/`).
 
 ## opentatu-services (`crates/services`)
 
@@ -95,6 +100,8 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage` (see `migrations/`)
 | `Services::start_next_audit`, `record_snapshot`, `set_audit_checkpoint`, `finish_audit`, `fail_audit` | Queue and lifecycle; each status change is an event |
 | `Services::audit`, `audits_of_app`, `recent_audits` | Audit queries |
 | `Services::app_timeline`, `app_history`, `audit_events`, `now` | Event queries; clock for artifacts |
+| `Services::record_scanner_run`, `record_scanner_failure` | `SCANNER_RAN` (+ results) / `SCANNER_FAILED` |
+| `Services::scanner_results`, `scanner_runs` → `ScannerRunSummary` (`ScannerOutcome`) | Results of an audit; its runs derived from events |
 | `Services::record_llm_usage(&LlmUsage)` | Stores one model call, stamped with the clock |
 | `Services::llm_usage_this_month(model)` → `UsageTotals` | Monthly totals (plan share, §A.2) |
 
@@ -111,6 +118,8 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage` (see `migrations/`)
 | `view::Badge`, `view::severity_badge`, `view::audit_status_badge` | Badge data; pt-BR labels |
 | `view::{audit_kind_label, event_label}` | pt-BR names of audit kinds and event kinds |
 | `view::{AuditRow, audit_row, TimelineEntry, timeline_entry, AppSummary, app_summary}` | Rows for the table, timeline and apps list components |
+| `view::{AuditSummary, audit_summary, duration_label}` | Audit page header (pt-BR durations) |
+| `view::{ScannerRunRow, scanner_run_row, ScannerResultRow, scanner_result_row}` | Rows of the scanner tables |
 | `PageError` | Logs details, shows a generic pt-BR error page |
 
 UI components (`templates/components/ui.html`, import as `ui`):
@@ -123,6 +132,8 @@ UI components (`templates/components/ui.html`, import as `ui`):
 | `ui::datetime(ts)` | Any `Timestamp` shown to the owner (`<time>` with ISO) |
 | `ui::audits_table(rows)` | Audits table (`view::AuditRow`), with empty state |
 | `ui::timeline(entries)` | Event timeline (`view::TimelineEntry`), with empty state |
+| `ui::scanner_runs_table(rows)` | Scanner executions of an audit (`view::ScannerRunRow`) |
+| `ui::scanner_results_table(rows)` | Normalized scanner results (`view::ScannerResultRow`) |
 
 CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge`, `c-empty`,
 `c-list`, `c-meta`, `c-table`, `c-timeline`,
@@ -161,8 +172,11 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 |---|---|
 | `ISOLATION_FLAGS` | §E.5 container flags (single list) |
 | `ContainerRun::command_line()` | Full engine command; rejects unpinned images and unsafe paths |
-| `ContainerEngine` | `docker` or `podman` |
-| `Scanner` (trait), `ScanContext`, `ScannerOutput`, `NormalizedResult` | Adapter port and common result format |
+| `ContainerEngine`, `Network`, `Mount`, `SOURCE_TARGET` | Engine CLI, network mode (analysis = none), bind mounts; network runs cannot mount `/src` |
+| `ScannersConfig::{load, tool, validate}` | `config/scanners.toml` (pinned images, versions, ruleset, ecosystems) |
+| `ScannerSuite` (trait) | Port used by the worker: `enabled`, `ready`, `run(kind, source, output)` → `ScannerRun` |
+| `Scanners::{new, update, cache_dir}` | Container-backed suite; `update` refreshes offline data (network, no source) |
+| `testing::FakeSuite` (feature `test-support`) | Canned outcomes per scanner for worker tests |
 
 ## opentatu-snapshots (`crates/snapshots`)
 
@@ -184,14 +198,15 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 
 | Component | Purpose |
 |---|---|
-| `AuditRecord::from_audit(&Audit)`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
+| `AuditRecord::from_audit(&Audit)`, `with_scanners(versions)`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
 
 ## opentatu-worker (`crates/worker`)
 
 | Component | Purpose |
 |---|---|
 | `Worker::{new, run_once, drain, run}` | Claims and runs queued audits; failures end the audit, not the worker |
-| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far and the limitations of the missing ones |
+| `Worker::new(services, snapshots, scanners, layout)` | Takes an `Arc<dyn ScannerSuite>` |
+| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far (snapshot, scanners, artifacts) and the limitations of the missing ones |
 
 ## Planned crates (structure only)
 
@@ -208,6 +223,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | Production wiring | `apps/opentatu/src/commands/mod.rs` → `services()` | The one place production `Services` are built |
 | `config::{load_dotenv, init_logging, database_path, api_key}` | `apps/opentatu/src/config.rs` | Env, logging to stderr, data dir (0700), API key as `Secret` |
 | `ServicesUsageRecorder` | `apps/opentatu/src/usage.rs` | `UsageRecorder` over `Services` (composition root) |
+| `scanners::build` | `apps/opentatu/src/commands/scanners.rs` | The one place production `Scanners` are built (`--scanners-config`) |
 | `output::{line, error}` | `apps/opentatu/src/output.rs` | Terminal output |
 | `pending::not_implemented(cmd, phase)` | `apps/opentatu/src/commands/pending.rs` | Placeholder for planned commands |
 | Repository checks | `xtask/src/` (crate `xtask`) | `architecture`, `docs`, `glossary` |

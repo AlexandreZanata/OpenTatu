@@ -75,6 +75,13 @@ impl AuditRecord {
         }
     }
 
+    /// Sets the version of every scanner that ran (`None` when none ran, R14).
+    #[must_use]
+    pub fn with_scanners(mut self, versions: BTreeMap<String, String>) -> Self {
+        self.scanners = (!versions.is_empty()).then_some(versions);
+        self
+    }
+
     /// Pretty JSON text of the record.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         let mut text = serde_json::to_string_pretty(self)?;
@@ -111,6 +118,7 @@ mod tests {
         assert_eq!(json["duration_seconds"], 4507);
         assert_eq!(json["display"], "29/11/2026 às 14:32 (horário de Brasília)");
         assert!(json["results"].is_null());
+        assert!(json["scanners"].is_null());
         assert!(json["coverage"].is_null());
         assert_eq!(
             json["limitations"][0],

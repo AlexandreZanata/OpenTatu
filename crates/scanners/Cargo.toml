@@ -11,8 +11,18 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[features]
+# `testing::FakeSuite`, for tests of crates that depend on the `ScannerSuite` port.
+test-support = []
+
 [dependencies]
 async-trait = { workspace = true }
 opentatu-core = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true }
+toml = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

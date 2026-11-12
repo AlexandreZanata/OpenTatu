@@ -28,6 +28,7 @@ pub mod audits;
 pub mod events;
 pub mod health;
 pub mod llm_usage;
+pub mod scanner_results;
 pub mod snapshots;
 
 pub use database::{Connection, Database, Transaction};

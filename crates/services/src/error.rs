@@ -28,4 +28,8 @@ pub enum Error {
     /// The request conflicts with the current state.
     #[error("conflict: {0}")]
     Conflict(String),
+
+    /// Stored data (e.g. an event payload) does not have the expected shape.
+    #[error("inconsistent stored data: {0}")]
+    Corrupt(String),
 }

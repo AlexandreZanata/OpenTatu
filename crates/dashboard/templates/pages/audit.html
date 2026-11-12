@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}{{ audit.id }} · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card(audit.id) %}
+  <dl class="c-meta">
+    <dt>Aplicação</dt><dd><a href="/apps/{{ audit.app }}">{{ audit.app }}</a></dd>
+    <dt>Tipo</dt><dd>{{ audit.kind }}</dd>
+    <dt>Status</dt><dd>{% call ui::badge(audit.status) %}{% endcall %}</dd>
+    <dt>Commit</dt><dd><code>{{ audit.commit }}</code> ({{ audit.branch }})</dd>
+    <dt>Criada em</dt><dd>{% call ui::datetime(audit.created_at) %}{% endcall %}</dd>
+    <dt>Iniciada em</dt><dd>{% if let Some(at) = audit.started_at %}{% call ui::datetime(at) %}{% endcall %}{% else %}—{% endif %}</dd>
+    <dt>Encerrada em</dt><dd>{% if let Some(at) = audit.completed_at %}{% call ui::datetime(at) %}{% endcall %}{% else %}—{% endif %}</dd>
+    <dt>Duração</dt><dd>{{ audit.duration }}</dd>
+  </dl>
+{% endcall %}
+
+{% call ui::card("Limitações") %}
+  {% if audit.limitations.is_empty() %}
+    <p>Nenhuma limitação registrada.</p>
+  {% else %}
+  <ul class="c-list">
+    {%- for limitation in audit.limitations %}
+    <li class="c-list__item">{{ limitation }}</li>
+    {%- endfor %}
+  </ul>
+  {% endif %}
+{% endcall %}
+
+{% call ui::card("Scanners") %}
+  {% call ui::scanner_runs_table(runs) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Resultados dos scanners") %}
+  <p class="c-list__meta">Resultados brutos normalizados. Ainda não foram triados pela IA: não são achados confirmados e a severidade é a informada pela ferramenta.</p>
+  {% call ui::scanner_results_table(results) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Eventos da auditoria") %}
+  {% call ui::timeline(timeline) %}{% endcall %}
+{% endcall %}
+{% endblock %}

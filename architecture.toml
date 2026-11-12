@@ -108,6 +108,7 @@ may_depend_on = [
     "opentatu-core",
     "opentatu-db",
     "opentatu-llm",
+    "opentatu-scanners",
     "opentatu-services",
     "opentatu-snapshots",
     "opentatu-worker",

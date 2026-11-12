@@ -28,18 +28,21 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 1 done** — apps, audits of exact commits, append-only history,
-> working memory and dashboard timeline; OpenCode Go integration (phase 0). Scanners and AI
-> analysis arrive in phases 2–5. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> Status: **roadmap phase 2 done** — Semgrep, Gitleaks, Trivy and OSV-Scanner run offline in
+> isolated containers on the exact commit and their normalized results show in the
+> dashboard; apps, audits, append-only history and working memory (phase 1); OpenCode Go
+> integration (phase 0). AI analysis arrives in phases 3–5. See
+> [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Quick start
 
 Requirements: Rust (the exact toolchain in `rust-toolchain.toml` is installed by rustup
-automatically) and `git`. Docker or rootless Podman will be needed from phase 2 on (scanners).
+automatically), `git`, and Docker or rootless Podman (scanners).
 
 ```bash
 cp .env.example .env                       # then set OPENCODE_GO_API_KEY
 cargo run -p opentatu -- llm ping          # checks the model provider
+cargo run -p opentatu -- scanners update   # downloads rules and databases (~2 GB, network)
 cargo run -p opentatu -- app add --slug myapp --name "My App" --repo /path/to/repo
 cargo run -p opentatu -- audit create --app myapp
 cargo run -p opentatu -- serve             # dashboard + worker

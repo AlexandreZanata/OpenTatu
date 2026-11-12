@@ -12,17 +12,20 @@ them in the same change.
 | Use case | the module in `crates/services/src/` | `Services::in_memory(clock)` |
 | HTTP (dashboard) | `crates/dashboard/src/routes.rs` tests | `tower::ServiceExt::oneshot`, `Host` header set |
 | HTTP (provider client) | `crates/llm/src/opencode_go.rs` tests | local `axum` server on `127.0.0.1:0` asserting headers; recorded response shapes |
+| Scanner normalization | adapter tests in `crates/scanners/src/adapters/` | trimmed real outputs in `crates/scanners/tests/fixtures/` |
+| Real containers (opt-in) | `crates/scanners/tests/containers.rs` (`#[ignore]`) | Docker/Podman; downloads ~2 GB on the first run into `target/tmp/` |
 | Repository checks | `xtask/src/main.rs` tests | architecture, docs, glossary |
 
 Integration tests that span crates go in `<crate>/tests/` of the highest crate involved
-(example: `crates/worker/tests/phase1_audit.rs`). Their helper functions are not `#[test]`
+(example: `crates/worker/tests/audit_pipeline.rs`). Their helper functions are not `#[test]`
 functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comment.
 
 ## Rules
 
 - **Deterministic.** Time from `FixedClock`; no sleeps; no randomness without a fixed seed.
-- **Hermetic.** No network, no real LLM (use `opentatu_llm::FakeClient`), no containers in
-  unit tests, no writes outside temporary or in-memory storage.
+- **Hermetic.** No network, no real LLM (use `opentatu_llm::FakeClient`), no containers
+  (use `opentatu_scanners::testing::FakeSuite`), no writes outside temporary or in-memory
+  storage. The only exception is opt-in and `#[ignore]`d: real scanner containers.
 - **Business rules are named.** A test that guards a rule starts with its id:
   `r04_events_cannot_be_updated`, `r06_only_reverification_closes_a_finding`. Grep `fn r0`
   to see which rules are covered.
@@ -44,6 +47,8 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |
+| Scanners | `opentatu_scanners::testing::FakeSuite::clean().with(kind, FakeOutcome::...)` (feature `test-support`) |
+| A scanner result | `FakeSuite::result(kind, n, rule_id, file)` |
 | A temporary data directory | `tempfile::tempdir()` + `DataLayout::new(dir.path())` |
 
 ## Running
@@ -53,6 +58,7 @@ cargo test --workspace                 # everything
 cargo test -p opentatu-db              # one crate
 cargo test -p opentatu-core fingerprint  # tests whose name contains "fingerprint"
 cargo xtask check                      # what CI runs
+cargo test -p opentatu-scanners --test containers -- --ignored --nocapture  # real containers
 ```
 
 ## Planned (when the features arrive)

@@ -122,6 +122,7 @@ a { color: var(--accent); }
 .c-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .c-table th, .c-table td { text-align: left; padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--border); }
 .c-table th { color: var(--muted); font-weight: 600; }
+.c-table__detail { overflow-wrap: anywhere; color: var(--muted); font-size: 0.85rem; }
 
 .c-timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
 .c-timeline__item { display: grid; gap: 0 var(--space-3); grid-template-columns: 16rem 1fr; padding: var(--space-1) var(--space-3); }

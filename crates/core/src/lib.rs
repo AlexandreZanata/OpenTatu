@@ -19,6 +19,7 @@ pub mod fingerprint;
 pub mod ids;
 pub mod layout;
 pub mod role;
+pub mod scanner;
 pub mod secrets;
 pub mod severity;
 pub mod time;
@@ -35,6 +36,7 @@ pub use ids::{
 };
 pub use layout::DataLayout;
 pub use role::AiRole;
+pub use scanner::{ScannerKind, ScannerResult, ScannerRun};
 pub use secrets::{Secret, mask_secret};
 pub use severity::{Severity, SeverityAdjustments};
 pub use time::{Clock, FixedClock, SystemClock, Timestamp};
