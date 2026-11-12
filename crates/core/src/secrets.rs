@@ -1,7 +1,10 @@
-//! Secret masking for reports, events and logs (rule R15; base prompt principle 7).
+//! Secrets: masking for reports, events and logs (R15; base prompt principle 7) and the
+//! [`Secret`] wrapper that keeps credentials out of logs and errors (R16).
 //!
-//! Shows at most the last 4 characters, plus a known non-secret type prefix
+//! Masking shows at most the last 4 characters, plus a known non-secret type prefix
 //! (`sk_live_`, `ghp_`...). Example from the spec: `sk_live_****9f2a`.
+
+use std::fmt;
 
 /// Mask placed where the secret was.
 pub const MASK: &str = "****";
@@ -59,6 +62,41 @@ pub fn mask_secret(value: &str) -> String {
     format!("{prefix}{MASK}{suffix}")
 }
 
+/// A credential (API key, token). `Debug` and `Display` print only [`MASK`], it cannot be
+/// serialized, and the value is reachable only through [`Secret::expose`] — call it at the
+/// last moment (e.g. when building the HTTP header), never to log or store it (R16).
+#[derive(Clone, PartialEq, Eq)]
+pub struct Secret(String);
+
+impl Secret {
+    /// Wraps a credential.
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    /// The raw value. Use only where the credential is sent to its own service.
+    pub fn expose(&self) -> &str {
+        &self.0
+    }
+
+    /// Whether the value is empty (e.g. an unset environment variable).
+    pub fn is_empty(&self) -> bool {
+        self.0.trim().is_empty()
+    }
+}
+
+impl fmt::Debug for Secret {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Secret({MASK})")
+    }
+}
+
+impl fmt::Display for Secret {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(MASK)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,6 +119,15 @@ mod tests {
     #[test]
     fn r15_unknown_prefix_shows_only_last_four() {
         assert_eq!(mask_secret("aaaaaaaaaaaaaaaa1234"), "****1234");
+    }
+
+    #[test]
+    fn r16_secret_never_prints_its_value() {
+        let secret = Secret::new("oc_sk_example_value_1234");
+        assert_eq!(format!("{secret}"), "****");
+        assert_eq!(format!("{secret:?}"), "Secret(****)");
+        assert_eq!(secret.expose(), "oc_sk_example_value_1234");
+        assert!(Secret::new("  ").is_empty());
     }
 
     #[test]

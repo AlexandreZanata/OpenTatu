@@ -70,6 +70,7 @@ cargo xtask docs                      # only the documentation checks
 cargo xtask glossary                  # only the vocabulary check
 cargo run -p opentatu -- --help       # the CLI
 cargo run -p opentatu -- db migrate   # create/migrate ./data/opentatu.db
+cargo run -p opentatu -- llm ping     # real model call (needs OPENCODE_GO_API_KEY in .env)
 cargo run -p opentatu -- dashboard    # http://127.0.0.1:7878
 ```
 

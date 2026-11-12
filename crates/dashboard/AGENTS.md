@@ -17,7 +17,7 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | `src/pages/<page>.rs` | one handler + template struct per page (`home`, `health`) |
 | `src/render.rs` | `render(&page)` — the only template → response path |
 | `src/view.rs` | `Layout`, `Badge`, `severity_badge` — the only domain → UI text mapping |
-| `src/security.rs` | `check_host` (DNS rebinding), `security_headers` (CSP, no-store...) |
+| `src/security.rs` | `check_host` (DNS rebinding), `check_origin` (CSRF), `security_headers` (CSP, no-store...) |
 | `src/config.rs` | `DashboardConfig::local` (loopback only) |
 | `src/server.rs` | `serve()` with graceful shutdown |
 | `src/assets.rs` | `/assets/app.css` |
@@ -42,7 +42,8 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 - Never duplicate component markup; never style inline; colors/spacing only via tokens.
 - Dates only through `ui::datetime` (or `Timestamp::display_pt_br`).
 - Handlers call `state.services` and `render(...)`; nothing else.
-- Security defaults stay on: loopback bind, `Host` allowlist, CSP without scripts,
+- Security defaults stay on (Q-005): loopback bind, `Host` allowlist, `Origin` check on
+  every state-changing request, CSP without scripts, `Referrer-Policy: same-origin`,
   `Cache-Control: no-store` on pages. Forms (later): POST + CSRF token + `SameSite=Strict`.
 
 ## How to extend

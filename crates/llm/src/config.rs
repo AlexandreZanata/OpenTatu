@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::Error;
 
+/// Default HTTP timeout: reasoning models can think for minutes on large inputs.
+const DEFAULT_TIMEOUT_SECONDS: u64 = 300;
+
 /// Root of `config/models.toml`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -26,17 +29,44 @@ pub struct ModelsConfig {
 pub struct ProviderConfig {
     /// Provider name, e.g. `opencode-go`.
     pub name: String,
-    /// Base URL confirmed in `docs/opencode-go.md` (empty until phase 0 research).
+    /// Base URL confirmed in `docs/opencode-go.md` (HTTPS).
     pub base_url: String,
     /// Name of the environment variable holding the API key (never the key itself).
     pub api_key_env: String,
+    /// HTTP timeout per call, in seconds.
+    #[serde(default = "default_timeout_seconds")]
+    pub timeout_seconds: u64,
+    /// The only models OpenTatu may call (empty = no restriction). The provider does not
+    /// enforce key restrictions server-side, so OpenTatu does (docs/opencode-go.md).
+    #[serde(default)]
+    pub allowed_models: Vec<String>,
+    /// Models whose provider trains on prompts/completions. Never assigned to AI roles
+    /// (they receive application code); usable only for diagnostics such as `llm ping`.
+    #[serde(default)]
+    pub models_that_train_on_prompts: Vec<String>,
+}
+
+fn default_timeout_seconds() -> u64 {
+    DEFAULT_TIMEOUT_SECONDS
+}
+
+impl ProviderConfig {
+    /// Whether OpenTatu may call `model` at all.
+    pub fn is_allowed(&self, model: &str) -> bool {
+        self.allowed_models.is_empty() || self.allowed_models.iter().any(|m| m == model)
+    }
+
+    /// Whether the provider trains on prompts sent to `model`.
+    pub fn trains_on_prompts(&self, model: &str) -> bool {
+        self.models_that_train_on_prompts.iter().any(|m| m == model)
+    }
 }
 
 /// Model settings of one AI role.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RoleConfig {
-    /// Exact model id (empty until phase 0 research).
+    /// Exact model id from `docs/opencode-go.md`.
     pub model: String,
     /// Sampling temperature (0.0–2.0).
     pub temperature: f32,
@@ -52,7 +82,7 @@ pub struct BudgetConfig {
     pub per_audit: BTreeMap<AuditKind, AuditBudget>,
 }
 
-/// Limits of a single audit. `0` means "not defined yet" (reported by `validate`).
+/// Limits of a single audit. `0` means "not defined" (reported by `validate`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AuditBudget {
@@ -79,26 +109,48 @@ impl ModelsConfig {
         Self::from_toml(&text)
     }
 
-    /// Problems that prevent real model calls (missing roles, placeholders not yet filled
-    /// by the phase 0 research, out-of-range values). Empty means ready.
+    /// Distinct models assigned to AI roles, sorted.
+    pub fn role_models(&self) -> Vec<&str> {
+        let mut models: Vec<&str> = self.roles.values().map(|r| r.model.as_str()).collect();
+        models.sort_unstable();
+        models.dedup();
+        models
+    }
+
+    /// Problems that prevent real model calls. Empty means ready.
     pub fn validate(&self) -> Vec<String> {
         let mut problems = Vec::new();
-        if self.provider.base_url.trim().is_empty() {
-            problems.push("provider.base_url is empty (fill it from docs/opencode-go.md)".into());
+        let provider = &self.provider;
+        if !provider.base_url.starts_with("https://") {
+            problems
+                .push("provider.base_url must be an https:// URL (see docs/opencode-go.md)".into());
         }
-        if self.provider.api_key_env.trim().is_empty() {
+        if provider.api_key_env.trim().is_empty() {
             problems.push("provider.api_key_env is empty".into());
         }
+        if provider.timeout_seconds == 0 {
+            problems.push("provider.timeout_seconds must be greater than 0".into());
+        }
         for role in AiRole::ALL {
-            match self.roles.get(role) {
-                None => problems.push(format!("roles.{role} is missing")),
-                Some(config) if config.model.trim().is_empty() => {
-                    problems.push(format!("roles.{role}.model is empty"));
-                }
-                Some(config) if !(0.0..=2.0).contains(&config.temperature) => {
-                    problems.push(format!("roles.{role}.temperature must be within 0.0..=2.0"));
-                }
-                Some(_) => {}
+            let Some(config) = self.roles.get(role) else {
+                problems.push(format!("roles.{role} is missing"));
+                continue;
+            };
+            if config.model.trim().is_empty() {
+                problems.push(format!("roles.{role}.model is empty"));
+            } else if !provider.is_allowed(&config.model) {
+                problems.push(format!(
+                    "roles.{role}.model `{}` is not in allowed_models",
+                    config.model
+                ));
+            } else if provider.trains_on_prompts(&config.model) {
+                problems.push(format!(
+                    "roles.{role}.model `{}` trains on prompts; roles receive application code",
+                    config.model
+                ));
+            }
+            if !(0.0..=2.0).contains(&config.temperature) {
+                problems.push(format!("roles.{role}.temperature must be within 0.0..=2.0"));
             }
         }
         if !(self.budget.max_plan_share > 0.0 && self.budget.max_plan_share <= 1.0) {
@@ -125,13 +177,16 @@ impl ModelsConfig {
 mod tests {
     use super::*;
 
-    /// The committed config must always parse and cover every role, even before the
-    /// phase 0 research fills the placeholders.
+    /// The committed config must always parse, cover every role and be ready for calls.
     const COMMITTED: &str = include_str!("../../../config/models.toml");
+
+    fn committed() -> ModelsConfig {
+        ModelsConfig::from_toml(COMMITTED).unwrap()
+    }
 
     #[test]
     fn committed_config_parses_and_covers_every_role() {
-        let config = ModelsConfig::from_toml(COMMITTED).unwrap();
+        let config = committed();
         for role in AiRole::ALL {
             assert!(
                 config.roles.contains_key(role),
@@ -142,21 +197,41 @@ mod tests {
     }
 
     #[test]
-    fn validate_reports_placeholders() {
-        let config = ModelsConfig::from_toml(COMMITTED).unwrap();
-        let mut ready = config.clone();
-        ready.provider.base_url = "https://provider.test/v1".into();
-        for role in ready.roles.values_mut() {
-            role.model = "model-x".into();
-        }
-        for limits in ready.budget.per_audit.values_mut() {
-            limits.max_tokens = 1_000;
-            limits.max_calls = 10;
-        }
-        assert!(ready.validate().is_empty(), "{:?}", ready.validate());
-        if config.provider.base_url.is_empty() {
-            assert!(!config.validate().is_empty());
-        }
+    fn committed_config_is_ready_for_calls() {
+        let problems = committed().validate();
+        assert!(problems.is_empty(), "{problems:?}");
+    }
+
+    #[test]
+    fn roles_cannot_use_models_outside_the_allowlist() {
+        let mut config = committed();
+        config.roles.get_mut(&AiRole::Hunter).unwrap().model = "glm-5.3".into();
+        assert!(
+            config
+                .validate()
+                .iter()
+                .any(|p| p.contains("not in allowed_models"))
+        );
+    }
+
+    #[test]
+    fn roles_cannot_use_models_that_train_on_prompts() {
+        let mut config = committed();
+        let training = config.provider.models_that_train_on_prompts[0].clone();
+        config.roles.get_mut(&AiRole::Skeptic).unwrap().model = training;
+        assert!(
+            config
+                .validate()
+                .iter()
+                .any(|p| p.contains("trains on prompts"))
+        );
+    }
+
+    #[test]
+    fn plain_http_is_rejected() {
+        let mut config = committed();
+        config.provider.base_url = "http://insecure.test/v1".into();
+        assert!(config.validate().iter().any(|p| p.contains("https://")));
     }
 
     #[test]

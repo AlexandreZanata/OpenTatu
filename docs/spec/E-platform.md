@@ -40,7 +40,7 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `snapshots` | id, app, commit_hash, captured_at | base |
 | `audits` | id, app, kind, status, commit_hash, previous_audit_id, created_at, started_at, completed_at, budget, usage, summary | base |
 | `events` | id, kind, app, audit_id, occurred_at, actor, target, data (JSON), model, prompt_version, references_event_id — **no UPDATE or DELETE (SQLite triggers)** | base |
-| `llm_usage` | id, audit_id, role, model, input_tokens, output_tokens, duration_ms, occurred_at | 0 |
+| `llm_usage` | id, audit_id, role, model, input_tokens, output_tokens, reasoning_tokens, cost_usd, duration_ms, occurred_at — append-only | 0 ✅ |
 | `maps` | id, app, audit_id, content (JSON), created_at | 3 |
 | `hypotheses` | id, audit_id, content (JSON), verdict | 4 |
 | `findings` | id, app, state, severity, cwe, fingerprint, location, first_detected, last_detected | 4 |
@@ -75,8 +75,8 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `opentatu_verification_status(task_id)` | verification status |
 | `opentatu_history(app, limit)` | timeline |
 
-Rules: one token per agent; every call becomes an event (see Q-007); no tool closes a
-finding or changes severity.
+Rules: one token per agent; every call becomes exactly one event (read-only tools:
+`MCP_TOOL_CALLED`, Q-007); no tool closes a finding or changes severity.
 
 ## E.7 Roadmap
 

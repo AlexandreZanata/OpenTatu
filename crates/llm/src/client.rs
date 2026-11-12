@@ -62,14 +62,17 @@ pub struct ModelRequest {
     pub temperature: f32,
     /// Conversation.
     pub messages: Vec<Message>,
-    /// JSON Schema the answer must follow (when the provider supports structured output).
+    /// JSON Schema the answer must follow. When present, the provider is asked for JSON
+    /// output; the schema itself is enforced by the investigator's validation.
     pub json_schema: Option<serde_json::Value>,
-    /// Output token limit, if any.
+    /// Output token limit, if any (reasoning tokens count against it).
     pub max_output_tokens: Option<u32>,
+    /// Provider conversation id (OpenCode Go requires `x-opencode-session`).
+    pub session_id: String,
 }
 
 /// A model answer plus the accounting data recorded in `llm_usage` (spec §D.2, R17).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ModelResponse {
     /// Raw text content (JSON for every investigator role).
     pub content: String,
@@ -77,8 +80,14 @@ pub struct ModelResponse {
     pub model: String,
     /// Prompt tokens.
     pub input_tokens: u64,
-    /// Completion tokens.
+    /// Completion tokens (reasoning included).
     pub output_tokens: u64,
+    /// Reasoning tokens (subset of `output_tokens`; 0 when not reported).
+    pub reasoning_tokens: u64,
+    /// Cost in US dollars charged against the plan allowance, when reported.
+    pub cost_usd: Option<f64>,
+    /// Why generation stopped (`stop`, `length`...), when reported.
+    pub finish_reason: Option<String>,
     /// Wall-clock latency in milliseconds.
     pub duration_ms: u64,
 }

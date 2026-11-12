@@ -27,7 +27,8 @@ events.
 | Event | `EVT-<NNNNNNNN>`, global sequence | `EVT-00000184` |
 | Map version | `MAP-<SLUG>-<YYYYMMDD>-<HHMM>` | `MAP-ABASTEVO-20261129-1432` |
 
-Implemented in `opentatu_core::ids` (see Q-001 about which timestamp stamps the audit ID).
+Implemented in `opentatu_core::ids`. The audit ID is stamped with the audit's `created_at`
+(Q-001, answered).
 
 ## B.3 Dates and times
 
@@ -90,10 +91,10 @@ committed.
   "commit": "<full 40-character hash>",
   "branch": "main",
   "previous_audit_id": "AUD-ABASTEVO-20261101-0910",
-  "created_at": "2026-11-29T14:31:47-03:00",
-  "started_at": "2026-11-29T14:32:00-03:00",
+  "created_at": "2026-11-29T14:32:00-03:00",
+  "started_at": "2026-11-29T14:32:05-03:00",
   "completed_at": "2026-11-29T15:47:12-03:00",
-  "duration_seconds": 4512,
+  "duration_seconds": 4507,
   "display": "29/11/2026 às 14:32 (horário de Brasília)",
   "models": { "cartographer": "<id>", "hunter": "<id>", "verifier": "<id>",
               "skeptic": "<id>", "planner": "<id>", "reporter": "<id>" },
@@ -154,6 +155,8 @@ Event kinds (`opentatu_core::EventKind`):
 - Audit end: `AUDIT_PAUSED`, `AUDIT_RESUMED`, `AUDIT_PARTIAL`, `AUDIT_COMPLETED`,
   `AUDIT_FAILED`
 - Owner: `OWNER_DECISION`
+- MCP read-only calls (Q-007): `MCP_TOOL_CALLED` — state-changing tools record their domain
+  event instead, so every MCP call produces exactly one event
 
 ## B.7 Live finding record (`findings/ABASTEVO-SEC-0004.json`)
 

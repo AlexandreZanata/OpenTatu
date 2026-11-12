@@ -10,7 +10,8 @@ them in the same change.
 | Unit (pure logic) | `#[cfg(test)] mod tests` at the bottom of the file under test | plain asserts |
 | Repository (SQL) | the repository module in `crates/db/src/` | `Database::in_memory()`, `#[tokio::test]` |
 | Use case | the module in `crates/services/src/` | `Services::in_memory(clock)` |
-| HTTP | `crates/dashboard/src/routes.rs` tests | `tower::ServiceExt::oneshot`, `Host` header set |
+| HTTP (dashboard) | `crates/dashboard/src/routes.rs` tests | `tower::ServiceExt::oneshot`, `Host` header set |
+| HTTP (provider client) | `crates/llm/src/opencode_go.rs` tests | local `axum` server on `127.0.0.1:0` asserting headers; recorded response shapes |
 | Repository checks | `xtask/src/main.rs` tests | architecture, docs, glossary |
 
 Integration tests that span crates go in `<crate>/tests/` of the highest crate involved.
@@ -38,6 +39,7 @@ Integration tests that span crates go in `<crate>/tests/` of the highest crate i
 | A database | `Database::in_memory()` (migrated) |
 | Use cases | `Services::in_memory(Arc::new(FixedClock::at(...)?))` |
 | LLM answers | `FakeClient::push_answer`, `FakeClient::requests` |
+| LLM call context | `CallContext::diagnostic("test", &timestamp)` |
 | Dashboard router | `routes.rs` test helper `app()` |
 
 ## Running

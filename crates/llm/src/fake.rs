@@ -64,6 +64,9 @@ impl LlmClient for FakeClient {
             model,
             input_tokens: 0,
             output_tokens,
+            reasoning_tokens: 0,
+            cost_usd: None,
+            finish_reason: Some("stop".into()),
             duration_ms: 0,
         })
     }

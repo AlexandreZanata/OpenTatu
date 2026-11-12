@@ -171,7 +171,10 @@ pub struct AuditId {
 impl AuditId {
     const FORMAT: &'static str = "AUD-<SLUG>-<YYYYMMDD>-<HHMM>[-N]";
 
-    /// ID of an audit of `slug` at `at` (local time of the default zone).
+    /// ID of an audit of `slug` stamped with `at` (local time of the default zone).
+    ///
+    /// Always pass the audit's `created_at`: the ID exists from creation, even while the
+    /// audit waits in the queue (Q-001, answered).
     ///
     /// `sequence` is the audit's order within that minute: 1 for the first (no suffix),
     /// then 2, 3... on collision (spec §B.2). Values below 1 count as 1.

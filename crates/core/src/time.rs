@@ -64,6 +64,16 @@ impl Timestamp {
         self.unix_seconds() - earlier.unix_seconds()
     }
 
+    /// Midnight of the first day of this instant's month, in the default zone. Used for
+    /// monthly budgets (spec §A.2: OpenTatu uses at most 60% of the plan per month).
+    pub fn start_of_month(&self) -> Timestamp {
+        let start = self
+            .zoned()
+            .first_of_month()
+            .and_then(|day| day.start_of_day());
+        start.map(|zoned| Self(zoned.timestamp())).unwrap_or(*self)
+    }
+
     /// Local date in the default zone as `YYYYMMDD` (used by IDs, spec §B.2).
     pub(crate) fn compact_date(&self) -> String {
         self.zoned().strftime("%Y%m%d").to_string()
@@ -216,6 +226,12 @@ mod tests {
         let ts: Timestamp = EXAMPLE.parse().unwrap();
         assert_eq!(ts.compact_date(), "20261129");
         assert_eq!(ts.compact_time(), "1432");
+    }
+
+    #[test]
+    fn start_of_month_is_local_midnight_of_day_one() {
+        let ts: Timestamp = EXAMPLE.parse().unwrap();
+        assert_eq!(ts.start_of_month().iso(), "2026-11-01T00:00:00-03:00");
     }
 
     #[test]

@@ -8,6 +8,7 @@ use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 
 use anyhow::Context;
+use opentatu_core::Secret;
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::prelude::*;
 
@@ -36,6 +37,23 @@ pub fn init_logging(filter: &str) -> anyhow::Result<()> {
         .with(targets)
         .try_init()?;
     Ok(())
+}
+
+/// Reads the API key from the environment variable named in `config/models.toml` and wraps
+/// it in a [`Secret`] at once. The value never reaches logs, errors or other crates' state
+/// except the provider client (R16).
+pub fn api_key(variable: &str) -> anyhow::Result<Secret> {
+    // R16: the single authorized read of the provider API key.
+    #[allow(clippy::disallowed_methods)]
+    let value = std::env::var(variable).with_context(|| {
+        format!("environment variable {variable} is not set (copy .env.example to .env)")
+    })?;
+    let secret = Secret::new(value);
+    anyhow::ensure!(
+        !secret.is_empty(),
+        "environment variable {variable} is empty"
+    );
+    Ok(secret)
 }
 
 /// Creates the data directory (owner-only permissions on Unix) and returns the database path.

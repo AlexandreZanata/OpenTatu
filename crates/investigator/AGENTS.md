@@ -18,12 +18,12 @@ rendering, fencing); role execution = phases 3–5
 | `src/prompts.rs` | `SOURCES` (embedded prompt files), `VARIABLES`, `Prompt`, `system_template` |
 | `src/render.rs` | `render`, `placeholders` |
 | `src/fence.rs` | `Block`, `fence` (R11) |
+| `src/outputs.rs` | `CommonFields`, `SuspiciousInstruction` — shared output keys (Q-008) |
 | `src/error.rs` | `Error` |
 | `../../prompts/*.md` | the prompt texts (normative, versioned) |
 
-Planned: `outputs/` (one module per role with serde types + JSON Schema, shared fields
-`role`, `audit_id`, `gaps`, `not_analyzed`, `suspicious_instructions` defined once and
-flattened — see Q-008), `run.rs` (call `Llm::generate`, validate, retry, collect suspicious
+Planned: role output types (one module per role, serde + JSON Schema, embedding
+`CommonFields` with `#[serde(flatten)]`), `run.rs` (call `Llm::generate`, validate, retry, collect suspicious
 instructions for `SUSPICIOUS_INSTRUCTION_DETECTED` events).
 
 ## Local rules

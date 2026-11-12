@@ -1,9 +1,9 @@
 //! Severity of a finding and the fixed adjustment matrix (spec §C.8, rule R18).
 //!
 //! The base level (CRITICAL..INFO) is chosen by the skeptic role from the matrix
-//! definitions; this module applies the deterministic adjustments. Not handled here:
-//! "provably unreachable code → dismiss" (a verdict, not a severity) and "regression raises
-//! fix priority, not severity" (a priority concern, R09).
+//! definitions; this module applies the deterministic adjustments and derives the fix
+//! priority (a regression raises priority, never severity — R09, Q-004). Not handled here:
+//! "provably unreachable code → dismiss" (a verdict, not a severity).
 
 crate::text_enum! {
     /// Finding severity. Declared in ascending order, so `Severity::Critical > Severity::High`.
@@ -52,6 +52,23 @@ impl Severity {
             severity = severity.lower();
         }
         severity
+    }
+
+    /// Fix priority from 1 (most urgent) to 5: CRITICAL = 1 … INFO = 5. A regression raises
+    /// the priority one level (minimum 1) without changing the severity (R09, Q-004).
+    pub fn fix_priority(self, is_regression: bool) -> u8 {
+        let base = match self {
+            Self::Critical => 1,
+            Self::High => 2,
+            Self::Medium => 3,
+            Self::Low => 4,
+            Self::Info => 5,
+        };
+        if is_regression {
+            (base - 1).max(1)
+        } else {
+            base
+        }
     }
 }
 
@@ -103,6 +120,14 @@ mod tests {
         for severity in [Severity::Low, Severity::Medium, Severity::High] {
             assert_eq!(severity.adjusted(adjustments), severity);
         }
+    }
+
+    #[test]
+    fn r09_regression_raises_priority_not_severity() {
+        assert_eq!(Severity::High.fix_priority(false), 2);
+        assert_eq!(Severity::High.fix_priority(true), 1);
+        assert_eq!(Severity::Critical.fix_priority(true), 1);
+        assert_eq!(Severity::Info.fix_priority(true), 4);
     }
 
     #[test]

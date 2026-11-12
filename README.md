@@ -12,9 +12,9 @@ coding agents such as Claude Code, OpenCode, Codex or Cursor.
 - **Built and maintained by AI agents**: architecture, guardrails and documentation are
   designed for that — start at [AGENTS.md](AGENTS.md).
 
-> Status: **project base** (before roadmap phase 0). The workspace, domain core, database
-> foundation, dashboard skeleton, prompts and documentation exist; audits do not run yet.
-> See [docs/ROADMAP.md](docs/ROADMAP.md).
+> Status: **roadmap phase 0 done** — base, domain core, database, dashboard skeleton,
+> prompts, documentation and the OpenCode Go integration (`opentatu llm ping`). Audits do not
+> run yet (phase 1 onward). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Quick start
 
@@ -22,8 +22,9 @@ Requirements: Rust (the exact toolchain in `rust-toolchain.toml` is installed by
 automatically). Docker or rootless Podman will be needed from phase 2 on (scanners).
 
 ```bash
-cp .env.example .env
+cp .env.example .env        # then set OPENCODE_GO_API_KEY
 cargo run -p opentatu -- db migrate
+cargo run -p opentatu -- llm ping
 cargo run -p opentatu -- dashboard
 ```
 
@@ -51,5 +52,4 @@ CI runs the same command. The repository checks enforce the crate layering
 
 ## License
 
-Not chosen yet — see [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) (Q-006). Until a
-license is added, all rights are reserved by the owner.
+[MIT](LICENSE) — free to use for any purpose.

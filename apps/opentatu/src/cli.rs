@@ -17,6 +17,15 @@ pub struct Cli {
     #[arg(long, global = true, env = "OPENTATU_LOG", default_value = "info")]
     pub log: String,
 
+    /// Models, provider and budgets file (spec §D.2).
+    #[arg(
+        long,
+        global = true,
+        env = "OPENTATU_MODELS_CONFIG",
+        default_value = "config/models.toml"
+    )]
+    pub models_config: PathBuf,
+
     /// Command to run.
     #[command(subcommand)]
     pub command: Command,
@@ -44,8 +53,13 @@ pub enum Command {
 /// `opentatu llm ...`
 #[derive(Debug, Subcommand)]
 pub enum LlmCommand {
-    /// Minimal model call printing model, latency and tokens [roadmap phase 0].
-    Ping,
+    /// Minimal model call: prints model, latency, tokens and cost, and records the usage.
+    /// Pings every model used by the AI roles unless `--model` is given.
+    Ping {
+        /// Ping only this model (must be in `[provider] allowed_models`).
+        #[arg(long)]
+        model: Option<String>,
+    },
 }
 
 /// `opentatu db ...`

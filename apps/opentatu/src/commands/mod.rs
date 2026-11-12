@@ -2,6 +2,7 @@
 
 mod dashboard;
 mod db;
+mod llm;
 mod pending;
 
 use std::path::Path;
@@ -21,7 +22,9 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
         Command::Serve(_) => pending::not_implemented("opentatu serve", 1),
         Command::Worker => pending::not_implemented("opentatu worker", 1),
         Command::Mcp => pending::not_implemented("opentatu mcp", 5),
-        Command::Llm(LlmCommand::Ping) => pending::not_implemented("opentatu llm ping", 0),
+        Command::Llm(LlmCommand::Ping { model }) => {
+            llm::ping(&cli.data_dir, &cli.models_config, model).await
+        }
     }
 }
 

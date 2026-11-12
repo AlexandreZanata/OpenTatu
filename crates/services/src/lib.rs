@@ -15,6 +15,7 @@
 
 mod error;
 mod health;
+mod usage;
 
 use std::sync::Arc;
 

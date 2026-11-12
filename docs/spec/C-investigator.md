@@ -13,7 +13,7 @@ orchestrator does around them.
 | C.1 | cartographer | [cartographer.md](../../prompts/cartographer.md) | Builds/updates the security map; does not hunt | `components`, `entry_points`, `trust_boundaries`, ... |
 | C.2 | hunter | [hunter.md](../../prompts/hunter.md) | Broad, grounded hypotheses; triages scanner results | `hypotheses`, `scanner_triage` |
 | C.3 | verifier | [verifier.md](../../prompts/verifier.md) | Proves or refutes each hypothesis; in doubt, inconclusive | `verdict`, `evidence`, `regression_test` |
-| C.4 | skeptic | [skeptic.md](../../prompts/skeptic.md) | Tries to refute confirmed findings; final severity by the matrix. Use a different model from the verifier's when possible | `decision`, `final_severity`, `severity_calculation` |
+| C.4 | skeptic | [skeptic.md](../../prompts/skeptic.md) | Tries to refute confirmed findings; final severity by the matrix. Use a different model from the verifier's when possible (today the same, for privacy — Q-011) | `decision`, `final_severity`, `severity_calculation` |
 | C.5 | planner | [planner.md](../../prompts/planner.md) | Turns upheld findings into executable fix tasks | `tasks` |
 | C.6 | reporter | [reporter.md](../../prompts/reporter.md) | Writes the pt-BR report from system-computed data only | `report_md`, `memory_summary` |
 

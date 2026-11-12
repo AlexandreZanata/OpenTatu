@@ -1,59 +1,72 @@
 # Models, provider and budgets (spec §D.2). Parsed by opentatu_llm::ModelsConfig.
 #
 # - NEVER put the API key here: `api_key_env` is only the NAME of the environment variable.
-# - Empty strings and zero limits are placeholders. They MUST be filled from the official
-#   documentation recorded in docs/opencode-go.md (phase 0 research, spec §D.1) — never
-#   from memory or guesses. `opentatu llm ping` refuses to run while placeholders remain.
-# - A test (crates/llm/src/config.rs) keeps this file parseable and complete.
+# - Every value below comes from the research recorded in docs/opencode-go.md (2026-11-12),
+#   confirmed against the live API. Re-check that file before changing models or URLs.
+# - A test (crates/llm/src/config.rs) keeps this file parseable, complete and valid.
 
 [provider]
 name = "opencode-go"
-base_url = ""                         # PENDING(phase-0): confirmed base URL
+# OpenAI-compatible Chat Completions; the client appends /chat/completions.
+base_url = "https://opencode.ai/inference/go/openai/v1"
 api_key_env = "OPENCODE_GO_API_KEY"
+timeout_seconds = 300
+# The owner restricted the key to these two models. The provider does NOT enforce it
+# server-side, so OpenTatu refuses any other model.
+allowed_models = ["deepseek-v4.1-flash", "muse-spark-1.3-contributor"]
+# Muse Spark "Contributor" is discounted in exchange for Meta training on prompts and
+# completions (not zero-data-retention). Roles receive application code, so this model is
+# never assigned to a role; it is usable only for diagnostics (`llm ping --model`).
+models_that_train_on_prompts = ["muse-spark-1.3-contributor"]
 
-# One entry per AI role (opentatu_core::AiRole). The skeptic should use a model different
-# from the verifier's when the plan offers one (spec §C.4).
+# One entry per AI role (opentatu_core::AiRole). DeepSeek V4.1 Flash: 1M context, 384K
+# output, JSON output, no training on prompts, zero retention under an agreement that
+# OpenCode renews monthly (check docs/opencode-go.md). The skeptic should ideally use a
+# different model (spec §C.4), but the only other allowed model trains on prompts (Q-011).
 [roles.cartographer]
-model = ""                            # PENDING(phase-0): exact DeepSeek Flash id
+model = "deepseek-v4.1-flash"
 temperature = 0.1
 
 [roles.hunter]
-model = ""                            # PENDING(phase-0)
+model = "deepseek-v4.1-flash"
 temperature = 0.4
 
 [roles.verifier]
-model = ""                            # PENDING(phase-0)
+model = "deepseek-v4.1-flash"
 temperature = 0.0
 
 [roles.skeptic]
-model = ""                            # PENDING(phase-0): a different model, if available
+model = "deepseek-v4.1-flash"
 temperature = 0.2
 
 [roles.planner]
-model = ""                            # PENDING(phase-0)
+model = "deepseek-v4.1-flash"
 temperature = 0.1
 
 [roles.reporter]
-model = ""                            # PENDING(phase-0)
+model = "deepseek-v4.1-flash"
 temperature = 0.3
 
 [budget]
-# OpenTatu may use at most this share of the plan limit: the same key is also used for
-# the owner's own programming work (spec §A.2).
+# OpenTatu may use at most this share of each model's monthly plan limit: the same key is
+# also used for the owner's programming work (spec §A.2). Go plan: DeepSeek V4.1 Flash has a
+# $100/month allowance (20% per 5 hours, 50% per week), so OpenTatu's share is $60/month.
 max_plan_share = 0.60
 
-# Per-audit limits. 0 = not defined yet (PENDING(phase-0): define from the plan limits).
+# Per-audit limits. Provisional values sized from list prices ($0.15/M input, $0.60/M
+# output off-peak; x2 at peak): a FULL audit at its limit costs at most ~$3.60 at peak,
+# well inside the 5-hour window. Tune them with real `llm_usage` data in phase 4.
 [budget.per_audit.FULL]
-max_tokens = 0
-max_calls = 0
+max_tokens = 3_000_000
+max_calls = 300
 max_minutes = 90
 
 [budget.per_audit.INCREMENTAL]
-max_tokens = 0
-max_calls = 0
+max_tokens = 1_000_000
+max_calls = 100
 max_minutes = 30
 
 [budget.per_audit.REVERIFICATION]
-max_tokens = 0
-max_calls = 0
+max_tokens = 300_000
+max_calls = 30
 max_minutes = 15

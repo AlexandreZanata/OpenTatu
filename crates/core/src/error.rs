@@ -1,5 +1,6 @@
 //! Domain error. Messages state the expected format so the fix is obvious.
 
+use crate::audit::AuditStatus;
 use crate::finding_state::FindingState;
 
 /// Validation errors of the domain (`opentatu-core`).
@@ -46,6 +47,17 @@ pub enum Error {
         from: FindingState,
         /// Requested state.
         to: FindingState,
+    },
+
+    /// Transition not allowed by the audit status machine (`opentatu_core::audit`, Q-002).
+    #[error(
+        "invalid audit status transition: {from} -> {to} (see AuditStatus::allowed_transitions)"
+    )]
+    InvalidAuditTransition {
+        /// Current status.
+        from: AuditStatus,
+        /// Requested status.
+        to: AuditStatus,
     },
 
     /// Fingerprint outside the `sha256:<64 lowercase hex>` format (spec §B.8).

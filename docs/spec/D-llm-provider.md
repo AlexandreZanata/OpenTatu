@@ -45,5 +45,14 @@ missing points marked "not confirmed".
   with a checkpoint (`AUDIT_PAUSED`).
 - Validate every response with a schema; invalid JSON = at most 2 new attempts, then record
   the step failure.
-- Command `cargo run -p opentatu -- llm ping` makes a minimal call and prints model, latency
-  and tokens. This is the done criterion of the integration (phase 0).
+- Command `cargo run -p opentatu -- llm ping [--model <id>]` makes a minimal call and prints
+  model, latency, tokens and cost, recording the call in `llm_usage`. This is the done
+  criterion of the integration (phase 0, done 2026-11-12).
+
+Added by the phase 0 research ([../opencode-go.md](../opencode-go.md), ADR-0018):
+
+- Every request carries a product `User-Agent` and a stable `x-opencode-session` per
+  conversation (requests without the session are rejected).
+- The key is not restricted server-side: `[provider] allowed_models` is enforced by
+  OpenTatu, and models listed in `models_that_train_on_prompts` are never used by AI roles
+  (they receive application code).

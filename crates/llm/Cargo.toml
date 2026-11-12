@@ -1,10 +1,11 @@
 [package]
 name = "opentatu-llm"
-description = "LLM provider abstraction: generate(role, messages, schema), per-role routing, models config and test client."
+description = "LLM provider abstraction: generate(role, messages, schema), OpenCode Go client, routing, retries and usage accounting."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+license.workspace = true
 repository.workspace = true
 
 [lints]
@@ -13,10 +14,12 @@ workspace = true
 [dependencies]
 async-trait = { workspace = true }
 opentatu-core = { workspace = true }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true }
 toml = { workspace = true }
 
 [dev-dependencies]
-tokio = { workspace = true }
+axum = { workspace = true }

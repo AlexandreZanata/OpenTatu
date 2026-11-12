@@ -207,3 +207,54 @@ Template:
 - **Alternatives considered:** one large handbook (wastes context); tool-specific rule files
   (duplication).
 - **Consequences:** changing a crate's layout means updating its `AGENTS.md`.
+
+## ADR-0017 — MIT license
+- **Date:** 2026-11-12 · **Status:** accepted (decided by the owner)
+- **Context:** the repository is public; the owner wants anyone to be able to use the code
+  for any purpose (Q-006).
+- **Decision:** MIT license (`LICENSE`), declared once in `[workspace.package]` and inherited
+  by every crate (`license.workspace = true`).
+- **Alternatives considered:** MIT OR Apache-2.0 (Rust convention; two files, same freedom);
+  AGPL-3.0 (restricts hosted derivatives — contrary to "any purpose").
+- **Consequences:** contributions are accepted under MIT.
+
+## ADR-0018 — OpenCode Go client: Chat Completions over reqwest, guarded and accounted
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** phase 0 research ([opencode-go.md](opencode-go.md)): OpenAI-compatible Chat
+  Completions; a stable `x-opencode-session` header is mandatory; direct clients must send
+  their own User-Agent; the key is not restricted server-side; one of the two allowed models
+  trains on prompts; responses report the plan charge in `usage.opencode.allowance`.
+- **Decision:**
+  - `OpenCodeGoClient` (implements `LlmClient`) uses `reqwest` with rustls (default
+    `aws-lc-rs` provider), JSON mode when a schema is requested, `Bearer` auth, product
+    User-Agent and the session id from `CallContext`.
+  - `Llm` is the single call path: it refuses models outside `[provider] allowed_models`,
+    refuses models in `models_that_train_on_prompts` for AI roles, retries rate limits with
+    capped exponential backoff (`RetryPolicy`), and records every call through the
+    `UsageRecorder` port.
+  - The port is implemented in the binary over `Services::record_llm_usage`, because `llm`
+    and `services` must not depend on each other; the shared record type `LlmUsage` lives in
+    `opentatu-core`. Usage is stored append-only in `llm_usage` with `cost_usd`.
+  - The API key is read once in `apps/opentatu/src/config.rs` into `opentatu_core::Secret`,
+    whose `Debug`/`Display` never show the value.
+- **Alternatives considered:** `ureq` (sync, lighter, but blocking calls inside Tokio);
+  rustls with the `ring` provider (smaller, but needs manual provider installation); the
+  Responses API (not needed: both models work through Chat Completions).
+- **Consequences:** the TLS stack adds build time and ~2 MB to the binary; `llm ping` is the
+  phase 0 done criterion and a quick connectivity check.
+
+## ADR-0019 — Resolution of the base open questions (delegated by the owner)
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** the owner asked to implement the ambiguities Q-001 to Q-010 instead of
+  answering each one; the recommended options were adopted.
+- **Decision:** audit ID stamped with `created_at` (Q-001); audit status machine with
+  resumable PAUSED and final PARTIAL (Q-002); DOWNGRADED and REGRESSION lead to new tasks,
+  regression raises fix priority (Q-003, Q-004); loopback dashboard protected by `Host`
+  allowlist + `Origin` check, password + TOTP required before any non-loopback bind (Q-005);
+  MIT (Q-006); one event per MCP call with `MCP_TOOL_CALLED` for read-only tools (Q-007);
+  shared output fields `CommonFields` and base prompt 1.1.0 (Q-008); owner name from
+  `OPENTATU_OWNER` (Q-009); OpenCode Go use allowed with conditions (Q-010). Details and
+  rationale: [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+- **Alternatives considered:** the other options listed in each question.
+- **Consequences:** each decision is reversible through a new ADR; Q-011 and Q-012 remain
+  open for the owner.

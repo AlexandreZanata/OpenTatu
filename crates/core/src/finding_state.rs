@@ -4,11 +4,11 @@
 //! HYPOTHESIS ─verifier─> DISMISSED | INCONCLUSIVE | CONFIRMED
 //! INCONCLUSIVE ─re-evaluated─> DISMISSED | CONFIRMED
 //! CONFIRMED ─skeptic─> DOWNGRADED | UPHELD | DISMISSED
-//! DOWNGRADED, UPHELD ─planner─> TASK_CREATED            (DOWNGRADED → TASK_CREATED: Q-003)
+//! DOWNGRADED, UPHELD ─planner─> TASK_CREATED            (DOWNGRADED → TASK_CREATED: Q-003, answered)
 //! TASK_CREATED ─fixing agent─> FIX_SUBMITTED
 //! FIX_SUBMITTED ─reverification─> CLOSED | FIX_REJECTED
 //! FIX_REJECTED ──> TASK_CREATED
-//! CLOSED ─fingerprint reappears─> REGRESSION ──> TASK_CREATED   (Q-004)
+//! CLOSED ─fingerprint reappears─> REGRESSION ──> TASK_CREATED   (Q-004, answered)
 //! RISK_ACCEPTED ─expires─> CONFIRMED
 //! ```
 //!

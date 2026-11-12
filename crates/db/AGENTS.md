@@ -14,15 +14,17 @@ Layer: **infrastructure** · May depend on: `opentatu-core` · Status: base ✅
 | File | Contents |
 |---|---|
 | `migrations/0001_foundation.sql` | `apps`, `snapshots`, `audits`, `events` + append-only triggers |
+| `migrations/0002_llm_usage.sql` | `llm_usage` (model-call accounting) + append-only triggers |
 | `src/database.rs` | `Database` (`open`, `in_memory`, `connection`, `begin`), `Connection`, `Transaction` |
 | `src/rows.rs` | `parsed`, `parsed_opt`, `json`, `unsigned`, `to_i64` — use them in every repository |
 | `src/events.rs` | `append`, `list_by_app` (no update/delete by design, R04) |
+| `src/llm_usage.rs` | `record`, `totals_since` (append-only) |
 | `src/health.rs` | `schema_version` |
 | `src/error.rs` | `Error` |
 
 Planned repositories (with their migrations, §E.4): `apps`, `snapshots`, `audits` (phase 1),
-`llm_usage` (phase 0), `maps` (3), `hypotheses`, `findings`, `evidence`, `decisions` (4),
-`tasks`, `verifications` (5), worker `jobs` (1).
+`maps` (3), `hypotheses`, `findings`, `evidence`, `decisions` (4), `tasks`, `verifications` (5),
+worker `jobs` (1).
 
 ## Local rules
 

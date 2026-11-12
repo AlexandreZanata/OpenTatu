@@ -25,6 +25,7 @@ mod rows;
 
 pub mod events;
 pub mod health;
+pub mod llm_usage;
 
 pub use database::{Connection, Database, Transaction};
 pub use error::Error;

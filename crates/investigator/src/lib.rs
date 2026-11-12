@@ -6,6 +6,7 @@
 //! - [`render`](mod@render): strict `{{variable}}` substitution (a missing value is an error).
 //! - [`fence`](mod@fence): wraps untrusted content (code, scanner output, diffs) in tagged blocks
 //!   that it cannot escape from (R11).
+//! - [`outputs`]: output types shared by every role ([`CommonFields`]).
 //!
 //! Message layout of every role call: the **system** message is `base.md` + `<role>.md`
 //! rendered with [`prompts::VARIABLES`]; the **user** message holds the role inputs, each
@@ -17,10 +18,12 @@
 mod error;
 
 pub mod fence;
+pub mod outputs;
 pub mod prompts;
 pub mod render;
 
 pub use error::Error;
 pub use fence::{Block, fence};
+pub use outputs::{CommonFields, SuspiciousInstruction};
 pub use prompts::Prompt;
 pub use render::render;

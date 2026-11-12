@@ -31,6 +31,10 @@ pub fn router(state: DashboardState, config: &DashboardConfig) -> Router {
         .route("/health", get(pages::health::json))
         .route("/assets/app.css", get(assets::stylesheet))
         .layer(middleware::from_fn_with_state(
+            allowed_hosts.clone(),
+            security::check_origin,
+        ))
+        .layer(middleware::from_fn_with_state(
             allowed_hosts,
             security::check_host,
         ))
@@ -97,6 +101,30 @@ mod tests {
     async fn foreign_host_is_rejected() {
         let (status, _, _) = get("/", "evil.test").await;
         assert_eq!(status, StatusCode::MISDIRECTED_REQUEST);
+    }
+
+    async fn post(origin: Option<&str>) -> StatusCode {
+        let mut request = Request::post("/").header(header::HOST, "127.0.0.1:7878");
+        if let Some(origin) = origin {
+            request = request.header(header::ORIGIN, origin);
+        }
+        let response = app()
+            .await
+            .oneshot(request.body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        response.status()
+    }
+
+    #[tokio::test]
+    async fn cross_origin_writes_are_blocked() {
+        assert_eq!(post(Some("https://evil.test")).await, StatusCode::FORBIDDEN);
+        assert_eq!(post(None).await, StatusCode::FORBIDDEN);
+        // Same origin passes the middleware (405: `/` has no POST handler).
+        assert_eq!(
+            post(Some("http://127.0.0.1:7878")).await,
+            StatusCode::METHOD_NOT_ALLOWED
+        );
     }
 
     #[tokio::test]

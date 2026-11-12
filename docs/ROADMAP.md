@@ -10,7 +10,7 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
 | Phase | Status | Scope | Done when |
 |---|---|---|---|
 | Base | ✅ | Workspace, layered crates, domain core, database foundation (events append-only), dashboard skeleton, prompts, guardrails (`cargo xtask check`), documentation | `cargo xtask check` passes; `opentatu db migrate` and `opentatu dashboard` work |
-| 0 — Foundation and research | ⬜ | Part D research recorded in [opencode-go.md](opencode-go.md); `config/models.toml` filled; OpenCode Go client in `opentatu-llm`; `llm_usage` table and accounting | `cargo run -p opentatu -- llm ping` answers with DeepSeek Flash and records tokens |
+| 0 — Foundation and research | ✅ | Part D research recorded in [opencode-go.md](opencode-go.md); `config/models.toml` filled; OpenCode Go client in `opentatu-llm`; `llm_usage` table and accounting | `cargo run -p opentatu -- llm ping` answers with DeepSeek Flash and records tokens (verified 2026-11-12) |
 | 1 — Apps, audits and memory | ⬜ | App registration, snapshot by commit, audit creation with ID and dates, append-only event log use cases, `MEMORY.md` generation, timeline in the dashboard, `opentatu serve` and `opentatu worker` | Creating an "empty" audit produces `AUD-<SLUG>-<YYYYMMDD>-<HHMM>`, the right events, and shows in the timeline with date and time in Brasília time |
 | 2 — Static scanners | ⬜ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard |
 | 3 — Cartographer and coverage | ⬜ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right |
@@ -35,3 +35,18 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
   fencing, scanner isolation flags and port.
 - Guardrails: layering, dependency hygiene, documentation and vocabulary checks; clippy bans
   on direct clock reads, process spawning and environment reads.
+
+## Phase 0: what exists
+
+- Research record [opencode-go.md](opencode-go.md) (endpoints, model ids, limits, terms,
+  retention, live checks) and `config/models.toml` filled from it.
+- `opentatu-llm`: `OpenCodeGoClient` (Chat Completions, Bearer auth, product User-Agent,
+  mandatory `x-opencode-session`), `Llm` single call path with model allowlist, guard against
+  models that train on prompts, capped exponential backoff, usage recording port.
+- `llm_usage` table (append-only, migration 0002), `Services::record_llm_usage` and
+  `Services::llm_usage_this_month`; `LlmUsage`, `UsageTotals` and `Secret` in core.
+- `opentatu llm ping [--model <id>]`: verified with `deepseek-v4.1-flash` and
+  `muse-spark-1.3-contributor`; models outside the allowlist are refused locally.
+- Base open questions Q-001–Q-010 resolved (ADR-0019): audit status machine, fix priority,
+  `MCP_TOOL_CALLED`, shared AI output fields (base prompt 1.1.0), dashboard `Origin` check.
+- Next: phase 1 (apps, audits and memory) — waits for the owner's approval.

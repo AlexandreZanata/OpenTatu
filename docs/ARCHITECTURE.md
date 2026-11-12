@@ -73,7 +73,7 @@ declared in the root `[workspace.dependencies]`, and on a crate missing from the
 | `opentatu-memory` | logic | `MEMORY.md`, `history.jsonl` lines, audit comparison, dedup by fingerprint | do IO |
 | `opentatu-reports` | logic | `audit.json`, `report.md` header, SARIF, `MANIFEST.json` | do IO |
 | `opentatu-db` | infrastructure | SQLite connection, migrations, one repository module per table | contain business decisions |
-| `opentatu-llm` | infrastructure | `Llm::generate(role, messages, schema)`, providers, models config, budget accounting | know prompt texts |
+| `opentatu-llm` | infrastructure | `Llm::generate(context, role, messages, schema)`, OpenCode Go client, model allowlist and training guard, retries, usage recording port | know prompt texts |
 | `opentatu-scanners` | infrastructure | isolated containers, scanner adapters, normalized results | run anything outside the isolation flags |
 | `opentatu-context` | infrastructure | code excerpts per entry point from the snapshot | send whole repositories |
 | `opentatu-investigator` | ai | prompt catalog, strict rendering, fencing, (later) output schemas and retries | call scanners or the database |
@@ -153,7 +153,7 @@ sequenceDiagram
 | What | Where |
 |---|---|
 | Secrets and local overrides | environment / `.env` (read only in `apps/opentatu/src/config.rs`) |
-| Provider, models per role, budgets | [`config/models.toml`](../config/models.toml) |
+| Provider, models per role, allowlist, budgets | [`config/models.toml`](../config/models.toml) (path: `--models-config` / `OPENTATU_MODELS_CONFIG`) |
 | Dependency versions | root `Cargo.toml` `[workspace.dependencies]` |
 | Allowed crate dependencies | [`architecture.toml`](../architecture.toml) |
 | Lints and banned calls | root `Cargo.toml` `[workspace.lints]` + [`clippy.toml`](../clippy.toml) |
@@ -168,7 +168,7 @@ sequenceDiagram
 | a dashboard page | `crates/dashboard/src/pages/` + template + route | [add-dashboard-page](recipes/add-dashboard-page.md) |
 | a UI component | macro in `templates/components/ui.html` (+ `view.rs`, CSS) | [add-ui-component](recipes/add-ui-component.md) |
 | a scanner | `Scanner` impl in `crates/scanners/src/` | [add-scanner](recipes/add-scanner.md) |
-| an LLM provider | `LlmClient` impl in `crates/llm/src/` | [add-dependency](recipes/add-dependency.md) + phase 0 |
+| an LLM provider | `LlmClient` impl in `crates/llm/src/` (model: `opencode_go.rs`) | [add-dependency](recipes/add-dependency.md) + an ADR |
 | a prompt change | `prompts/<name>.md` + version bump | [change-prompt](recipes/change-prompt.md) |
 | an MCP tool | `crates/mcp/src/` over a use case | [add-mcp-tool](recipes/add-mcp-tool.md) |
 | a CLI command | `apps/opentatu/src/cli.rs` + `commands/` | [add-cli-command](recipes/add-cli-command.md) |

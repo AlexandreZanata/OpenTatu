@@ -1,7 +1,7 @@
 # opentatu-services — use cases
 
 Layer: **application** · May depend on: `opentatu-core`, `opentatu-db`, `opentatu-memory` ·
-Status: base ✅ (health only)
+Status: health ✅, model-call accounting ✅ (phase 0)
 
 ## Responsibility
 
@@ -16,6 +16,7 @@ Status: base ✅ (health only)
 |---|---|
 | `src/lib.rs` | `Services` (`new`, `in_memory`), module list |
 | `src/health.rs` | `health()` → `HealthReport` |
+| `src/usage.rs` | `record_llm_usage`, `llm_usage_this_month` |
 | `src/error.rs` | `Error` (wraps db and domain errors) |
 
 Planned modules (one per aggregate): `apps.rs`, `audits.rs`, `timeline.rs` (phase 1),

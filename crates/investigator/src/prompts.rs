@@ -36,7 +36,10 @@ const SOURCES: &[(&str, &str)] = &[
 /// Every `{{variable}}` a prompt may use, with its meaning. Values are always produced by
 /// the system (R03: dates come from the clock; the AI never invents them).
 pub const VARIABLES: &[(&str, &str)] = &[
-    ("owner", "Owner's name"),
+    (
+        "owner",
+        "Owner's name, from the OPENTATU_OWNER environment variable (Q-009)",
+    ),
     ("role", "AI role text, e.g. `verifier`"),
     ("audit_id", "Audit ID, e.g. AUD-ABASTEVO-20261129-1432"),
     ("audit_kind", "FULL, INCREMENTAL, REVERIFICATION or PR"),
@@ -238,6 +241,6 @@ mod tests {
     fn system_template_joins_base_and_role() {
         let (template, tags) = system_template(AiRole::Verifier).unwrap();
         assert!(template.contains("{{audit_id}}"));
-        assert_eq!(tags, ["base@1.0.0", "verifier@1.0.0"]);
+        assert_eq!(tags, ["base@1.1.0", "verifier@1.0.0"]);
     }
 }

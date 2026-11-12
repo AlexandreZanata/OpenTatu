@@ -109,8 +109,8 @@ Side states:
 - **REGRESSION** — a CLOSED finding whose fingerprint reappears. Reopens with priority
   raised.
 
-The executable state machine is `opentatu_core::FindingState` (see Q-003 and Q-004 in
-[../OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md) for the interpreted transitions).
+The executable state machine is `opentatu_core::FindingState`. DOWNGRADED and REGRESSION
+both lead to a new task (Q-003, Q-004, answered in [../OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md)).
 
 ## A.7 Business rules (never break)
 
@@ -136,7 +136,8 @@ The executable state machine is `opentatu_core::FindingState` (see Q-003 and Q-0
 - **R12** AI agents have no shell and no direct network or disk access; they only use tools
   exposed by OpenTatu.
 - **R13** When the budget runs out, the audit pauses with a checkpoint and status PARTIAL.
-  It never pretends to be complete. (See Q-002.)
+  It never pretends to be complete. (PAUSED is the resumable stop and PARTIAL the final
+  incomplete state — Q-002, answered; `opentatu_core::AuditStatus`.)
 - **R14** Coverage is always reported. "Not tested" is never treated as "safe".
 - **R15** Secrets found in code are masked in reports (e.g. `sk_live_****9f2a`).
 - **R16** The OpenCode Go API key never goes to the scanners, logs, reports or history.

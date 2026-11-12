@@ -1,4 +1,4 @@
-//! LLM errors.
+//! LLM errors. None of them may contain the API key or request contents (R16).
 
 use std::path::PathBuf;
 
@@ -25,6 +25,23 @@ pub enum Error {
     #[error("AI role `{0}` has no model configured in config/models.toml")]
     RoleNotConfigured(AiRole),
 
+    /// The model is not in `[provider] allowed_models`.
+    #[error("model `{0}` is not in [provider] allowed_models of config/models.toml")]
+    ModelNotAllowed(String),
+
+    /// An AI role was configured with a model whose provider trains on prompts; roles
+    /// receive application code, which must never be used for training.
+    #[error(
+        "AI role `{role}` cannot use `{model}`: it trains on prompts \
+         ([provider] models_that_train_on_prompts)"
+    )]
+    TrainingModelForRole {
+        /// Role being called.
+        role: AiRole,
+        /// Configured model.
+        model: String,
+    },
+
     /// The provider rate limited the call; back off, then pause the audit with a checkpoint.
     #[error("rate limited by the provider (retry after {retry_after_seconds:?} s)")]
     RateLimited {
@@ -36,9 +53,13 @@ pub enum Error {
     #[error("provider authentication failed (check the API key environment variable)")]
     Authentication,
 
-    /// Any other provider failure. Must not contain the API key or request contents.
+    /// Any other provider failure (HTTP status, error type and a truncated message).
     #[error("provider request failed: {0}")]
     Provider(String),
+
+    /// The usage of a successful call could not be recorded.
+    #[error("could not record model usage: {0}")]
+    UsageRecording(String),
 
     /// The [`crate::FakeClient`] had no scripted answer left.
     #[error("fake client has no scripted response left")]

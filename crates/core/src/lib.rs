@@ -20,6 +20,7 @@ pub mod role;
 pub mod secrets;
 pub mod severity;
 pub mod time;
+pub mod usage;
 
 pub use audit::{AuditKind, AuditStatus};
 pub use error::Error;
@@ -28,9 +29,10 @@ pub use finding_state::FindingState;
 pub use fingerprint::{Fingerprint, FingerprintInput};
 pub use ids::{AuditId, EventId, EvidenceId, FindingId, HypothesisId, MapId, Slug, TaskId};
 pub use role::AiRole;
-pub use secrets::mask_secret;
+pub use secrets::{Secret, mask_secret};
 pub use severity::{Severity, SeverityAdjustments};
 pub use time::{Clock, FixedClock, SystemClock, Timestamp};
+pub use usage::{LlmUsage, UsageTotals};
 
 /// Re-export used by this crate's exported macros. Do not use directly.
 #[doc(hidden)]
