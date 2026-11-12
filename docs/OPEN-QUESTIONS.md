@@ -18,7 +18,8 @@ Template:
 ```
 
 Q-001 to Q-010 were answered on 2026-11-12: the owner delegated the decisions ("implement
-them") and asked for the license; the recommended options were adopted (ADR-0019).
+them") and asked for the license; the recommended options were adopted (ADR-0019). Q-011 and
+Q-012 were answered by the owner the same day (ADR-0022). No question is open.
 
 ---
 
@@ -88,7 +89,7 @@ them") and asked for the license; the recommended options were adopted (ADR-0019
 ---
 
 ## Q-011 — Should the skeptic use Muse Spark for model diversity?
-- **Status:** open · **Blocks:** nothing (phase 4 quality)
+- **Status:** answered (2026-11-12)
 - **Context:** §C.4 asks for a model different from the verifier's "if possible". The key
   allows only `deepseek-v4.1-flash` and `muse-spark-1.3-contributor`, and Muse Spark is
   discounted in exchange for Meta training on prompts and completions (not zero retention).
@@ -96,14 +97,17 @@ them") and asked for the license; the recommended options were adopted (ADR-0019
 - **Options:** (a) keep DeepSeek for every role (privacy first); (b) use Muse Spark for the
   skeptic only (diversity, but private code may be used for training); (c) allow another
   non-training model on the key.
-- **Working interpretation:** (a). The config marks Muse Spark in
-  `models_that_train_on_prompts`, and roles refuse such models.
-- **Answer:**
+- **Answer:** use both models, each where it is strongest (owner). After a comparison on
+  synthetic code ([opencode-go.md](opencode-go.md), "Model selection"): DeepSeek V4.1 Flash
+  for cartographer, hunter, verifier and planner; Muse Spark 1.3 for skeptic and reporter,
+  with explicit consent per role (`accept_prompt_training = true`). Roles without consent
+  still refuse training models.
 
 ## Q-012 — Pay-as-you-go fallback after the Go limits
-- **Status:** open · **Blocks:** nothing (owner setting)
+- **Status:** answered (2026-11-12)
 - **Context:** with Console balance, OpenCode Go may continue after the plan limits by
   charging pay-as-you-go instead of blocking. OpenTatu enforces its own 60% share once audits
   run (phase 4), but other uses of the key could still spend.
 - **Options:** keep Console balance at zero / disable Extra Usage; or accept the fallback.
-- **Answer:**
+- **Answer:** the owner's Console balance is zero, so the plan blocks at its limits instead
+  of charging pay-as-you-go.

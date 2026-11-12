@@ -7,6 +7,14 @@ pub enum Error {
     #[error("database error: {0}")]
     Sqlx(#[from] sqlx::Error),
 
+    /// A domain rule rejected the change (e.g. an invalid status transition).
+    #[error(transparent)]
+    Domain(#[from] opentatu_core::Error),
+
+    /// The row to change does not exist.
+    #[error("not found: {0}")]
+    NotFound(String),
+
     /// A migration failed or an applied migration was modified.
     #[error("migration error: {0}")]
     Migration(#[from] sqlx::migrate::MigrateError),

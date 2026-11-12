@@ -47,6 +47,7 @@ Implemented in `opentatu_core::time` (`Timestamp`, `Clock`).
 data/apps/abastevo/
 ├── app.json                         app profile
 ├── MEMORY.md                        working memory (generated)
+├── OWNER-NOTES.md                   owner's free notes (hand-edited; copied into MEMORY.md)
 ├── history.jsonl                    mirror of the event log
 ├── map/
 │   ├── current.json
@@ -77,8 +78,10 @@ data/apps/abastevo/
         └── checkpoints/             to resume a paused audit
 ```
 
-The data directory is configurable (`OPENTATU_DATA_DIR`, default `./data`) and is never
-committed.
+Next to `apps/`, the data directory holds `opentatu.db`, `repos/<slug>.git` (bare mirror of
+each repository) and `snapshots/<slug>/<commit>/` (checkout of each audited commit, R02).
+Every path comes from `opentatu_core::DataLayout`. The data directory is configurable
+(`OPENTATU_DATA_DIR`, default `./data`) and is never committed.
 
 ## B.5 Audit record (`audit.json`) — example
 
@@ -249,5 +252,5 @@ ASVS coverage: 64% (82 of 128 applicable requirements verified).
 - File upload (dynamic verification pending).
 
 ## Owner notes
-(free text written by the owner; the AI reads it but never edits it)
+(copied from OWNER-NOTES.md, written by the owner; the AI reads it but never edits it)
 ```

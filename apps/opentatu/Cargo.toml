@@ -21,6 +21,8 @@ opentatu-dashboard = { workspace = true }
 opentatu-db = { workspace = true }
 opentatu-llm = { workspace = true }
 opentatu-services = { workspace = true }
+opentatu-snapshots = { workspace = true }
+opentatu-worker = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

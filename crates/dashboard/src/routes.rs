@@ -28,6 +28,7 @@ pub fn router(state: DashboardState, config: &DashboardConfig) -> Router {
     let allowed_hosts = Arc::new(config.allowed_hosts.clone());
     Router::new()
         .route("/", get(pages::home::page))
+        .route("/apps/{slug}", get(pages::app::page))
         .route("/health", get(pages::health::json))
         .route("/assets/app.css", get(assets::stylesheet))
         .layer(middleware::from_fn_with_state(
@@ -53,19 +54,34 @@ mod tests {
 
     use super::*;
 
-    async fn app() -> Router {
+    async fn services() -> Services {
         let clock = Arc::new(FixedClock::at("2026-11-29T14:32:00-03:00").unwrap());
-        let services = Services::in_memory(clock).await.unwrap();
+        Services::in_memory(clock).await.unwrap()
+    }
+
+    fn router_over(services: Services) -> Router {
         let config = DashboardConfig::local("127.0.0.1:7878".parse().unwrap()).unwrap();
         router(DashboardState::new(services), &config)
     }
 
+    async fn app() -> Router {
+        router_over(services().await)
+    }
+
     async fn get(path: &str, host: &str) -> (StatusCode, header::HeaderMap, String) {
+        get_from(app().await, path, host).await
+    }
+
+    async fn get_from(
+        router: Router,
+        path: &str,
+        host: &str,
+    ) -> (StatusCode, header::HeaderMap, String) {
         let request = Request::get(path)
             .header(header::HOST, host)
             .body(Body::empty())
             .unwrap();
-        let response = app().await.oneshot(request).await.unwrap();
+        let response = router.oneshot(request).await.unwrap();
         let status = response.status();
         let headers = response.headers().clone();
         let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -84,6 +100,50 @@ mod tests {
         );
         assert_eq!(headers[header::CACHE_CONTROL], "no-store");
         assert!(headers.contains_key(header::CONTENT_SECURITY_POLICY));
+    }
+
+    #[tokio::test]
+    async fn app_page_shows_profile_audits_and_timeline_in_brasilia_time() {
+        let services = services().await;
+        services
+            .register_app(opentatu_core::NewApp {
+                slug: opentatu_core::Slug::new("demo").unwrap(),
+                name: "Demo".into(),
+                repo_url: "/srv/demo".into(),
+                branch: "main".into(),
+                stack: vec!["Rust".into()],
+                sensitive_data: vec![],
+                lab_url: None,
+            })
+            .await
+            .unwrap();
+        services
+            .create_audit(opentatu_services::NewAudit {
+                app: opentatu_core::Slug::new("demo").unwrap(),
+                kind: opentatu_core::AuditKind::Full,
+                commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+                branch: Some("main".into()),
+                requested_by: opentatu_core::Actor::Owner,
+            })
+            .await
+            .unwrap();
+        let router = router_over(services);
+
+        let (status, _, body) = get_from(router.clone(), "/apps/demo", "127.0.0.1:7878").await;
+        assert_eq!(status, StatusCode::OK);
+        for expected in [
+            "AUD-DEMO-20261129-1432",
+            "Na fila",
+            "Aplicação cadastrada",
+            "Auditoria criada",
+            "29/11/2026 às 14:32 (horário de Brasília)",
+        ] {
+            assert!(body.contains(expected), "missing {expected:?}");
+        }
+        let (_, _, home) = get_from(router.clone(), "/", "127.0.0.1:7878").await;
+        assert!(home.contains("href=\"/apps/demo\""), "{home}");
+        let (missing, _, _) = get_from(router, "/apps/ghost", "127.0.0.1:7878").await;
+        assert_eq!(missing, StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

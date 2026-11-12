@@ -63,7 +63,7 @@ impl Llm {
             .roles
             .get(&role)
             .ok_or(Error::RoleNotConfigured(role))?;
-        if self.config.provider.trains_on_prompts(&role_config.model) {
+        if !role_config.may_use_model(&self.config.provider) {
             return Err(Error::TrainingModelForRole {
                 role,
                 model: role_config.model.clone(),
@@ -214,10 +214,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn roles_never_use_models_that_train_on_prompts() {
+    async fn roles_use_training_models_only_with_consent() {
         let mut config = config();
         let training = config.provider.models_that_train_on_prompts[0].clone();
-        config.roles.get_mut(&AiRole::Hunter).unwrap().model = training.clone();
+        let hunter = config.roles.get_mut(&AiRole::Hunter).unwrap();
+        hunter.model = training.clone();
+        hunter.accept_prompt_training = false;
         let fake = Arc::new(FakeClient::new());
         let llm = Llm::new(fake.clone(), config);
 

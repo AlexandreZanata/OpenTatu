@@ -10,24 +10,30 @@
 
 mod macros;
 
+pub mod app;
 pub mod audit;
 pub mod error;
 pub mod event;
 pub mod finding_state;
 pub mod fingerprint;
 pub mod ids;
+pub mod layout;
 pub mod role;
 pub mod secrets;
 pub mod severity;
 pub mod time;
 pub mod usage;
 
-pub use audit::{AuditKind, AuditStatus};
+pub use app::{App, NewApp};
+pub use audit::{Audit, AuditKind, AuditStatus};
 pub use error::Error;
 pub use event::{Actor, Event, EventKind, NewEvent};
 pub use finding_state::FindingState;
 pub use fingerprint::{Fingerprint, FingerprintInput};
-pub use ids::{AuditId, EventId, EvidenceId, FindingId, HypothesisId, MapId, Slug, TaskId};
+pub use ids::{
+    AuditId, CommitHash, EventId, EvidenceId, FindingId, HypothesisId, MapId, Slug, TaskId,
+};
+pub use layout::DataLayout;
 pub use role::AiRole;
 pub use secrets::{Secret, mask_secret};
 pub use severity::{Severity, SeverityAdjustments};

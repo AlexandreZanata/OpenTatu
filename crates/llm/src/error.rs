@@ -29,11 +29,11 @@ pub enum Error {
     #[error("model `{0}` is not in [provider] allowed_models of config/models.toml")]
     ModelNotAllowed(String),
 
-    /// An AI role was configured with a model whose provider trains on prompts; roles
-    /// receive application code, which must never be used for training.
+    /// An AI role was configured with a model whose provider trains on prompts, without
+    /// the owner's consent (`accept_prompt_training`).
     #[error(
         "AI role `{role}` cannot use `{model}`: it trains on prompts \
-         ([provider] models_that_train_on_prompts)"
+         and the role lacks accept_prompt_training = true"
     )]
     TrainingModelForRole {
         /// Role being called.

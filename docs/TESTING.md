@@ -14,7 +14,9 @@ them in the same change.
 | HTTP (provider client) | `crates/llm/src/opencode_go.rs` tests | local `axum` server on `127.0.0.1:0` asserting headers; recorded response shapes |
 | Repository checks | `xtask/src/main.rs` tests | architecture, docs, glossary |
 
-Integration tests that span crates go in `<crate>/tests/` of the highest crate involved.
+Integration tests that span crates go in `<crate>/tests/` of the highest crate involved
+(example: `crates/worker/tests/phase1_audit.rs`). Their helper functions are not `#[test]`
+functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comment.
 
 ## Rules
 
@@ -40,7 +42,9 @@ Integration tests that span crates go in `<crate>/tests/` of the highest crate i
 | Use cases | `Services::in_memory(Arc::new(FixedClock::at(...)?))` |
 | LLM answers | `FakeClient::push_answer`, `FakeClient::requests` |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
-| Dashboard router | `routes.rs` test helper `app()` |
+| Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
+| A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |
+| A temporary data directory | `tempfile::tempdir()` + `DataLayout::new(dir.path())` |
 
 ## Running
 

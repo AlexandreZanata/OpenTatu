@@ -1,7 +1,7 @@
 # opentatu-services — use cases
 
 Layer: **application** · May depend on: `opentatu-core`, `opentatu-db`, `opentatu-memory` ·
-Status: health ✅, model-call accounting ✅ (phase 0)
+Status: health, accounting (phase 0) ✅; apps, audits, timelines (phase 1) ✅
 
 ## Responsibility
 
@@ -17,10 +17,13 @@ Status: health ✅, model-call accounting ✅ (phase 0)
 | `src/lib.rs` | `Services` (`new`, `in_memory`), module list |
 | `src/health.rs` | `health()` → `HealthReport` |
 | `src/usage.rs` | `record_llm_usage`, `llm_usage_this_month` |
+| `src/apps.rs` | `register_app`, `app`, `apps` |
+| `src/audits.rs` | `NewAudit`, `create_audit`, `start_next_audit`, `record_snapshot`, `set_audit_checkpoint`, `finish_audit`, `fail_audit`, audit queries |
+| `src/timeline.rs` | `app_timeline`, `app_history`, `audit_events`, `now` |
 | `src/error.rs` | `Error` (wraps db and domain errors) |
 
-Planned modules (one per aggregate): `apps.rs`, `audits.rs`, `timeline.rs` (phase 1),
-`findings.rs`, `decisions.rs` (phase 4), `tasks.rs` (phase 5).
+Planned modules (one per aggregate): `findings.rs`, `decisions.rs` (phase 4), `tasks.rs`
+(phase 5).
 
 ## Local rules
 

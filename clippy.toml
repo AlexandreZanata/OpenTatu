@@ -12,9 +12,10 @@ disallowed-methods = [
     { path = "jiff::Zoned::now", reason = "R03: use opentatu_core::Clock::now()", allow-invalid = true },
     { path = "jiff::Timestamp::now", reason = "R03: use opentatu_core::Clock::now()", allow-invalid = true },
     { path = "std::time::SystemTime::now", reason = "R03: use opentatu_core::Clock::now()" },
-    # R12: external processes only in opentatu-scanners (isolated containers) and xtask.
-    { path = "std::process::Command::new", reason = "R12: external processes only in opentatu-scanners" },
-    { path = "tokio::process::Command::new", reason = "R12: external processes only in opentatu-scanners", allow-invalid = true },
+    # R12: external processes only in opentatu-scanners (isolated containers),
+    # opentatu-snapshots (git) and xtask.
+    { path = "std::process::Command::new", reason = "R12: external processes only in opentatu-scanners and opentatu-snapshots" },
+    { path = "tokio::process::Command::new", reason = "R12: external processes only in opentatu-scanners and opentatu-snapshots", allow-invalid = true },
     # R16: environment variables (including the API key) are read only by the binary.
     { path = "std::env::var", reason = "R16: read config/secrets only in apps/opentatu/src/config.rs" },
     { path = "std::env::var_os", reason = "R16: read config/secrets only in apps/opentatu/src/config.rs" },

@@ -5,15 +5,12 @@
 //! logged.
 
 use std::io::IsTerminal;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Context;
-use opentatu_core::Secret;
+use opentatu_core::{DataLayout, Secret};
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::prelude::*;
-
-/// SQLite file name inside the data directory.
-const DATABASE_FILE: &str = "opentatu.db";
 
 /// Loads `.env` from the current directory when present (values never override variables
 /// already set in the environment).
@@ -56,12 +53,13 @@ pub fn api_key(variable: &str) -> anyhow::Result<Secret> {
     Ok(secret)
 }
 
-/// Creates the data directory (owner-only permissions on Unix) and returns the database path.
-pub fn database_path(data_dir: &Path) -> anyhow::Result<PathBuf> {
+/// Creates the data directory (owner-only permissions on Unix) and returns its layout
+/// (`DataLayout` is the only source of paths under it, spec §B.4).
+pub fn prepare_data_dir(data_dir: &Path) -> anyhow::Result<DataLayout> {
     std::fs::create_dir_all(data_dir)
         .with_context(|| format!("could not create data directory {}", data_dir.display()))?;
     restrict_permissions(data_dir)?;
-    Ok(data_dir.join(DATABASE_FILE))
+    Ok(DataLayout::new(data_dir))
 }
 
 #[cfg(unix)]

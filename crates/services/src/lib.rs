@@ -13,8 +13,11 @@
 //!
 //! See docs/recipes/add-use-case.md.
 
+mod apps;
+mod audits;
 mod error;
 mod health;
+mod timeline;
 mod usage;
 
 use std::sync::Arc;
@@ -22,6 +25,7 @@ use std::sync::Arc;
 use opentatu_core::Clock;
 use opentatu_db::Database;
 
+pub use audits::NewAudit;
 pub use error::Error;
 pub use health::HealthReport;
 

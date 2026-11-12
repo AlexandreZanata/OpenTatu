@@ -54,14 +54,37 @@ Consulted by: Claude Opus 5.5 (Claude Code), on the owner's request.
   per-audit token/call limits are provisional (see `config/models.toml`).
 - Accounting stores `usage.opencode.allowance` as `cost_usd` for the monthly share.
 
+## Model selection (Q-011, 2026-11-12)
+
+The owner chose to use both allowed models, each where it is strongest. Comparison run on
+synthetic code only (no owner data), JSON mode, temperature 0, 2 runs per task:
+
+| Task (role it stands for) | DeepSeek V4.1 Flash | Muse Spark 1.3 |
+|---|---|---|
+| Find the IDOR, no false SQL injection (hunter) | 2/2, 6–12 s | 2/2, 12–18 s |
+| Refute a hypothesis mitigated elsewhere (verifier) | 2/2, 4–6 s | 2/2, ~9 s |
+| Dismiss a false SQL injection (skeptic) | 2/2 | 2/2 |
+| Summarize given numbers without recomputing, pt-BR (reporter) | 1/2 (added a derived total; kept English severity names) | 2/2 (natural pt-BR) |
+
+Muse Spark spends far more reasoning tokens (700–1,400 vs 40–320) but costs about the
+same per call ($0.0002–0.0003). Assignment in `config/models.toml`:
+
+- **DeepSeek V4.1 Flash** — cartographer, hunter, verifier, planner: they read raw
+  application code; no training on prompts, zero retention, 384K output, faster.
+- **Muse Spark 1.3** — skeptic (a model independent from the verifier, spec §C.4) and
+  reporter (stayed within the given data, better pt-BR). Both roles send application data to
+  a model that trains on prompts; the owner accepted it (`accept_prompt_training = true`).
+
+The sample is small; the phase 6 benchmark re-evaluates the assignment per prompt version.
+
 ## Owner actions recommended
 
 1. Keep the workspace privacy region on **Global** (required by DeepSeek) and re-check the
    DeepSeek zero-retention agreement after **2026-11-30** (renewed monthly).
-2. Consider **disabling the paid-endpoints-that-train setting** if Muse Spark is not needed
-   outside diagnostics; it allows prompts to be used for training.
+2. The paid-endpoints-that-train setting must stay enabled: the skeptic and the reporter
+   use Muse Spark (Q-011).
 3. Keep Console balance at zero (or disable Extra Usage) if you never want pay-as-you-go
-   charges after the Go limits are reached.
+   charges after the Go limits are reached. — Done by the owner (Q-012).
 4. Since the key was shared in a chat, rotate it if it ever needs to be more than a test key.
 
 ## Ambiguities and gaps

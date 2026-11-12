@@ -15,14 +15,17 @@ timeout_seconds = 300
 # server-side, so OpenTatu refuses any other model.
 allowed_models = ["deepseek-v4.1-flash", "muse-spark-1.3-contributor"]
 # Muse Spark "Contributor" is discounted in exchange for Meta training on prompts and
-# completions (not zero-data-retention). Roles receive application code, so this model is
-# never assigned to a role; it is usable only for diagnostics (`llm ping --model`).
+# completions (not zero-data-retention). A role may use it only with explicit owner consent
+# (`accept_prompt_training = true`); otherwise OpenTatu refuses the call.
 models_that_train_on_prompts = ["muse-spark-1.3-contributor"]
 
-# One entry per AI role (opentatu_core::AiRole). DeepSeek V4.1 Flash: 1M context, 384K
-# output, JSON output, no training on prompts, zero retention under an agreement that
-# OpenCode renews monthly (check docs/opencode-go.md). The skeptic should ideally use a
-# different model (spec §C.4), but the only other allowed model trains on prompts (Q-011).
+# Model per AI role — owner decision Q-011 (2026-11-12): use both models, each where it did
+# best in the comparison recorded in docs/opencode-go.md ("Model selection").
+# - DeepSeek V4.1 Flash for every role that reads raw application code: no training,
+#   zero retention (renewed monthly), 384K output, faster in the comparison.
+# - Muse Spark 1.3 for the skeptic (a model different from the verifier, spec §C.4) and the
+#   reporter (kept to the given numbers and wrote better pt-BR). Both receive application
+#   data (finding excerpts, the list of findings), so the owner consented to training.
 [roles.cartographer]
 model = "deepseek-v4.1-flash"
 temperature = 0.1
@@ -36,16 +39,18 @@ model = "deepseek-v4.1-flash"
 temperature = 0.0
 
 [roles.skeptic]
-model = "deepseek-v4.1-flash"
+model = "muse-spark-1.3-contributor"
 temperature = 0.2
+accept_prompt_training = true
 
 [roles.planner]
 model = "deepseek-v4.1-flash"
 temperature = 0.1
 
 [roles.reporter]
-model = "deepseek-v4.1-flash"
+model = "muse-spark-1.3-contributor"
 temperature = 0.3
+accept_prompt_training = true
 
 [budget]
 # OpenTatu may use at most this share of each model's monthly plan limit: the same key is

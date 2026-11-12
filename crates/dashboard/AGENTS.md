@@ -1,7 +1,7 @@
 # opentatu-dashboard — local web UI
 
 Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · Status: base ✅
-(home + health)
+(home, app page with timeline, health)
 
 ## Responsibility
 
@@ -14,9 +14,9 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | File | Contents |
 |---|---|
 | `src/routes.rs` | `router()` — the only route registration; `DashboardState`; HTTP tests |
-| `src/pages/<page>.rs` | one handler + template struct per page (`home`, `health`) |
+| `src/pages/<page>.rs` | one handler + template struct per page (`home`, `app`, `health`) |
 | `src/render.rs` | `render(&page)` — the only template → response path |
-| `src/view.rs` | `Layout`, `Badge`, `severity_badge` — the only domain → UI text mapping |
+| `src/view.rs` | `Layout`, `Badge`, badges, labels, `AuditRow`, `TimelineEntry`, `AppSummary` — the only domain → UI text mapping |
 | `src/security.rs` | `check_host` (DNS rebinding), `check_origin` (CSRF), `security_headers` (CSP, no-store...) |
 | `src/config.rs` | `DashboardConfig::local` (loopback only) |
 | `src/server.rs` | `serve()` with graceful shutdown |
@@ -35,6 +35,8 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 | `ui::badge(badge)` | colored label (`view::Badge`) |
 | `ui::empty_state(message, hint)` | empty list placeholder |
 | `ui::datetime(ts)` | owner-facing date with ISO `datetime` attribute |
+| `ui::audits_table(rows)` | audits table with empty state |
+| `ui::timeline(entries)` | event timeline with empty state |
 
 ## Local rules
 

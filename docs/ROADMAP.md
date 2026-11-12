@@ -11,7 +11,7 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
 |---|---|---|---|
 | Base | ✅ | Workspace, layered crates, domain core, database foundation (events append-only), dashboard skeleton, prompts, guardrails (`cargo xtask check`), documentation | `cargo xtask check` passes; `opentatu db migrate` and `opentatu dashboard` work |
 | 0 — Foundation and research | ✅ | Part D research recorded in [opencode-go.md](opencode-go.md); `config/models.toml` filled; OpenCode Go client in `opentatu-llm`; `llm_usage` table and accounting | `cargo run -p opentatu -- llm ping` answers with DeepSeek Flash and records tokens (verified 2026-11-12) |
-| 1 — Apps, audits and memory | ⬜ | App registration, snapshot by commit, audit creation with ID and dates, append-only event log use cases, `MEMORY.md` generation, timeline in the dashboard, `opentatu serve` and `opentatu worker` | Creating an "empty" audit produces `AUD-<SLUG>-<YYYYMMDD>-<HHMM>`, the right events, and shows in the timeline with date and time in Brasília time |
+| 1 — Apps, audits and memory | ✅ | App registration, snapshot by commit, audit creation with ID and dates, append-only event log use cases, `MEMORY.md` generation, timeline in the dashboard, `opentatu serve` and `opentatu worker` | Creating an "empty" audit produces `AUD-<SLUG>-<YYYYMMDD>-<HHMM>`, the right events, and shows in the timeline with date and time in Brasília time (verified 2026-11-12) |
 | 2 — Static scanners | ⬜ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard |
 | 3 — Cartographer and coverage | ⬜ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right |
 | 4 — Hunter, verifier (static) and skeptic | ⬜ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage |
@@ -49,4 +49,24 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
   `muse-spark-1.3-contributor`; models outside the allowlist are refused locally.
 - Base open questions Q-001–Q-010 resolved (ADR-0019): audit status machine, fix priority,
   `MCP_TOOL_CALLED`, shared AI output fields (base prompt 1.1.0), dashboard `Origin` check.
-- Next: phase 1 (apps, audits and memory) — waits for the owner's approval.
+- Model per role decided by the owner (Q-011, ADR-0022).
+
+## Phase 1: what exists
+
+- `opentatu app add|list`, `opentatu audit create|list`, `opentatu worker [--once]`,
+  `opentatu serve` (dashboard + worker in one process).
+- Core: `NewApp`/`App` (validated profile, git-option injection rejected), `Audit` record,
+  `CommitHash` (R02), `DataLayout` (every path of §B.4), compact local time formats.
+- Database: `apps`, `audits` (queue + status machine + checkpoint + limitations, migration
+  0003), `snapshots` repositories; event queries per app and per audit.
+- `opentatu-snapshots` (new crate): bare mirror per app, revision → full commit, read-only
+  checkout of the exact commit, hardened git calls (ADR-0020).
+- Use cases: register app, create audit (ID stamped with `created_at`, `-N` suffix on
+  collisions, previous audit linked), claim, snapshot, finish/fail, timelines.
+- Worker pipeline: snapshot → final status (PARTIAL with one limitation per missing step,
+  R13/R14) → artifacts `app.json`, `audit.json`, `history.jsonl`, `MEMORY.md` (ADR-0021).
+- Dashboard: apps list, recent audits, app page with profile, audits table and event
+  timeline in Brasília time; 404 page.
+- Verified end to end: OpenTatu registered as an app, audits `AUD-OPENTATU-20261112-0823`
+  and `-0823-2` queued, run by `worker --once` and by `serve`, shown in the timeline.
+- Next: phase 2 (static scanners) — waits for the owner's approval.

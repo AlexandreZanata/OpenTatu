@@ -11,6 +11,7 @@
 //! | [`EvidenceId`] | `<AUDIT>-EV-<NNN>` | `AUD-ABASTEVO-20261129-1432-EV-001` |
 //! | [`TaskId`] | `<FINDING>-T<N>` | `ABASTEVO-SEC-0004-T1` |
 //! | [`EventId`] | `EVT-<NNNNNNNN>` | `EVT-00000184` |
+//! | [`CommitHash`] | 40 or 64 lowercase hex (SHA-1 / SHA-256 repositories) | `4c4a5df9…` |
 //!
 //! Never build or parse these strings by hand: use the constructors in this module.
 //! Numbers wider than their padding are allowed (`-SEC-10000`), but padding is canonical:
@@ -487,6 +488,47 @@ impl FromStr for EventId {
 
 impl_text!(EventId);
 
+// ---------------------------------------------------------------------------------------
+// CommitHash: full git commit id (R02)
+// ---------------------------------------------------------------------------------------
+
+/// Full commit hash: 40 (SHA-1) or 64 (SHA-256) lowercase hex characters. Audits always
+/// reference one — never a branch name (R02).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CommitHash(String);
+
+impl CommitHash {
+    const FORMAT: &'static str = "40 or 64 lowercase hex characters";
+
+    /// The full hash.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// First 12 characters, for display only.
+    pub fn short(&self) -> &str {
+        &self.0[..12]
+    }
+}
+
+impl FromStr for CommitHash {
+    type Err = Error;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        let valid = matches!(text.len(), 40 | 64)
+            && text
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b));
+        if valid {
+            Ok(Self(text.to_owned()))
+        } else {
+            Err(invalid("CommitHash", text, Self::FORMAT))
+        }
+    }
+}
+
+impl_text!(CommitHash);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -612,6 +654,23 @@ mod tests {
         assert_eq!(id.as_str(), "EVT-00000184");
         assert_eq!("EVT-00000184".parse::<EventId>().unwrap().number(), 184);
         assert!("EVT-184".parse::<EventId>().is_err());
+    }
+
+    #[test]
+    fn r02_commit_hash_is_full_and_lowercase() {
+        let sha1 = "4c4a5df92ace8d8068e57362a7308e8b9d031b3a";
+        assert_eq!(sha1.parse::<CommitHash>().unwrap().short(), "4c4a5df92ace");
+        assert!(
+            format!("{sha1}{}", "0".repeat(24))
+                .parse::<CommitHash>()
+                .is_ok()
+        );
+        for bad in ["main", "4c4a5df", &sha1.to_uppercase(), &format!("{sha1}0")] {
+            assert!(
+                bad.parse::<CommitHash>().is_err(),
+                "{bad} should be invalid"
+            );
+        }
     }
 
     #[test]

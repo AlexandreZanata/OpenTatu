@@ -1,7 +1,7 @@
 # opentatu — the single executable (composition root)
 
 Layer: **binary** · May depend on: core, db, llm, services, worker, dashboard, mcp ·
-Status: `dashboard`, `db migrate`, `llm ping` ✅; other commands answer with their phase
+Status: `serve`, `dashboard`, `worker`, `app`, `audit`, `db migrate`, `llm ping` ✅; `mcp` = phase 5
 
 ## Responsibility
 
@@ -20,9 +20,12 @@ Status: `dashboard`, `db migrate`, `llm ping` ✅; other commands answer with th
 | `src/commands/mod.rs` | dispatch; `services()` — the only production wiring of `Services` |
 | `src/commands/<command>.rs` | one module per command |
 | `src/commands/llm.rs` | `llm ping [--model]` |
+| `src/commands/app.rs` | `app add`, `app list` |
+| `src/commands/audit.rs` | `audit create` (resolves the commit, R02), `audit list` |
+| `src/commands/worker.rs` | `worker [--once]`, `serve` (dashboard + worker) |
 | `src/commands/pending.rs` | `not_implemented(cmd, phase)` for planned commands |
 | `src/usage.rs` | `ServicesUsageRecorder` — the `UsageRecorder` port over `Services` |
-| `src/config.rs` | `.env`, logging, data directory (0700), `api_key` → `Secret` — the only env reader (R16) |
+| `src/config.rs` | `.env`, logging, `prepare_data_dir` → `DataLayout` (0700), `api_key` → `Secret` — the only env reader (R16) |
 | `src/output.rs` | the only module that prints |
 
 ## Local rules

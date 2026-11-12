@@ -1,6 +1,6 @@
 # opentatu-memory — what OpenTatu remembers (pure)
 
-Layer: **logic** · May depend on: `opentatu-core` · Status: planned (phases 1 and 4)
+Layer: **logic** · May depend on: `opentatu-core` · Status: phase 1 ✅ (memory, history); comparison and dedup = phase 4
 
 ## Responsibility
 
@@ -10,12 +10,12 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: planned (phases 1 
 - **Does not:** IO. Callers load data with `opentatu-db` (through services/worker) and write
   the files.
 
-## Planned files
+## Files
 
 | File | Contents | Phase |
 |---|---|---|
-| `src/working_memory.rs` | render `MEMORY.md` within ~2,000 tokens; older audits summarized one line per month | 1 |
-| `src/history.rs` | one JSON line per `Event` (same serde format as `opentatu_core::Event`) | 1 |
+| `src/working_memory.rs` | ✅ `render_memory` — `MEMORY.md` within ~2,000 tokens; older audits summarized per month; owner notes copied | 1 |
+| `src/history.rs` | ✅ `render_history` — one JSON line per `Event` | 1 |
 | `src/comparison.rs` | diff of two audits' findings by fingerprint | 4 |
 | `src/dedup.rs` | match hypotheses against known findings, false positives and closed findings | 4 |
 

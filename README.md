@@ -1,31 +1,48 @@
 # OpenTatu
 
-Personal agent that investigates the security of your own applications, remembers
-everything it found (with dates, evidence and reports) and hands verified fix tasks to
-coding agents such as Claude Code, OpenCode, Codex or Cursor.
+**Local-first AI security auditor for your own applications.** OpenTatu combines static
+analysis scanners (Semgrep, Gitleaks, Trivy, OSV-Scanner) with LLM reasoning roles to find
+vulnerabilities with evidence, keeps an append-only, dated history of every audit, and hands
+verified fix tasks to AI coding agents (Claude Code, OpenCode, Codex, Cursor) through the
+Model Context Protocol (MCP). One Rust binary, one SQLite file, private by design.
 
-- **Local and private**: one Rust binary, one SQLite file, dashboard on `127.0.0.1`.
-- **Lightweight**: no Node, no Postgres, no JavaScript in the UI; scanners run in
-  disposable, network-less containers.
-- **Evidence over opinion**: AI hypotheses only become findings with proof; only
-  OpenTatu's own reverification closes a finding.
-- **Built and maintained by AI agents**: architecture, guardrails and documentation are
-  designed for that — start at [AGENTS.md](AGENTS.md).
+[![CI](https://github.com/AlexandreZanata/OpenTatu/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexandreZanata/OpenTatu/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Rust](https://img.shields.io/badge/rust-1.99-orange.svg)
 
-> Status: **roadmap phase 0 done** — base, domain core, database, dashboard skeleton,
-> prompts, documentation and the OpenCode Go integration (`opentatu llm ping`). Audits do not
-> run yet (phase 1 onward). See [docs/ROADMAP.md](docs/ROADMAP.md).
+## Why OpenTatu (design goals — see the status below for what runs today)
+
+- **Evidence over opinion** — AI hypotheses only become findings with proof (source → sink
+  trace, missing control, checked mitigations); a skeptic role tries to refute every
+  finding; severity comes from a fixed matrix, not from impressions.
+- **Memory across audits** — append-only event log, per-app working memory, fingerprints
+  that detect regressions and never reopen known false positives.
+- **Verified fixes** — fixing agents take tasks over MCP; only OpenTatu's own reverification
+  closes a finding.
+- **Local and private** — runs on your machine (dashboard on `127.0.0.1`, no JavaScript, no
+  Node, no Postgres); scanners in disposable containers without network; model allowlist and
+  explicit consent before any model that trains on prompts.
+- **Built and maintained by AI agents** — layered crates with enforced dependency rules,
+  machine-checked conventions and agent-first documentation — start at [AGENTS.md](AGENTS.md).
+
+Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
+vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
+
+> Status: **roadmap phase 1 done** — apps, audits of exact commits, append-only history,
+> working memory and dashboard timeline; OpenCode Go integration (phase 0). Scanners and AI
+> analysis arrive in phases 2–5. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Quick start
 
 Requirements: Rust (the exact toolchain in `rust-toolchain.toml` is installed by rustup
-automatically). Docker or rootless Podman will be needed from phase 2 on (scanners).
+automatically) and `git`. Docker or rootless Podman will be needed from phase 2 on (scanners).
 
 ```bash
-cp .env.example .env        # then set OPENCODE_GO_API_KEY
-cargo run -p opentatu -- db migrate
-cargo run -p opentatu -- llm ping
-cargo run -p opentatu -- dashboard
+cp .env.example .env                       # then set OPENCODE_GO_API_KEY
+cargo run -p opentatu -- llm ping          # checks the model provider
+cargo run -p opentatu -- app add --slug myapp --name "My App" --repo /path/to/repo
+cargo run -p opentatu -- audit create --app myapp
+cargo run -p opentatu -- serve             # dashboard + worker
 ```
 
 Open http://127.0.0.1:7878. Health check: http://127.0.0.1:7878/health.

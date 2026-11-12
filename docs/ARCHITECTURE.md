@@ -44,6 +44,7 @@ flowchart TB
     DB["db"]
     LLM["llm"]
     SCN["scanners"]
+    SNP["snapshots<br/>git"]
     CTX["context"]
   end
   subgraph logic["logic (pure)"]
@@ -56,10 +57,10 @@ flowchart TB
   APP --> DASH & MCP & WRK & SVC
   DASH --> SVC
   MCP --> SVC
-  WRK --> SVC & INV & SCN & CTX & REP & MEM & DB & LLM
+  WRK --> SVC & INV & SCN & SNP & CTX & REP & MEM & DB & LLM
   SVC --> DB & MEM
   INV --> LLM
-  DB & LLM & SCN & CTX & MEM & REP --> CORE
+  DB & LLM & SCN & SNP & CTX & MEM & REP --> CORE
 ```
 
 Every crate may also depend on `core`. The authoritative list of allowed edges is
@@ -75,6 +76,7 @@ declared in the root `[workspace.dependencies]`, and on a crate missing from the
 | `opentatu-db` | infrastructure | SQLite connection, migrations, one repository module per table | contain business decisions |
 | `opentatu-llm` | infrastructure | `Llm::generate(context, role, messages, schema)`, OpenCode Go client, model allowlist and training guard, retries, usage recording port | know prompt texts |
 | `opentatu-scanners` | infrastructure | isolated containers, scanner adapters, normalized results | run anything outside the isolation flags |
+| `opentatu-snapshots` | infrastructure | git mirror per app, revision → commit, checkout of the exact commit (R02) | run git without the hardening options |
 | `opentatu-context` | infrastructure | code excerpts per entry point from the snapshot | send whole repositories |
 | `opentatu-investigator` | ai | prompt catalog, strict rendering, fencing, (later) output schemas and retries | call scanners or the database |
 | `opentatu-services` | application | every use case; transactions with their events | render HTML or speak MCP |
@@ -103,7 +105,7 @@ flowchart LR
   Serve -- "HTTPS, phase 0" --> Provider[(OpenCode Go)]
 ```
 
-- `opentatu serve` (phase 1) runs dashboard and worker in one process; `dashboard` and
+- `opentatu serve` runs dashboard and worker in one process; `dashboard` and
   `worker` can also run alone. SQLite in WAL mode lets the separate `mcp` processes read and
   write safely (`BEGIN IMMEDIATE` + busy timeout).
 - The dashboard binds to loopback only; a non-loopback address is refused until owner

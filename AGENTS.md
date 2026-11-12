@@ -71,7 +71,9 @@ cargo xtask glossary                  # only the vocabulary check
 cargo run -p opentatu -- --help       # the CLI
 cargo run -p opentatu -- db migrate   # create/migrate ./data/opentatu.db
 cargo run -p opentatu -- llm ping     # real model call (needs OPENCODE_GO_API_KEY in .env)
-cargo run -p opentatu -- dashboard    # http://127.0.0.1:7878
+cargo run -p opentatu -- serve        # dashboard (http://127.0.0.1:7878) + audit worker
+cargo run -p opentatu -- app add --slug demo --name Demo --repo /path/to/repo
+cargo run -p opentatu -- audit create --app demo   # then: worker --once (or keep serve running)
 ```
 
 ## Repository map
@@ -85,10 +87,11 @@ crates/dashboard/   Axum + Askama UI; components in templates/components/ui.html
 crates/llm/         generate(role, messages, schema); config/models.toml; FakeClient
 crates/investigator/ prompts, strict rendering, fencing of untrusted content
 crates/scanners/    isolated containers (single isolation flag list), normalized results
+crates/snapshots/   git mirror per app, exact-commit checkout (the only git caller)
 crates/memory/      MEMORY.md, history, audit comparison, dedup (pure)
 crates/reports/     audit.json, report.md, SARIF, MANIFEST.json (pure)
 crates/context/     code excerpts per entry point
-crates/worker/      audit pipeline (spec §C.7), queue, checkpoints, budget
+crates/worker/      audit pipeline (spec §C.7): queue = audits table, steps, artifacts
 crates/mcp/         MCP server (stdio) for fixing agents
 xtask/              repository checks (architecture, docs, glossary)
 prompts/            versioned AI role prompts (embedded in the binary)

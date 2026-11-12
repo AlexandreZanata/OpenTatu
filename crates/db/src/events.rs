@@ -51,6 +51,40 @@ pub async fn append(conn: &mut SqliteConnection, event: &NewEvent) -> Result<Eve
     Ok(EventId::new(number))
 }
 
+/// Most recent events of an app, newest first, at most `limit` (timelines).
+pub async fn recent_by_app(
+    conn: &mut SqliteConnection,
+    app: &Slug,
+    limit: u32,
+) -> Result<Vec<Event>, Error> {
+    let rows = sqlx::query(concat!(
+        "SELECT ",
+        columns!(),
+        " FROM events WHERE app = ? ORDER BY id DESC LIMIT ?"
+    ))
+    .bind(app.as_str())
+    .bind(i64::from(limit))
+    .fetch_all(&mut *conn)
+    .await?;
+    rows.iter().map(from_row).collect()
+}
+
+/// Events of one audit, oldest first.
+pub async fn list_by_audit(
+    conn: &mut SqliteConnection,
+    audit: &opentatu_core::AuditId,
+) -> Result<Vec<Event>, Error> {
+    let rows = sqlx::query(concat!(
+        "SELECT ",
+        columns!(),
+        " FROM events WHERE audit_id = ? ORDER BY id"
+    ))
+    .bind(audit.as_str())
+    .fetch_all(&mut *conn)
+    .await?;
+    rows.iter().map(from_row).collect()
+}
+
 /// Events of an app, oldest first, at most `limit`.
 pub async fn list_by_app(
     conn: &mut SqliteConnection,

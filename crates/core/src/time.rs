@@ -74,6 +74,16 @@ impl Timestamp {
         start.map(|zoned| Self(zoned.timestamp())).unwrap_or(*self)
     }
 
+    /// Local `YYYY-MM-DD HH:MM` in the default zone (compact, AI-facing: MEMORY.md timeline).
+    pub fn local_minute(&self) -> String {
+        self.zoned().strftime("%Y-%m-%d %H:%M").to_string()
+    }
+
+    /// Local `YYYY-MM` in the default zone (monthly summaries).
+    pub fn local_month(&self) -> String {
+        self.zoned().strftime("%Y-%m").to_string()
+    }
+
     /// Local date in the default zone as `YYYYMMDD` (used by IDs, spec §B.2).
     pub(crate) fn compact_date(&self) -> String {
         self.zoned().strftime("%Y%m%d").to_string()
@@ -226,6 +236,13 @@ mod tests {
         let ts: Timestamp = EXAMPLE.parse().unwrap();
         assert_eq!(ts.compact_date(), "20261129");
         assert_eq!(ts.compact_time(), "1432");
+    }
+
+    #[test]
+    fn compact_local_formats() {
+        let ts: Timestamp = EXAMPLE.parse().unwrap();
+        assert_eq!(ts.local_minute(), "2026-11-29 14:32");
+        assert_eq!(ts.local_month(), "2026-11");
     }
 
     #[test]

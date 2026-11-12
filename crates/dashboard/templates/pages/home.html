@@ -5,7 +5,23 @@
 
 {% block content %}
 {% call ui::card("Aplicações") %}
-  {% call ui::empty_state("Nenhuma aplicação cadastrada.", "O cadastro de aplicações chega na fase 1 do roadmap.") %}{% endcall %}
+  {% if apps.is_empty() %}
+    {% call ui::empty_state("Nenhuma aplicação cadastrada.", "Cadastre com `opentatu app add --slug <slug> --name <nome> --repo <url>`.") %}{% endcall %}
+  {% else %}
+  <ul class="c-list">
+    {%- for app in apps %}
+    <li class="c-list__item">
+      <a href="/apps/{{ app.slug }}"><strong>{{ app.name }}</strong></a> <code>{{ app.slug }}</code>
+      {% if let Some(status) = app.last_status %}{% call ui::badge(status) %}{% endcall %}{% endif %}
+      <div class="c-list__meta">{{ app.source }}</div>
+    </li>
+    {%- endfor %}
+  </ul>
+  {% endif %}
+{% endcall %}
+
+{% call ui::card("Auditorias recentes") %}
+  {% call ui::audits_table(audits) %}{% endcall %}
 {% endcall %}
 
 {% call ui::card("Sistema") %}

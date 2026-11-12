@@ -1,6 +1,6 @@
 # opentatu-reports — audit artifacts (pure)
 
-Layer: **logic** · May depend on: `opentatu-core` · Status: planned (phases 1, 4, 5)
+Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (phase 1); report, SARIF, manifest planned
 
 ## Responsibility
 
@@ -10,11 +10,11 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: planned (phases 1,
 - **Does not:** IO, model calls (the reporter AI writes the narrative), computing numbers
   (the worker computes; this crate formats).
 
-## Planned files
+## Files
 
 | File | Contents | Phase |
 |---|---|---|
-| `src/audit_record.rs` | `audit.json` (§B.5) | 1 |
+| `src/audit_record.rs` | ✅ `AuditRecord` — `audit.json` (§B.5); uncomputed sections `null` (R14) | 1 |
 | `src/report.rs` | header with models, prompt versions, scanners, usage, duration + reporter text | 4 |
 | `src/sarif.rs` | SARIF 2.1.0 export for GitHub code scanning | 4 |
 | `src/manifest.rs` | `MANIFEST.json` and per-task Markdown | 5 |

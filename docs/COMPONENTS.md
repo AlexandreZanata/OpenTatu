@@ -29,6 +29,9 @@ it replaces.
 | Severity labels/colors | `opentatu_dashboard::view::severity_badge` | `"Crítica"` literals in templates |
 | CSS tokens | `:root` of `crates/dashboard/static/app.css` | raw colors in components |
 | Environment reads | `apps/opentatu/src/config.rs` | `std::env::var` elsewhere |
+| Paths under the data directory | `opentatu_core::DataLayout` | `join("apps")` and friends by hand |
+| Git invocations | `opentatu_snapshots` (`git.rs`) | `Command::new("git")` elsewhere |
+| Audit pipeline steps and limitations | `opentatu_worker::pipeline` (`Step`, `PENDING_STEPS`) | status logic in other crates |
 | Credentials in memory | `opentatu_core::Secret` | plain `String` keys/tokens |
 | Terminal output | `apps/opentatu/src/output.rs` | `println!` elsewhere |
 | Domain vocabulary | `docs/GLOSSARY.md` | synonyms |
@@ -45,7 +48,11 @@ it replaces.
 | `HypothesisId`, `EvidenceId` `::new(audit, n)` | `<AUDIT>-H-<NNN>`, `<AUDIT>-EV-<NNN>` | formatting child IDs |
 | `TaskId::new(finding, n)` | `<FINDING>-T<N>` | formatting task IDs |
 | `EventId::new(n)` | `EVT-<NNNNNNNN>` | formatting event IDs |
-| `Timestamp` | Whole-second instant; `iso()`, `display_pt_br()`, `seconds_since()`, `start_of_month()` | `jiff`/`chrono` types outside core |
+| `CommitHash` (`short()`) | Full 40/64-hex commit (R02) | branch names or short hashes in records |
+| `NewApp` (`validate()`), `App` | App profile, git-option injection rejected (R01) | ad-hoc profile structs |
+| `Audit` (`duration_seconds()`) | Audit record / queue item (§B.5) | custom audit structs |
+| `DataLayout` | Every path of §B.4 (db, app files, audits, mirrors, snapshots) | building paths by hand |
+| `Timestamp` | Whole-second instant; `iso()`, `display_pt_br()`, `local_minute()`, `local_month()`, `seconds_since()`, `start_of_month()` | `jiff`/`chrono` types outside core |
 | `Clock`, `SystemClock`, `FixedClock` | Injectable "now" (R03); fixed clock for tests | system time calls |
 | `AuditKind`, `AuditStatus` + `allowed_transitions()`, `validate_transition()`, `reached_by(EventKind)` | Audit enums and status machine (§A.5, R13, Q-002) | ad-hoc status checks |
 | `AiRole` | The six investigator roles; text = prompt file name | strings |
@@ -67,6 +74,10 @@ it replaces.
 | `Database::begin()` → `Transaction` (`commit()`) | `BEGIN IMMEDIATE` write transaction |
 | `events::append`, `events::list_by_app` | Append-only event log (R04) |
 | `llm_usage::record`, `llm_usage::totals_since` | Append-only model-call accounting |
+| `apps::{insert, get, list}` | Registered apps (insert takes its event) |
+| `audits::{insert, get, exists, list_by_app, list_recent, next_queued, last_final, update_status, set_checkpoint}` | Audits and the worker queue; `update_status` validates the transition and appends the event |
+| `snapshots::record` | Captured commits (once per commit) + `SNAPSHOT_CAPTURED` |
+| `events::{recent_by_app, list_by_audit}` | Timelines |
 | `health::schema_version` | Highest applied migration |
 | `rows::{parsed, parsed_opt, json, unsigned, to_i64}` (crate-private) | Typed column reading with column-named errors — use in every repository |
 
@@ -79,6 +90,11 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage` (see `migrations/`)
 | `Services::new(db, clock)` | Entry point to every use case |
 | `Services::in_memory(clock)` | Standard fixture for tests of upper layers |
 | `Services::health()` → `HealthReport` | Database reachability and schema version |
+| `Services::register_app`, `app`, `apps` | Registered apps (R01) |
+| `Services::create_audit(NewAudit)` | Queues an audit: ID from `created_at` + collision suffix, previous audit linked |
+| `Services::start_next_audit`, `record_snapshot`, `set_audit_checkpoint`, `finish_audit`, `fail_audit` | Queue and lifecycle; each status change is an event |
+| `Services::audit`, `audits_of_app`, `recent_audits` | Audit queries |
+| `Services::app_timeline`, `app_history`, `audit_events`, `now` | Event queries; clock for artifacts |
 | `Services::record_llm_usage(&LlmUsage)` | Stores one model call, stamped with the clock |
 | `Services::llm_usage_this_month(model)` → `UsageTotals` | Monthly totals (plan share, §A.2) |
 
@@ -92,7 +108,9 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage` (see `migrations/`)
 | `security::{check_host, check_origin, security_headers}` (crate-private) | DNS rebinding, CSRF (`Origin`) and header protection (Q-005) |
 | `render::render(&page)` | The only template → response path |
 | `view::Layout` | Data for `base.html` (every page has `layout`) |
-| `view::Badge`, `view::severity_badge` | Badge data; pt-BR severity labels |
+| `view::Badge`, `view::severity_badge`, `view::audit_status_badge` | Badge data; pt-BR labels |
+| `view::{audit_kind_label, event_label}` | pt-BR names of audit kinds and event kinds |
+| `view::{AuditRow, audit_row, TimelineEntry, timeline_entry, AppSummary, app_summary}` | Rows for the table, timeline and apps list components |
 | `PageError` | Logs details, shows a generic pt-BR error page |
 
 UI components (`templates/components/ui.html`, import as `ui`):
@@ -103,8 +121,11 @@ UI components (`templates/components/ui.html`, import as `ui`):
 | `ui::badge(badge)` | Colored label from a `view::Badge` |
 | `ui::empty_state(message, hint)` | Empty list placeholder |
 | `ui::datetime(ts)` | Any `Timestamp` shown to the owner (`<time>` with ISO) |
+| `ui::audits_table(rows)` | Audits table (`view::AuditRow`), with empty state |
+| `ui::timeline(entries)` | Event timeline (`view::TimelineEntry`), with empty state |
 
 CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge`, `c-empty`,
+`c-list`, `c-meta`, `c-table`, `c-timeline`,
 `c-footer`.
 
 ## opentatu-llm (`crates/llm`)
@@ -143,14 +164,40 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `ContainerEngine` | `docker` or `podman` |
 | `Scanner` (trait), `ScanContext`, `ScannerOutput`, `NormalizedResult` | Adapter port and common result format |
 
+## opentatu-snapshots (`crates/snapshots`)
+
+| Component | Purpose |
+|---|---|
+| `Snapshots::refresh_mirror(slug, repo_url)` | Bare mirror per app (clone once, fetch after) |
+| `Snapshots::resolve(slug, revision)` → `CommitHash` | Branch/tag/commit → full hash (R02) |
+| `Snapshots::capture(slug, commit)` → `Snapshot { dir, reused }` | Checkout of the exact commit, reused when complete |
+| `testing::{create_repo, commit_files}` (feature `test-support`) | The only helper that creates throwaway git repos in tests |
+
+## opentatu-memory (`crates/memory`)
+
+| Component | Purpose |
+|---|---|
+| `render_memory(&MemoryInput)` | `MEMORY.md` (§B.9), deterministic, ~2,000 tokens max |
+| `render_history(&[Event])` | `history.jsonl` lines (§B.1) |
+
+## opentatu-reports (`crates/reports`)
+
+| Component | Purpose |
+|---|---|
+| `AuditRecord::from_audit(&Audit)`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
+
+## opentatu-worker (`crates/worker`)
+
+| Component | Purpose |
+|---|---|
+| `Worker::{new, run_once, drain, run}` | Claims and runs queued audits; failures end the audit, not the worker |
+| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far and the limitations of the missing ones |
+
 ## Planned crates (structure only)
 
 | Crate | Phase | Planned components (see the crate's AGENTS.md) |
 |---|---|---|
-| `opentatu-memory` (`crates/memory`) | 1, 4 | `MEMORY.md` rendering, history lines, audit comparison, dedup |
-| `opentatu-reports` (`crates/reports`) | 1, 4, 5 | `audit.json`, `report.md` header, SARIF, `MANIFEST.json` |
 | `opentatu-context` (`crates/context`) | 3, 7 | file tree, excerpt selection, config files, diff |
-| `opentatu-worker` (`crates/worker`) | 1+ | queue, pipeline steps, budget, snapshot |
 | `opentatu-mcp` (`crates/mcp`) | 5 | the eight MCP tools of §E.6 |
 
 ## Binary and tooling

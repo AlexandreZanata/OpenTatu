@@ -55,6 +55,11 @@ path = "crates/scanners"
 layer = "infrastructure"
 may_depend_on = ["opentatu-core"]
 
+[crates.opentatu-snapshots]
+path = "crates/snapshots"
+layer = "infrastructure"
+may_depend_on = ["opentatu-core"]
+
 [crates.opentatu-context]
 path = "crates/context"
 layer = "infrastructure"
@@ -81,6 +86,7 @@ may_depend_on = [
     "opentatu-llm",
     "opentatu-investigator",
     "opentatu-scanners",
+    "opentatu-snapshots",
     "opentatu-context",
     "opentatu-services",
 ]
@@ -103,6 +109,7 @@ may_depend_on = [
     "opentatu-db",
     "opentatu-llm",
     "opentatu-services",
+    "opentatu-snapshots",
     "opentatu-worker",
     "opentatu-dashboard",
     "opentatu-mcp",

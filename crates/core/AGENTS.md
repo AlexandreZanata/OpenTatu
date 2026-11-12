@@ -17,10 +17,12 @@ Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · St
 | `src/lib.rs` | modules and root re-exports | — |
 | `src/macros.rs` | `text_enum!` (exported), `impl_text!` (internal) | — |
 | `src/error.rs` | `Error` with expected-format messages | — |
-| `src/ids.rs` | `Slug`, `AuditId`, `MapId`, `FindingId`, `HypothesisId`, `EvidenceId`, `TaskId`, `EventId` | §B.2 |
+| `src/ids.rs` | `Slug`, `AuditId`, `MapId`, `FindingId`, `HypothesisId`, `EvidenceId`, `TaskId`, `EventId`, `CommitHash` | §B.2, R02 |
+| `src/app.rs` | `NewApp` (validated profile), `App` | §A.4, R01 |
+| `src/layout.rs` | `DataLayout` — every path under the data directory | §B.4 |
 | `src/time.rs` | `Timestamp`, `Clock`, `SystemClock`, `FixedClock` | §B.3, R03 |
 | `src/role.rs` | `AiRole` | §C |
-| `src/audit.rs` | `AuditKind`, `AuditStatus` and its status machine | §A.5, R13, Q-002 |
+| `src/audit.rs` | `AuditKind`, `AuditStatus` and its status machine, `Audit` record | §A.5, §B.5, R13, Q-002 |
 | `src/severity.rs` | `Severity`, `SeverityAdjustments`, `fix_priority` | §C.8, R18, R09 |
 | `src/finding_state.rs` | `FindingState` state machine | §A.6, R06–R09 |
 | `src/event.rs` | `EventKind`, `Actor`, `NewEvent`, `Event` | §B.6, R04 |
@@ -28,7 +30,7 @@ Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · St
 | `src/secrets.rs` | `mask_secret`, `Secret` | R15, R16 |
 | `src/usage.rs` | `LlmUsage`, `UsageTotals` | §D.2, R17 |
 
-Planned: app profile types (phase 1), per-audit budget tracking types (phase 4).
+Planned: per-audit budget tracking types (phase 4), finding records (phase 4).
 
 ## Local rules
 

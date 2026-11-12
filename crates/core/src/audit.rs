@@ -13,7 +13,9 @@
 //! persistent rate limit); `PARTIAL` is a final state for an audit that ended without full
 //! coverage — it is never reported as complete (R13, R14).
 
-use crate::{Error, EventKind};
+use serde::{Deserialize, Serialize};
+
+use crate::{AuditId, CommitHash, Error, EventKind, Slug, Timestamp};
 
 crate::text_enum! {
     /// Kind of audit (spec §A.5).
@@ -90,6 +92,43 @@ impl AuditStatus {
             EventKind::AuditFailed => Some(Self::Failed),
             _ => None,
         }
+    }
+}
+
+/// An audit as stored (spec §B.5). The worker uses the audits table as its queue: a
+/// `CREATED` audit is a queued job.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Audit {
+    /// `AUD-<SLUG>-<YYYYMMDD>-<HHMM>[-N]`, stamped with `created_at` (Q-001).
+    pub id: AuditId,
+    /// Audited app.
+    pub app: Slug,
+    /// Audit kind.
+    pub kind: AuditKind,
+    /// Current status.
+    pub status: AuditStatus,
+    /// Exact commit under analysis (R02).
+    pub commit: CommitHash,
+    /// Branch the commit was resolved from, if any.
+    pub branch: Option<String>,
+    /// Latest earlier audit of the same app that reached `COMPLETED` or `PARTIAL`.
+    pub previous_audit_id: Option<AuditId>,
+    /// Creation time (R03).
+    pub created_at: Timestamp,
+    /// First start time.
+    pub started_at: Option<Timestamp>,
+    /// Time a final status was reached.
+    pub completed_at: Option<Timestamp>,
+    /// Last pipeline step completed (technical progress for resuming, not history).
+    pub checkpoint: Option<String>,
+    /// What this audit did not cover, owner-facing pt-BR sentences (R13, R14).
+    pub limitations: Vec<String>,
+}
+
+impl Audit {
+    /// Seconds between start and completion, once both exist.
+    pub fn duration_seconds(&self) -> Option<i64> {
+        Some(self.completed_at?.seconds_since(&self.started_at?))
     }
 }
 

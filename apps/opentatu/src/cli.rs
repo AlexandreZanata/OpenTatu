@@ -4,6 +4,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
+use opentatu_core::AuditKind;
 
 /// OpenTatu — personal security investigation agent (local and private).
 #[derive(Debug, Parser)]
@@ -34,12 +35,25 @@ pub struct Cli {
 /// Top-level commands.
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Run the dashboard and the audit worker in one process [roadmap phase 1].
-    Serve(ListenArgs),
+    /// Run the dashboard and the audit worker in one process (default local mode).
+    Serve {
+        /// Listening options.
+        #[command(flatten)]
+        listen: ListenArgs,
+        /// Worker options.
+        #[command(flatten)]
+        worker: WorkerArgs,
+    },
     /// Run only the local web dashboard.
     Dashboard(ListenArgs),
-    /// Run only the audit worker [roadmap phase 1].
-    Worker,
+    /// Run only the audit worker.
+    Worker(WorkerArgs),
+    /// Registered applications.
+    #[command(subcommand)]
+    App(AppCommand),
+    /// Audits.
+    #[command(subcommand)]
+    Audit(AuditCommand),
     /// Run the MCP server over stdio for fixing agents [roadmap phase 5].
     Mcp,
     /// LLM provider commands.
@@ -48,6 +62,84 @@ pub enum Command {
     /// Database commands.
     #[command(subcommand)]
     Db(DbCommand),
+}
+
+/// `opentatu app ...`
+#[derive(Debug, Subcommand)]
+pub enum AppCommand {
+    /// Register an application you own (R01).
+    Add(AddAppArgs),
+    /// List registered applications.
+    List,
+}
+
+/// `opentatu app add` options.
+#[derive(Debug, Args)]
+pub struct AddAppArgs {
+    /// Unique slug: lowercase letters, digits and hyphens, e.g. `abastevo`.
+    #[arg(long)]
+    pub slug: String,
+    /// Display name.
+    #[arg(long)]
+    pub name: String,
+    /// Git repository URL or local path.
+    #[arg(long)]
+    pub repo: String,
+    /// Branch audited by default.
+    #[arg(long, default_value = "main")]
+    pub branch: String,
+    /// Technologies, comma separated.
+    #[arg(long, value_delimiter = ',')]
+    pub stack: Vec<String>,
+    /// Sensitive data handled by the app, comma separated.
+    #[arg(long, value_delimiter = ',')]
+    pub sensitive_data: Vec<String>,
+    /// Isolated lab URL for dynamic tests (never production, R10).
+    #[arg(long)]
+    pub lab_url: Option<String>,
+}
+
+/// `opentatu audit ...`
+#[derive(Debug, Subcommand)]
+pub enum AuditCommand {
+    /// Queue an audit of the exact commit of a branch or revision (R02).
+    Create {
+        /// App slug.
+        #[arg(long)]
+        app: String,
+        /// Audit kind: full, incremental, reverification or pr.
+        #[arg(long, default_value = "full", value_parser = parse_kind)]
+        kind: AuditKind,
+        /// Branch, tag or commit to audit (default: the app's branch).
+        #[arg(long)]
+        revision: Option<String>,
+    },
+    /// List audits, newest first.
+    List {
+        /// Only audits of this app.
+        #[arg(long)]
+        app: Option<String>,
+        /// Maximum number of audits.
+        #[arg(long, default_value_t = 20)]
+        limit: u32,
+    },
+}
+
+/// Worker options.
+#[derive(Debug, Args)]
+pub struct WorkerArgs {
+    /// Process the queued audits and exit instead of polling.
+    #[arg(long)]
+    pub once: bool,
+    /// Seconds between queue polls.
+    #[arg(long, env = "OPENTATU_WORKER_POLL_SECONDS", default_value_t = 2)]
+    pub poll_seconds: u64,
+}
+
+fn parse_kind(text: &str) -> Result<AuditKind, String> {
+    text.to_ascii_uppercase()
+        .parse()
+        .map_err(|_| format!("unknown audit kind {text:?} (full, incremental, reverification, pr)"))
 }
 
 /// `opentatu llm ...`

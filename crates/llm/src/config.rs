@@ -70,6 +70,17 @@ pub struct RoleConfig {
     pub model: String,
     /// Sampling temperature (0.0–2.0).
     pub temperature: f32,
+    /// Owner consent to send this role's prompts to a model that trains on them
+    /// (`[provider] models_that_train_on_prompts`). Default `false`: such models are refused.
+    #[serde(default)]
+    pub accept_prompt_training: bool,
+}
+
+impl RoleConfig {
+    /// Whether this role may call `self.model` given the provider's training list.
+    pub fn may_use_model(&self, provider: &ProviderConfig) -> bool {
+        self.accept_prompt_training || !provider.trains_on_prompts(&self.model)
+    }
 }
 
 /// Usage limits (spec §A.2, §D.2).
@@ -143,9 +154,10 @@ impl ModelsConfig {
                     "roles.{role}.model `{}` is not in allowed_models",
                     config.model
                 ));
-            } else if provider.trains_on_prompts(&config.model) {
+            } else if !config.may_use_model(provider) {
                 problems.push(format!(
-                    "roles.{role}.model `{}` trains on prompts; roles receive application code",
+                    "roles.{role}.model `{}` trains on prompts; set accept_prompt_training = true \
+                     only with the owner's consent (roles receive application data)",
                     config.model
                 ));
             }
@@ -215,15 +227,44 @@ mod tests {
     }
 
     #[test]
-    fn roles_cannot_use_models_that_train_on_prompts() {
+    fn training_models_need_explicit_owner_consent() {
         let mut config = committed();
         let training = config.provider.models_that_train_on_prompts[0].clone();
-        config.roles.get_mut(&AiRole::Skeptic).unwrap().model = training;
+        let hunter = config.roles.get_mut(&AiRole::Hunter).unwrap();
+        hunter.model = training;
+        hunter.accept_prompt_training = false;
         assert!(
             config
                 .validate()
                 .iter()
                 .any(|p| p.contains("trains on prompts"))
+        );
+        config
+            .roles
+            .get_mut(&AiRole::Hunter)
+            .unwrap()
+            .accept_prompt_training = true;
+        assert!(config.validate().is_empty(), "{:?}", config.validate());
+    }
+
+    #[test]
+    fn q011_roles_follow_the_owner_choice() {
+        let config = committed();
+        let training = &config.provider.models_that_train_on_prompts;
+        for role in [
+            AiRole::Cartographer,
+            AiRole::Hunter,
+            AiRole::Verifier,
+            AiRole::Planner,
+        ] {
+            assert!(
+                !training.contains(&config.roles[&role].model),
+                "{role} must not train"
+            );
+        }
+        assert_ne!(
+            config.roles[&AiRole::Skeptic].model,
+            config.roles[&AiRole::Verifier].model
         );
     }
 

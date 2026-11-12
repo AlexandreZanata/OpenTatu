@@ -258,3 +258,58 @@ Template:
 - **Alternatives considered:** the other options listed in each question.
 - **Consequences:** each decision is reversible through a new ADR; Q-011 and Q-012 remain
   open for the owner.
+
+## ADR-0020 — Snapshots through the git CLI in a dedicated crate
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** R02 requires auditing an exact commit; phase 1 must capture it. Options were
+  a Rust git library or the `git` CLI; process spawning was reserved to `opentatu-scanners`.
+- **Decision:** new infrastructure crate `opentatu-snapshots` (depends only on core) that
+  keeps a bare mirror per app (`<data>/repos/<slug>.git`), resolves revisions to a full
+  `CommitHash`, and checks the commit out into `<data>/snapshots/<slug>/<commit>/` (reused
+  when the same commit is audited again; a marker file makes incomplete snapshots rebuild).
+  Every call is hardened: no hooks, no `ext::` transport, no prompts, `--` and
+  `--end-of-options` before user values, credentials redacted from errors. `clippy.toml`
+  now allows processes in `opentatu-scanners` and `opentatu-snapshots` only. The crate's
+  `test-support` feature exposes the single helper that creates throwaway repositories.
+- **Alternatives considered:** `gix` (pure Rust, but a large dependency tree); `git2`
+  (libgit2 C dependency); putting git calls in the worker (would spread process spawning).
+- **Consequences:** `git` must be installed (it is on any machine with the apps' code).
+
+## ADR-0021 — Phase 1 pipeline: audits table as the queue, artifacts by the worker
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** spec §E.2 asks for a SQLite queue with checkpoints; §C.7 lists 16 steps of
+  which phase 1 implements creation, snapshot and memory.
+- **Decision:**
+  - The `audits` table is the queue: `CREATED` = queued; `Services::start_next_audit`
+    claims the oldest in a `BEGIN IMMEDIATE` transaction (safe across processes);
+    `checkpoint` and `limitations` columns added (migration 0003). Checkpoints are technical
+    progress and emit no event; every status change emits one.
+  - The worker writes the §B.4 artifacts (`app.json`, `audit.json`, `history.jsonl`,
+    `MEMORY.md`) after the final status, atomically (temp file + rename); paths come only
+    from `opentatu_core::DataLayout`; content comes from the pure `memory`/`reports` crates.
+  - While analysis steps are missing, every audit ends **PARTIAL** with one owner-facing
+    limitation per missing step (`opentatu_worker::pipeline::PENDING_STEPS`): an audit that
+    analyzed nothing is never reported as complete (R13, R14). Unreadable repositories end
+    the audit as FAILED without stopping the worker.
+  - Owner notes live in `OWNER-NOTES.md` (hand-edited) and are copied into `MEMORY.md`,
+    which is regenerated and never edited by hand.
+  - `opentatu serve` runs dashboard and worker in one process; `worker --once` drains the
+    queue and exits.
+- **Alternatives considered:** a separate jobs table (duplicates audit state); COMPLETED with
+  zero findings for empty audits (would read as "safe", violating R14).
+- **Consequences:** phases 2–5 remove sentences from `PENDING_STEPS` as steps are added; an
+  audit becomes COMPLETED only when every step of its kind ran.
+
+## ADR-0022 — Model per AI role (Q-011)
+- **Date:** 2026-11-12 · **Status:** accepted (decided by the owner)
+- **Context:** the owner chose to use both allowed models, each where it is strongest; Muse
+  Spark trains on prompts.
+- **Decision:** DeepSeek V4.1 Flash for cartographer, hunter, verifier and planner; Muse
+  Spark 1.3 for skeptic and reporter, based on the comparison in
+  [opencode-go.md](opencode-go.md). `RoleConfig::accept_prompt_training` records the owner's
+  consent per role; without it, roles refuse models in `models_that_train_on_prompts`
+  (validated at load and at call time).
+- **Alternatives considered:** DeepSeek everywhere (privacy-first, no model diversity for the
+  skeptic); Muse Spark everywhere (would send raw code to training).
+- **Consequences:** findings excerpts and the findings list reach a model that trains on
+  them; the phase 6 benchmark re-evaluates the assignment.

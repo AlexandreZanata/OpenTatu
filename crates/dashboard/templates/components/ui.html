@@ -26,3 +26,43 @@
 {#- datetime(ts): an opentatu_core::Timestamp shown in pt-BR with machine-readable ISO
     (spec §B.3). Never format dates in templates any other way. -#}
 {% macro datetime(ts) %}<time datetime="{{ ts.iso() }}">{{ ts.display_pt_br() }}</time>{% endmacro %}
+
+{#- audits_table(rows): audits as a table; `rows` are view::AuditRow (view::audit_row). -#}
+{% macro audits_table(rows) %}
+{% if rows.is_empty() %}
+{% call empty_state("Nenhuma auditoria ainda.", "Crie uma com `opentatu audit create --app <slug>` e rode `opentatu worker --once`.") %}{% endcall %}
+{% else %}
+<table class="c-table">
+  <thead><tr><th>Auditoria</th><th>Aplicação</th><th>Tipo</th><th>Status</th><th>Criada em</th><th>Commit</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.id }}</code></td>
+      <td><a href="/apps/{{ row.app }}">{{ row.app }}</a></td>
+      <td>{{ row.kind }}</td>
+      <td>{% call badge(row.status) %}{% endcall %}</td>
+      <td>{% call datetime(row.created_at) %}{% endcall %}</td>
+      <td><code>{{ row.commit }}</code></td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{#- timeline(entries): events, newest first; `entries` are view::TimelineEntry. -#}
+{% macro timeline(entries) %}
+{% if entries.is_empty() %}
+{% call empty_state("Nenhum evento registrado.", "Os eventos aparecem aqui assim que algo acontece.") %}{% endcall %}
+{% else %}
+<ol class="c-timeline">
+  {%- for entry in entries %}
+  <li class="c-timeline__item">
+    <span class="c-timeline__when">{% call datetime(entry.at) %}{% endcall %}</span>
+    <span class="c-timeline__what">{{ entry.label }}</span>
+    <span class="c-timeline__who">{{ entry.actor }}{% if !entry.target.is_empty() %} · <code>{{ entry.target }}</code>{% endif %}</span>
+  </li>
+  {%- endfor %}
+</ol>
+{% endif %}
+{% endmacro %}

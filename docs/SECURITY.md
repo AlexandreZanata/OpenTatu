@@ -15,6 +15,7 @@ list of controls; the requirements are in the spec (R10–R16, §E.5, §E.8).
 | Secret leakage (R15, R16) | API key only in the environment (`.env`, git-ignored, `0600`), read in one place into `Secret` (prints `****`), never logged or stored; secrets in findings masked with `mask_secret`; no prompt/code content in logs or provider errors |
 | Application code used to train third-party models | Models that train on prompts are listed in `models_that_train_on_prompts` and refused for AI roles; roles use DeepSeek V4.1 Flash (no training, zero retention renewed monthly — re-check after 2026-11-30) |
 | Unexpected provider spending | `allowed_models` enforced locally (the key is not restricted server-side); per-audit budgets and the 60% monthly share from `llm_usage.cost_usd`; owner advised to disable the pay-as-you-go fallback (Q-012) |
+| Malicious repository or URL attacks the host through git | Repository URLs/branches validated (no leading `-`, no `ext::`); git runs without hooks, prompts or `ext::` transport, with `--`/`--end-of-options` before user values; credentials redacted from errors; snapshots are never executed |
 | History tampering (R04) | `events` table rejects UPDATE/DELETE with triggers; corrections are new events |
 | Fixing agent closes or downgrades a finding | MCP tools cannot close findings or change severity (R06); only reverification closes |
 | Dynamic tests hit production (R10) | Dynamic verification only against the lab URL, fictitious data; production out of scope in every prompt |
@@ -32,6 +33,7 @@ list of controls; the requirements are in the spec (R10–R16, §E.5, §E.8).
 | Fencing untrusted content | `opentatu_investigator::fence` |
 | Secret masking | `opentatu_core::mask_secret` |
 | Container isolation | `opentatu_scanners::{ISOLATION_FLAGS, ContainerRun}` |
+| Hardened git | `crates/snapshots/src/git.rs` |
 | Append-only events | `crates/db/migrations/0001_foundation.sql` triggers |
 | Env reads / process spawning / clock reads banned elsewhere | `clippy.toml` |
 | Data dir permissions | `apps/opentatu/src/config.rs` |

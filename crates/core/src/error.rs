@@ -60,6 +60,10 @@ pub enum Error {
         to: AuditStatus,
     },
 
+    /// App profile with an invalid field (spec §A.4).
+    #[error("invalid app profile: {0}")]
+    InvalidApp(String),
+
     /// Fingerprint outside the `sha256:<64 lowercase hex>` format (spec §B.8).
     #[error("invalid fingerprint: {0:?} (expected format: sha256:<64 lowercase hex chars>)")]
     InvalidFingerprint(String),

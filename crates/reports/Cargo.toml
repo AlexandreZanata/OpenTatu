@@ -12,3 +12,6 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+opentatu-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

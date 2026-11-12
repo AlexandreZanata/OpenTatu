@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}{{ app.profile.name }} · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card(app.profile.name) %}
+  <dl class="c-meta">
+    <dt>Slug</dt><dd><code>{{ app.profile.slug }}</code></dd>
+    <dt>Repositório</dt><dd><code>{{ app.profile.repo_url }}</code> (branch <code>{{ app.profile.branch }}</code>)</dd>
+    <dt>Stack</dt><dd>{% if app.profile.stack.is_empty() %}—{% else %}{{ app.profile.stack.join(", ") }}{% endif %}</dd>
+    <dt>Dados sensíveis</dt><dd>{% if app.profile.sensitive_data.is_empty() %}—{% else %}{{ app.profile.sensitive_data.join(", ") }}{% endif %}</dd>
+    <dt>Cadastrada em</dt><dd>{% call ui::datetime(app.created_at) %}{% endcall %}</dd>
+  </dl>
+{% endcall %}
+
+{% call ui::card("Auditorias") %}
+  {% call ui::audits_table(audits) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Linha do tempo") %}
+  {% call ui::timeline(timeline) %}{% endcall %}
+{% endcall %}
+{% endblock %}
