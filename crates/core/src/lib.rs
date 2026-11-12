@@ -14,7 +14,8 @@ pub mod agent;
 pub mod app;
 pub mod asvs;
 pub mod audit;
-pub mod coverage;
+pub mod change;
+mod coverage;
 pub mod error;
 pub mod event;
 pub mod finding;
@@ -25,6 +26,7 @@ pub mod ids;
 pub mod layout;
 pub mod lenient;
 pub mod map;
+mod map_incremental;
 pub mod role;
 pub mod scanner;
 pub mod secrets;
@@ -73,3 +75,6 @@ pub use usage::{LlmUsage, RecordedLlmUsage, UsageTotals};
 /// Re-export used by this crate's exported macros. Do not use directly.
 #[doc(hidden)]
 pub use serde as __serde;
+
+// Phase 7 commit-change contracts.
+pub use change::{FileChange, FixIdentity, IncrementalScope};

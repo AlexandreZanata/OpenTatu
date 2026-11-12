@@ -45,3 +45,6 @@ local reference; ids, priority and severity are assigned by the system.
 Prompt files: front matter, registration and variables are tested. Rendering and fencing
 have unit tests. Role execution tests use `opentatu_llm::FakeClient` (`run::tests::llm`,
 `run::tests::variables` are the shared fixtures).
+
+Phase 7: cartographer/hunter prompts 2.2.0 describe incremental scope using existing
+previous-map/diff blocks; output schemas and the fenced role execution path are reused.

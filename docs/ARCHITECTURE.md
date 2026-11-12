@@ -140,10 +140,13 @@ sequenceDiagram
   W->>S: create audit (ID, created_at, AUDIT_CREATED)
   W->>W: snapshot exact commit (R02)
   W->>SC: run isolated scanners, normalize
-  W->>C: tree, config, ranked code (budget)
+  W->>W: INCREMENTAL: diff previous final commit (snapshots only)
+  W->>C: tree, scoped code/config and budgeted diff
+  W->>I: previous map and diff for incremental update
   W->>I: cartographer(map inputs)
   I->>L: generate(role, messages, schema)
-  W->>C: select excerpts per entry point
+  W->>W: detect approved fixes reaching configured branch (ADR-0032)
+  W->>C: select affected entry points, or changed source seeds
   loop up to 3 rounds
     W->>I: hunter
   end
@@ -172,7 +175,9 @@ sequenceDiagram
   W->>W: verifier on the original hypothesis with <fix>; closed findings' code searched (R09); tests changed (R19)
   W->>S: record_reverification
   alt approved
-    S->>S: REVERIFICATION_PASSED, FINDING_CLOSED, task DONE
+    S->>S: REVERIFICATION_PASSED, FIX_APPROVED, task DONE
+    W->>W: next configured-branch audit detects approved fix
+    W->>S: FINDING_CLOSED with branch commit and detection method
   else rejected
     S->>S: REVERIFICATION_FAILED, task reopened with reasons (TASK_CREATED)
   end
@@ -221,3 +226,20 @@ sequenceDiagram
   main cost lever.
 
 Security of OpenTatu itself: [SECURITY.md](SECURITY.md).
+
+## Phase 7 polling and scope
+
+`Worker::watch_once` refreshes authorized mirrors and resolves each configured branch;
+`Services::audit_new_commit` transactionally checks prior final baseline, active work and
+last audited branch head. Only a new eligible head queues INCREMENTAL with system/watcher
+provenance. `serve` and long-running `worker` poll independently from the single audit
+queue, at `--watch-minutes` / `OPENTATU_WATCH_MINUTES` (10 by default, 0 off). `worker
+--once` only drains; `watch --once` only polls/queues. No inbound webhook or automatic FULL.
+
+The incremental base is `previous_audit_id` (COMPLETED/PARTIAL, excluding REVERIFICATION).
+Scanners still inspect the whole snapshot, but only changed-path results reach the hunter.
+Context reuses depth-2 dependency selection on old/new snapshots to identify affected
+handlers, includes new entries, and falls back to changed source files. Unchanged map
+records are retained and unexamined coverage remains NOT_TESTED. Scope is explicit in
+`audit.json` and the system-owned report section. INCREMENTAL has its configured budget.
+See ADR-0033; PAUSED resumption remains deferred to Q-032.

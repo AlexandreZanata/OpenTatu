@@ -36,6 +36,7 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
             worker::serve(data_dir, configs, listen.address, &worker).await
         }
         Command::Dashboard(args) => dashboard::run(data_dir, args.address).await,
+        Command::Watch { once: _ } => worker::watch(data_dir, configs).await,
         Command::Worker(args) => worker::run(data_dir, configs, &args).await,
         Command::Scanners(ScannersCommand::Update { only }) => {
             scanners::update(data_dir, configs.scanners, only).await

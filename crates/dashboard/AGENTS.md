@@ -72,3 +72,7 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 
 `routes.rs` tests drive the router with `oneshot` (always send a `Host` header). Unit tests
 for `view.rs` mappings and `config.rs`.
+
+Phase 7: `finding_state_badge` maps FIX_APPROVED to the owner label; the app page lists
+approved fixes awaiting merge separately, reusing `ui::findings_table`. No new CSS or
+markup component is needed.

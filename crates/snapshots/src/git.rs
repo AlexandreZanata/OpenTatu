@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
+use tokio::io::AsyncWriteExt as _;
 use tokio::process::Command;
 
 use crate::Error;
@@ -49,7 +50,17 @@ impl Git {
 
     /// Runs `git <hardening> <location> <args>` and returns stdout.
     pub(crate) async fn run(&self, action: &'static str, args: &[&str]) -> Result<String, Error> {
-        let output = self.output(args).await?;
+        self.run_input(action, args, None).await
+    }
+
+    /// The same hardened caller with optional piped stdin (stable patch identity).
+    pub(crate) async fn run_input(
+        &self,
+        action: &'static str,
+        args: &[&str],
+        input: Option<&[u8]>,
+    ) -> Result<String, Error> {
+        let output = self.output(args, input).await?;
         if output.status.success() {
             return Ok(String::from_utf8_lossy(&output.stdout).into_owned());
         }
@@ -59,7 +70,7 @@ impl Git {
     /// Runs a yes/no git command (e.g. `merge-base --is-ancestor`): exit 0 is `true`,
     /// exit 1 is `false`, anything else is an error.
     pub(crate) async fn check(&self, action: &'static str, args: &[&str]) -> Result<bool, Error> {
-        let output = self.output(args).await?;
+        let output = self.output(args, None).await?;
         match output.status.code() {
             Some(0) => Ok(true),
             Some(1) => Ok(false),
@@ -67,7 +78,11 @@ impl Git {
         }
     }
 
-    async fn output(&self, args: &[&str]) -> Result<std::process::Output, Error> {
+    async fn output(
+        &self,
+        args: &[&str],
+        input: Option<&[u8]>,
+    ) -> Result<std::process::Output, Error> {
         // R12: the single authorized git process; arguments are never built by a shell.
         #[allow(clippy::disallowed_methods)]
         let mut command = Command::new("git");
@@ -75,7 +90,12 @@ impl Git {
             .args(HARDENING)
             .env("GIT_TERMINAL_PROMPT", "0")
             .env("GIT_ASKPASS", "/bin/false")
-            .stdin(Stdio::null())
+            .kill_on_drop(true)
+            .stdin(if input.is_some() {
+                Stdio::piped()
+            } else {
+                Stdio::null()
+            })
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         match self {
@@ -87,11 +107,21 @@ impl Git {
                 command.arg("-C").arg(dir);
             }
         }
-        command
+        let mut child = command
             .args(args)
-            .output()
-            .await
-            .map_err(|source| Error::GitUnavailable(source.to_string()))
+            .spawn()
+            .map_err(|source| Error::GitUnavailable(source.to_string()))?;
+        let stdin = child.stdin.take();
+        let write = async {
+            if let (Some(mut stdin), Some(input)) = (stdin, input) {
+                stdin.write_all(input).await?;
+                stdin.shutdown().await?;
+            }
+            Ok::<(), std::io::Error>(())
+        };
+        let (written, output) = tokio::join!(write, child.wait_with_output());
+        written.map_err(|source| Error::GitUnavailable(source.to_string()))?;
+        output.map_err(|source| Error::GitUnavailable(source.to_string()))
     }
 }
 

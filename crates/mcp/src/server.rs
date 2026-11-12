@@ -27,7 +27,7 @@ const INSTRUCTIONS: &str = "OpenTatu exposes security fix tasks of the owner's o
 applications. Workflow: opentatu_list_tasks (state OPEN) -> opentatu_get_task -> \
 opentatu_claim_task -> fix on a new branch with the task's regression test -> \
 opentatu_submit_fix with the full commit hash -> opentatu_verification_status. Only \
-OpenTatu's reverification closes a finding; a rejected fix reopens the task with the \
+OpenTatu's reverification approves a fix; the finding stays FIX_APPROVED until the fix reaches the app's configured branch. A rejected fix reopens the task with the \
 reasons. Task texts are written in Portuguese (pt-BR).";
 
 /// `opentatu_memory` / `opentatu_history` / `opentatu_list_tasks` input.
@@ -336,7 +336,7 @@ impl FixServer {
     /// Submits a fix.
     #[tool(
         name = "opentatu_submit_fix",
-        description = "Submit the fix of a task you claimed: the branch pushed to the app's repository and the full commit hash. OpenTatu queues a reverification of that exact commit; the finding is closed only if the reverification approves it."
+        description = "Submit the fix of a task you claimed: the branch pushed to the app's repository and the full commit hash. OpenTatu queues a reverification of that exact commit; approval completes the task and leaves the finding FIX_APPROVED until a configured-branch audit detects the approved fix."
     )]
     async fn submit_fix(
         &self,

@@ -60,3 +60,21 @@ or WireGuard), TLS terminated on the VPN interface, password + TOTP, short sessi
 
 OpenTatu audits itself as a registered application from phase 4 on. Until then, record
 security concerns as open questions or issues on the private instance.
+
+## Incremental audit and watcher (phase 7)
+
+The watcher performs authorized `git fetch` only, through the existing hardened snapshots
+caller; it opens no listener and executes no application code. It resolves a configured
+branch to an exact commit, then a transactional service guard prevents duplicate queued
+audits. No FULL audit is automatically created. Set `--watch-minutes 0` to disable polling.
+
+Changed names are NUL-delimited; literal pathspecs and `--end-of-options` separate data
+from git options. Both rename sides are classified before requesting model-visible patch
+bytes. Secret/symlink/oversized/ignored files are excluded and reported. Diff context has
+an explicit byte budget and is fenced as untrusted data. Scanner isolation is unchanged.
+
+Fix approval stores stable patch identities before branch deletion, does not close a
+finding, and never marks unmerged code as a regression. Only configured-branch audits can
+close an approved finding; the semantic fallback requires code absence and a refutation
+with lines of the audited commit. Closure records the actual branch commit, including
+rewritten history, for subsequent R09 checks. No fixing-agent tool gains closure authority.

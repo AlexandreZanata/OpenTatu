@@ -26,6 +26,10 @@
   {% call ui::findings_table(findings, "Nenhum achado aberto.") %}{% endcall %}
 {% endcall %}
 
+{% call ui::card("Correções aprovadas, aguardando merge") %}
+  {% call ui::findings_table(awaiting_merge, "Nenhuma correção aguardando merge.") %}{% endcall %}
+{% endcall %}
+
 {% call ui::card("Tarefas de correção pendentes") %}
   {% call ui::tasks_table(tasks, "Nenhuma tarefa pendente.") %}{% endcall %}
 {% endcall %}

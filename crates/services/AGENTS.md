@@ -48,3 +48,13 @@ Planned modules (one per aggregate): `decisions.rs` (owner decisions, R20).
 
 In each module, using `Services::in_memory(Arc::new(FixedClock::at(...)?))`; assert results
 and the events written.
+
+Phase 7: `audit_new_commit` owns watcher admission; manual INCREMENTAL requires a final
+non-reverification baseline. `record_reverification` sets FIX_APPROVED/task DONE and requires
+patch identity for approval. `close_merged_fix` alone closes an approved fix on an audited
+configured branch, with detection provenance; it is not exposed to fixing agents.
+Incremental coverage cannot mark an unexamined shared ASVS requirement VERIFIED.
+
+`actionable_findings` excludes persistent old findings from incremental role work;
+`original_hypothesis` keeps reverification tied to the evidence-confirmed original claim
+rather than a newer unverified re-detection.

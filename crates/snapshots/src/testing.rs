@@ -34,6 +34,27 @@ pub fn checkout_new_branch(dir: &Path, name: &str, start: &str) {
     git(dir, &["checkout", "--quiet", "-b", name, start]);
 }
 
+/// Switches a throwaway repository to an existing branch.
+pub fn checkout(dir: &Path, branch: &str) {
+    git(dir, &["checkout", "--quiet", branch]);
+}
+
+/// Squash-merges a test branch and records its staged change in one new commit.
+pub fn squash_merge(dir: &Path, branch: &str) {
+    git(dir, &["merge", "--quiet", "--squash", branch]);
+    commit_files(dir, &[], "squash fix");
+}
+
+/// Merges a test branch, preserving ancestry.
+pub fn merge(dir: &Path, branch: &str) {
+    git(dir, &["merge", "--quiet", "--no-ff", "--no-edit", branch]);
+}
+
+/// Rebases the current test branch onto another local branch.
+pub fn rebase(dir: &Path, onto: &str) {
+    git(dir, &["rebase", "--quiet", onto]);
+}
+
 fn git(dir: &Path, args: &[&str]) {
     // Test fixture: builds a throwaway repository with the git CLI (this crate owns git).
     #[allow(clippy::disallowed_methods)]

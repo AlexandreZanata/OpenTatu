@@ -72,6 +72,13 @@ impl Services {
                 ));
             }
         };
+        let previous = opentatu_db::audits::last_final(&mut *tx, id.slug()).await?;
+        if input.kind == AuditKind::Incremental && previous.is_none() {
+            return Err(Error::Conflict(
+                "an incremental audit needs a previous final audit; create a FULL audit first"
+                    .into(),
+            ));
+        }
         let audit = Audit {
             id: id.clone(),
             app: input.app,
@@ -79,17 +86,18 @@ impl Services {
             status: AuditStatus::Created,
             commit: input.commit,
             branch: input.branch,
-            previous_audit_id: opentatu_db::audits::last_final(&mut *tx, id.slug()).await?,
+            previous_audit_id: previous,
             created_at: now,
             started_at: None,
             completed_at: None,
             checkpoint: None,
             limitations: vec![],
         };
-        let event = NewEvent::new(EventKind::AuditCreated, input.requested_by, now)
+        let event = NewEvent::new(EventKind::AuditCreated, input.requested_by.clone(), now)
             .with_audit(id.clone())
             .with_target(&id)
             .with_data(serde_json::json!({
+                "trigger": if audit.kind == AuditKind::Incremental && input.requested_by == Actor::System { "watcher" } else { "manual" },
                 "kind": audit.kind,
                 "commit": audit.commit,
                 "branch": audit.branch,
@@ -97,6 +105,47 @@ impl Services {
             }));
         opentatu_db::audits::insert(&mut *tx, &audit, &event).await?;
         Ok(audit)
+    }
+
+    /// Atomically decides whether a newly resolved configured-branch head needs an
+    /// INCREMENTAL audit. No baseline, active work or an already-audited head means skip.
+    pub async fn audit_new_commit(
+        &self,
+        app: &Slug,
+        commit: CommitHash,
+    ) -> Result<Option<Audit>, Error> {
+        let mut tx = self.db.begin().await?;
+        let registered = opentatu_db::apps::get(&mut tx, app)
+            .await?
+            .ok_or_else(|| Error::UnknownApp(app.clone()))?;
+        if opentatu_db::audits::has_active(&mut tx, app).await?
+            || opentatu_db::audits::last_final(&mut tx, app)
+                .await?
+                .is_none()
+        {
+            tx.commit().await?;
+            return Ok(None);
+        }
+        let last =
+            opentatu_db::audits::last_on_branch(&mut tx, app, &registered.profile.branch).await?;
+        if last.is_some_and(|a| a.commit == commit) {
+            tx.commit().await?;
+            return Ok(None);
+        }
+        let audit = self
+            .insert_audit(
+                &mut tx,
+                NewAudit {
+                    app: app.clone(),
+                    kind: AuditKind::Incremental,
+                    commit,
+                    branch: Some(registered.profile.branch),
+                    requested_by: Actor::System,
+                },
+            )
+            .await?;
+        tx.commit().await?;
+        Ok(Some(audit))
     }
 
     /// Claims the oldest queued audit (`CREATED → RUNNING`, `AUDIT_STARTED`), if any.
@@ -328,5 +377,75 @@ mod tests {
                 .await
                 .is_err()
         );
+    }
+
+    #[tokio::test]
+    async fn incremental_requires_a_final_baseline_and_watcher_is_atomic() {
+        let (services, _) = services().await;
+        services.register_app(new_app("abastevo")).await.unwrap();
+        let mut input = new_audit("abastevo");
+        input.kind = AuditKind::Incremental;
+        assert!(
+            services
+                .create_audit(input)
+                .await
+                .unwrap_err()
+                .to_string()
+                .contains("FULL")
+        );
+        let slug = Slug::new("abastevo").unwrap();
+        let commit = COMMIT.parse().unwrap();
+        assert!(
+            services
+                .audit_new_commit(&slug, commit)
+                .await
+                .unwrap()
+                .is_none()
+        );
+        let baseline = services.create_audit(new_audit("abastevo")).await.unwrap();
+        let changed: CommitHash = "2222222222222222222222222222222222222222".parse().unwrap();
+        assert!(
+            services
+                .audit_new_commit(&slug, changed.clone())
+                .await
+                .unwrap()
+                .is_none(),
+            "queued"
+        );
+        services.start_next_audit().await.unwrap();
+        assert!(
+            services
+                .audit_new_commit(&slug, changed.clone())
+                .await
+                .unwrap()
+                .is_none(),
+            "running"
+        );
+        services
+            .finish_audit(&baseline.id, AuditStatus::Partial, &[])
+            .await
+            .unwrap();
+        assert!(
+            services
+                .audit_new_commit(&slug, baseline.commit.clone())
+                .await
+                .unwrap()
+                .is_none()
+        );
+        let (a, b) = tokio::join!(
+            services.audit_new_commit(&slug, changed.clone()),
+            services.audit_new_commit(&slug, changed)
+        );
+        let queued: Vec<_> = [a.unwrap(), b.unwrap()].into_iter().flatten().collect();
+        assert_eq!(queued.len(), 1, "concurrent polls cannot duplicate work");
+        assert_eq!(queued[0].kind, AuditKind::Incremental);
+        assert_eq!(queued[0].previous_audit_id, Some(baseline.id));
+        let event = services
+            .audit_events(&queued[0].id)
+            .await
+            .unwrap()
+            .remove(0);
+        assert_eq!(event.content.actor, Actor::System);
+        assert_eq!(event.content.data["trigger"], "watcher");
     }
 }

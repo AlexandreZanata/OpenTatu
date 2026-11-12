@@ -29,3 +29,6 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: phase 1 ✅ (memor
 
 Snapshot-style tests of the rendered text (add `insta` via the dependency recipe when
 needed).
+
+Phase 7: FIX_APPROVED remains open/persistent (not a regression); working memory states
+the number of approved fixes awaiting merge. The fingerprint algorithm is unchanged.

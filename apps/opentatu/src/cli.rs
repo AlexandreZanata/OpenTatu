@@ -57,6 +57,12 @@ pub enum Command {
     Dashboard(ListenArgs),
     /// Run only the audit worker.
     Worker(WorkerArgs),
+    /// Poll configured branches once and queue eligible INCREMENTAL audits.
+    Watch {
+        /// Check every app once, print queued audits, and exit.
+        #[arg(long, required = true)]
+        once: bool,
+    },
     /// Registered applications.
     #[command(subcommand)]
     App(AppCommand),
@@ -250,6 +256,10 @@ pub enum AuditCommand {
 /// Worker options.
 #[derive(Debug, Args)]
 pub struct WorkerArgs {
+    /// Minutes between configured-branch checks (default: OPENTATU_WATCH_MINUTES or 10;
+    /// 0 disables). Queue polling remains independent.
+    #[arg(long)]
+    pub watch_minutes: Option<u64>,
     /// Process the queued audits and exit instead of polling.
     #[arg(long)]
     pub once: bool,

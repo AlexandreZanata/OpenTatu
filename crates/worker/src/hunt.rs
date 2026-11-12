@@ -55,8 +55,31 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
                 .to_owned(),
         ]);
     };
-    let batches = batches(&prioritized(&map.content.entry_points));
-    let scanner_results = services.scanner_results(&audit.id).await?;
+    let affected = run
+        .incremental
+        .as_ref()
+        .map(|scope| scope.entries(run, &map));
+    let eligible: Vec<_> = map
+        .content
+        .entry_points
+        .iter()
+        .filter(|entry| affected.as_ref().is_none_or(|ids| ids.contains(&entry.id)))
+        .cloned()
+        .collect();
+    let mut batches = batches(&prioritized(&eligible));
+    if eligible.is_empty()
+        && run
+            .incremental
+            .as_ref()
+            .is_some_and(|scope| !scope.source_seeds(&run.files).is_empty())
+    {
+        batches.push(Vec::new());
+    }
+    let mut scanner_results = services.scanner_results(&audit.id).await?;
+    if let Some(scope) = &run.incremental {
+        let paths = scope.paths();
+        scanner_results.retain(|r| r.file.as_ref().is_some_and(|p| paths.contains(p)));
+    }
     let dismissed = services.dismissed_hypotheses(audit).await?;
     let dismissed_before = services.dismissed_before(audit).await?;
     let mut limitations = Vec::new();
@@ -79,6 +102,11 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
                 });
             }
         }
+        if batch.is_empty()
+            && let Some(scope) = &run.incremental
+        {
+            seeds.extend(scope.source_seeds(&run.files));
+        }
         let code = entry_point_code(&run.files, &seeds, ROUND_CODE_BYTES, ROUND_FILE_BYTES);
         let code_files: BTreeSet<&str> = code.excerpts.iter().map(|e| e.path.as_str()).collect();
         let scanner: Vec<&ScannerResult> = scanner_results
@@ -93,7 +121,7 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
         let open: Vec<_> = findings.iter().filter(|f| f.is_open()).collect();
         let recorded = services.hypotheses_of_audit(&audit.id).await?;
         let false_positives: Vec<_> = dismissed.iter().rev().take(MAX_FALSE_POSITIVES).collect();
-        let inputs = vec![
+        let mut inputs = vec![
             (Block::Map, map_excerpt(&map, batch)),
             (Block::Scanner, scanner_lines(&scanner)),
             (Block::Code, code.render()),
@@ -104,6 +132,9 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
                 hypothesis_lines(&recorded.iter().collect::<Vec<_>>()),
             ),
         ];
+        if let Some(scope) = &run.incremental {
+            inputs.push((Block::Diff, scope.diff.render()));
+        }
         let variables = run.variables().await?;
         let call = RoleCall {
             audit_id: &audit.id,
@@ -143,6 +174,13 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
                     continue;
                 }
             };
+            if run.incremental.is_some() && !code_files.contains(content.location.file.as_str()) {
+                dropped.push(format!(
+                    "out of incremental scope: {}",
+                    content.location.file
+                ));
+                continue;
+            }
             let fingerprint = run.fingerprint(&content.cwe, &content.location);
             let findings = services.findings_of_app(&audit.app).await?;
             let earlier: Vec<_> = services
@@ -236,9 +274,7 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
         }
     }
 
-    let missing: Vec<&str> = map
-        .content
-        .entry_points
+    let missing: Vec<&str> = eligible
         .iter()
         .filter(|e| !covered.contains(&e.id))
         .map(|e| e.id.as_str())

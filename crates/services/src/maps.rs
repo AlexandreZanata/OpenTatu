@@ -139,7 +139,27 @@ impl Services {
             return Ok(None);
         };
         let (checked, failed, unresolved) = self.requirement_sets(audit).await?;
-        let statuses = requirement_statuses(&checked, &failed, &unresolved);
+        let mut statuses = requirement_statuses(&checked, &failed, &unresolved);
+        if self.audit(audit).await?.kind == opentatu_core::AuditKind::Incremental {
+            let examined: Vec<_> = self
+                .hunt_rounds(audit)
+                .await?
+                .into_iter()
+                .flat_map(|round| round.entry_points)
+                .collect();
+            // An ASVS requirement shared with untouched routes has not been fully checked
+            // by this incremental audit. Never carry previous VERIFIED coverage forward.
+            statuses.retain(|id, status| {
+                *status != opentatu_core::RequirementStatus::Verified
+                    || (!map.content.app_asvs.contains(id)
+                        && map
+                            .content
+                            .entry_points
+                            .iter()
+                            .filter(|e| e.applicable_asvs.contains(id))
+                            .all(|e| examined.contains(&e.id)))
+            });
+        }
         let catalog = AsvsCatalog::embedded()?;
         Ok(Some(Coverage::compute(
             &map,

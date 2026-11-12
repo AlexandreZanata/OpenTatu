@@ -87,3 +87,21 @@ one exception: it measures against apps with known flaws.
 - Snapshot tests for `MEMORY.md`, `report.md` and SARIF (phase 1/4) — add `insta` through
   [recipes/add-dependency.md](recipes/add-dependency.md).
 - Rebuild-from-events test for derived tables (phase 4, ADR-0006).
+
+## Phase 7 verification
+
+`cargo test -p opentatu-snapshots` covers literal diffs, deletions/renames, stable patch
+identity through squash/rebase and unmatched branches. `cargo test -p opentatu-context`
+covers budget/secret exclusion and related-code scope. Core/memory tests protect approved
+versus closed states, map preservation, and R09 persistence while awaiting merge. Services
+tests cover missing baseline, queued/running/unchanged skips and concurrent watcher polls.
+
+`cargo test -p opentatu-worker --test audit_pipeline` uses the shared fakes and throwaway
+repos: scoped map update/hunter/scanner filtering/report, unchanged ASVS NOT_TESTED,
+approval -> waiting, ancestry/squash/rebase/semantic closure, insufficient semantic evidence,
+never-merged fixes and post-merge R09 behavior. The exact INCREMENTAL budget is tested
+without spending real tokens. Use the local-clone Abastevo workflow from ADR-0033 for real
+acceptance; never build/run its intentionally vulnerable handler or push those commits.
+PAUSED resumption is deliberately outside phase 7 (Q-032).
+Empty-diff audits exercise zero AI calls; reports without AI must retain known unexamined
+entry points, even when no new map is available (R14).

@@ -6,7 +6,8 @@
 //! CONFIRMED ─skeptic─> DOWNGRADED | UPHELD | DISMISSED
 //! DOWNGRADED, UPHELD ─planner─> TASK_CREATED            (DOWNGRADED → TASK_CREATED: Q-003, answered)
 //! TASK_CREATED ─fixing agent─> FIX_SUBMITTED
-//! FIX_SUBMITTED ─reverification─> CLOSED | FIX_REJECTED
+//! FIX_SUBMITTED ─reverification─> FIX_APPROVED | FIX_REJECTED
+//! FIX_APPROVED ─merge detected─> CLOSED
 //! FIX_REJECTED ──> TASK_CREATED
 //! CLOSED ─fingerprint reappears─> REGRESSION ──> TASK_CREATED   (Q-004, answered)
 //! RISK_ACCEPTED ─expires─> CONFIRMED
@@ -40,7 +41,9 @@ crate::text_enum! {
         FixSubmitted => "FIX_SUBMITTED",
         /// Reverification failed; goes back to a task.
         FixRejected => "FIX_REJECTED",
-        /// Closed after an approved reverification (R06).
+        /// Reverified fix waiting to reach the configured application branch (ADR-0032).
+        FixApproved => "FIX_APPROVED",
+        /// Approved fix detected on the application branch (R06).
         Closed => "CLOSED",
         /// Risk accepted by the owner, with justification and expiry (R07).
         RiskAccepted => "RISK_ACCEPTED",
@@ -59,7 +62,8 @@ impl FindingState {
             S::Confirmed => &[S::Downgraded, S::Upheld, S::Dismissed, S::RiskAccepted],
             S::Downgraded | S::Upheld => &[S::TaskCreated, S::Dismissed, S::RiskAccepted],
             S::TaskCreated => &[S::FixSubmitted, S::Dismissed, S::RiskAccepted],
-            S::FixSubmitted => &[S::Closed, S::FixRejected],
+            S::FixSubmitted => &[S::FixApproved, S::FixRejected],
+            S::FixApproved => &[S::Closed],
             S::FixRejected | S::Regression => &[S::TaskCreated, S::Dismissed, S::RiskAccepted],
             S::Closed => &[S::Regression],
             S::RiskAccepted => &[S::Confirmed],
@@ -97,6 +101,7 @@ mod tests {
             S::FixRejected,
             S::TaskCreated,
             S::FixSubmitted,
+            S::FixApproved,
             S::Closed,
             S::Regression,
             S::TaskCreated,
@@ -114,7 +119,7 @@ mod tests {
     #[test]
     fn r06_only_reverification_closes_a_finding() {
         for state in S::ALL {
-            let expected = *state == S::FixSubmitted;
+            let expected = *state == S::FixApproved;
             assert_eq!(
                 state.can_transition_to(S::Closed),
                 expected,

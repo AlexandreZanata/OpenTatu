@@ -34,3 +34,8 @@ Paths: `DataLayout::mirror_dir` (`<data>/repos/<slug>.git`) and `DataLayout::sna
 
 Use `testing::create_repo` (enable `features = ["test-support"]` in dev-dependencies). Tests
 need the `git` CLI (present locally and in CI).
+
+Phase 7: `src/changes.rs` implements `changed_files`, `unified_diff`, `fix_identity` and
+`patch_ids`. `Git::run_input` extends the same hardened caller with bounded-lifetime stdin
+for `git patch-id --stable` (Tokio io-util); no shell. Test support additionally owns
+`checkout`, `merge`, `squash_merge`, `rebase`. Only these helpers start git in tests.

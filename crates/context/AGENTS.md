@@ -21,7 +21,9 @@ configuration, cartographer selection); per-entry-point selection (phase 4) ✅;
 | `src/related.rs` | `Seed`, `entry_point_code` — handler files + imports/same package up to depth 2 (Go, Rust, JS/TS, Python) |
 | `src/error.rs` | `Error` |
 
-Planned: `src/diff.rs` for INCREMENTAL audits (phase 7).
+Phase 7: `src/diff.rs` — `diff_allowed` checks both rename sides before requesting patch
+bytes; `render_diff` reuses `Selection`/`Excerpt` and reports omissions within its byte
+budget; `affected_entry_points` reuses `entry_point_code` depth-2 selection.
 
 ## Local rules
 

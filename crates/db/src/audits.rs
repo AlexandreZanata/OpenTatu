@@ -113,7 +113,7 @@ pub async fn next_queued(conn: &mut SqliteConnection) -> Result<Option<Audit>, E
 pub async fn last_final(conn: &mut SqliteConnection, app: &Slug) -> Result<Option<AuditId>, Error> {
     let id: Option<String> = sqlx::query_scalar(
         "SELECT id FROM audits WHERE app = ? AND status IN ('COMPLETED', 'PARTIAL') \
-         AND kind <> 'REVERIFICATION' ORDER BY created_at DESC, id DESC LIMIT 1",
+         AND kind <> 'REVERIFICATION' ORDER BY created_at DESC, rowid DESC LIMIT 1",
     )
     .bind(app.as_str())
     .fetch_optional(&mut *conn)
@@ -125,6 +125,28 @@ pub async fn last_final(conn: &mut SqliteConnection, app: &Slug) -> Result<Optio
         })
     })
     .transpose()
+}
+
+/// Whether the app already has queued or running work (watcher race guard).
+pub async fn has_active(conn: &mut SqliteConnection, app: &Slug) -> Result<bool, Error> {
+    let found: Option<i64> = sqlx::query_scalar(
+        "SELECT 1 FROM audits WHERE app = ? AND status IN ('CREATED', 'RUNNING') LIMIT 1",
+    )
+    .bind(app.as_str())
+    .fetch_optional(&mut *conn)
+    .await?;
+    Ok(found.is_some())
+}
+
+/// Latest non-reverification audit on this exact configured branch, regardless of final
+/// status: a failed attempt is not enqueued again on every poll of the same commit.
+pub async fn last_on_branch(
+    conn: &mut SqliteConnection,
+    app: &Slug,
+    branch: &str,
+) -> Result<Option<Audit>, Error> {
+    let row = sqlx::query(concat!("SELECT ", columns!(), " FROM audits WHERE app = ? AND branch = ? AND kind <> 'REVERIFICATION' ORDER BY created_at DESC, rowid DESC LIMIT 1")).bind(app.as_str()).bind(branch).fetch_optional(&mut *conn).await?;
+    row.as_ref().map(from_row).transpose()
 }
 
 /// Moves an audit to `to` (validated by `AuditStatus::validate_transition`), stamping
@@ -373,5 +395,81 @@ pub(crate) mod tests {
             .execute(&mut *conn)
             .await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn watcher_queries_ignore_reverifications_and_track_active_work() {
+        let (db, audit) = database_with_audit().await;
+        let mut conn = db.connection().await.unwrap();
+        assert!(has_active(&mut conn, &audit.app).await.unwrap());
+        assert_eq!(
+            last_on_branch(&mut conn, &audit.app, "other")
+                .await
+                .unwrap(),
+            None
+        );
+        let at: Timestamp = NOW.parse().unwrap();
+        update_status(
+            &mut conn,
+            &audit.id,
+            AuditStatus::Running,
+            &at,
+            &[],
+            &event(EventKind::AuditStarted, &audit),
+        )
+        .await
+        .unwrap();
+        update_status(
+            &mut conn,
+            &audit.id,
+            AuditStatus::Partial,
+            &at,
+            &[],
+            &event(EventKind::AuditPartial, &audit),
+        )
+        .await
+        .unwrap();
+        assert!(!has_active(&mut conn, &audit.app).await.unwrap());
+        let mut verification = queued("AUD-ABASTEVO-20261112-0900-2");
+        verification.kind = opentatu_core::AuditKind::Reverification;
+        insert(
+            &mut conn,
+            &verification,
+            &event(EventKind::AuditCreated, &verification),
+        )
+        .await
+        .unwrap();
+        update_status(
+            &mut conn,
+            &verification.id,
+            AuditStatus::Running,
+            &at,
+            &[],
+            &event(EventKind::AuditStarted, &verification),
+        )
+        .await
+        .unwrap();
+        update_status(
+            &mut conn,
+            &verification.id,
+            AuditStatus::Completed,
+            &at,
+            &[],
+            &event(EventKind::AuditCompleted, &verification),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            last_final(&mut conn, &audit.app).await.unwrap(),
+            Some(audit.id.clone())
+        );
+        assert_eq!(
+            last_on_branch(&mut conn, &audit.app, "main")
+                .await
+                .unwrap()
+                .unwrap()
+                .id,
+            audit.id
+        );
     }
 }

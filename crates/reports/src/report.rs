@@ -74,10 +74,14 @@ pub struct ReportData {
     pub kind: AuditKind,
     /// Commit.
     pub commit: CommitHash,
+    /// Incremental scope (absent for full audits).
+    pub incremental_scope: Option<opentatu_core::IncrementalScope>,
     /// Comparison with the previous audit.
     pub comparison: Comparison,
     /// Findings detected in this audit (open first, by severity).
     pub findings: Vec<FindingSummary>,
+    /// Approved fixes whose integration was detected in this audit (system facts).
+    pub merge_detections: Vec<String>,
     /// Hypotheses.
     pub hypotheses: HypothesisCounts,
     /// Hypotheses left open.
@@ -273,6 +277,17 @@ pub fn fallback_body(data: &ReportData) -> String {
     out
 }
 
+/// Deterministic scope section included even if the reporter omits or misstates it.
+pub fn incremental_scope_text(scope: &opentatu_core::IncrementalScope) -> String {
+    format!(
+        "## Escopo incremental (sistema)\n\nBase: `{}`.\n\nArquivos alterados (inclui remoções/renomes): {}.\n\nEntradas examinadas: {}.\n\nEntradas fora do escopo (não reavaliadas, não significa seguras): {}.\n\n",
+        scope.base_commit,
+        scope.changed_files.join(", "),
+        scope.examined_entry_points.join(", "),
+        scope.out_of_scope.join(", ")
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,6 +300,7 @@ mod tests {
             app_name: "Demo".into(),
             kind: AuditKind::Full,
             commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+            incremental_scope: None,
             comparison: Comparison::default(),
             findings: vec![FindingSummary {
                 finding_id: "DEMO-SEC-0001".parse().unwrap(),
@@ -295,6 +311,7 @@ mod tests {
                 location: "api/orders.go:10-20 (GetOrder)".into(),
                 regression: false,
             }],
+            merge_detections: Vec::new(),
             hypotheses: HypothesisCounts {
                 total: 3,
                 confirmed: 1,

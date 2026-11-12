@@ -76,7 +76,7 @@ OSV-Scanner; later ZAP in the dynamic lab).
 
 - **FULL** — rebuilds the whole map and investigates every entry point. Use: first audit,
   monthly, before large releases.
-- **INCREMENTAL** — investigates only what changed since the last completed audit (diff
+- **INCREMENTAL** — investigates only what changed since the previous final audit (COMPLETED or PARTIAL, never a REVERIFICATION; diff
   between commits) and the components that depend on it. Use: on every push to the main
   branch, or daily.
 - **REVERIFICATION** — confirms a submitted fix resolved the finding without regressions.
@@ -100,7 +100,9 @@ HYPOTHESIS
                          └──> FIX_SUBMITTED
                                 │  (OpenTatu, reverification)
                                 ├──> FIX_REJECTED ──> back to TASK_CREATED
-                                └──> CLOSED
+                                └──> FIX_APPROVED (task DONE, awaiting merge)
+                                       │ (fix detected on the configured branch)
+                                       └──> CLOSED
 ```
 
 Side states:
@@ -123,7 +125,8 @@ both lead to a new task (Q-003, Q-004, answered in [../OPEN-QUESTIONS.md](../OPE
 - **R05** A hypothesis only becomes a finding with evidence meeting the minimum standard
   (§C.9).
 - **R06** A finding is only CLOSED after a reverification approved by OpenTatu. A fixing
-  agent's statement closes nothing.
+  agent's statement closes nothing. Approval moves it to FIX_APPROVED; only detection of
+  that approved fix on the configured app branch closes it (ADR-0032).
 - **R07** An accepted risk requires a justification and an expiry date.
 - **R08** A false positive is recorded with reason and fingerprint; it is not reopened while
   the related code does not change.

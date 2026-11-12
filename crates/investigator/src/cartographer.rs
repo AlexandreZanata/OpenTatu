@@ -168,7 +168,7 @@ mod tests {
             AuthenticationRequirement::Unknown
         );
         assert_eq!(answer.output.common.gaps.len(), 1);
-        assert_eq!(answer.prompt_versions[1], "cartographer@2.1.0");
+        assert_eq!(answer.prompt_versions[1], "cartographer@2.2.0");
         let user = &fake.requests()[0].messages[1].content;
         for tag in ["<structure>", "<code>", "<config>", "<asvs>"] {
             assert!(user.contains(tag), "missing {tag}");

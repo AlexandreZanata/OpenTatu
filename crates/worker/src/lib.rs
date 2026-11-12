@@ -20,12 +20,15 @@ mod budget;
 mod cartography;
 mod error;
 mod hunt;
+mod incremental;
+mod merge;
 pub mod pipeline;
 mod planning;
 mod reporting;
 mod reverification;
 mod usage;
 mod verification;
+mod watcher;
 
 use std::future::Future;
 use std::sync::Arc;
@@ -57,6 +60,7 @@ pub struct Worker {
     scanners: Arc<dyn ScannerSuite>,
     layout: DataLayout,
     ai: Option<AiSettings>,
+    watch_minutes: u64,
 }
 
 impl Worker {
@@ -74,7 +78,15 @@ impl Worker {
             scanners,
             layout,
             ai: None,
+            watch_minutes: 0,
         }
+    }
+
+    /// Enables configured-branch polling; zero disables it. No automatic FULL audits.
+    #[must_use]
+    pub fn with_watch_minutes(mut self, minutes: u64) -> Self {
+        self.watch_minutes = minutes;
+        self
     }
 
     /// Enables the AI steps. Without it, audits list them as limitations (R13).
@@ -134,13 +146,28 @@ impl Worker {
         poll: Duration,
         shutdown: impl Future<Output = ()>,
     ) -> Result<(), Error> {
-        tokio::pin!(shutdown);
-        loop {
-            self.drain().await?;
-            tokio::select! {
-                () = &mut shutdown => return Ok(()),
-                () = tokio::time::sleep(poll) => {}
+        let queue = async {
+            tokio::pin!(shutdown);
+            loop {
+                // Preserve the existing graceful behavior: finish the current drain
+                // before honoring shutdown; never abandon an audit just because a
+                // watcher tick or Ctrl+C arrived.
+                self.drain().await?;
+                tokio::select! { () = &mut shutdown => return Ok(()), () = tokio::time::sleep(poll) => {} }
             }
-        }
+        };
+        let watch = async {
+            if self.watch_minutes == 0 {
+                std::future::pending::<()>().await;
+            }
+            loop {
+                self.watch_once().await?;
+                tokio::time::sleep(Duration::from_secs(
+                    self.watch_minutes.saturating_mul(60).max(1),
+                ))
+                .await;
+            }
+        };
+        tokio::select! { result = queue => result, result = watch => result }
     }
 }

@@ -1,5 +1,5 @@
-//! The audit pipeline (spec §C.7). One function per step; each completed step updates the
-//! checkpoint so a paused audit can resume (phase 4 adds pausing on budget). A
+//! The audit pipeline (spec §C.7). One function per step; each completed step records a
+//! checkpoint. Budget exhaustion ends PARTIAL; resumption is deferred to Q-032. A
 //! REVERIFICATION audit takes its own short path (`reverification.rs`).
 //!
 //! An audit is `COMPLETED` only when its steps produced no limitation; otherwise it is
@@ -51,10 +51,16 @@ pub async fn run(worker: &Worker, audit: Audit) -> Result<Audit, Error> {
     let mut limitations = scanners(worker, &audit, &source).await?;
     let ai = AiRun::start(worker, &audit, &source).await?;
     match &ai {
-        None => limitations.push(cartography::NO_AI.to_owned()),
+        None => {
+            limitations.push(cartography::NO_AI.to_owned());
+            limitations.extend(crate::merge::run(worker, &audit, None).await?);
+        }
         Some(run) => {
             limitations.extend(cartography::run(run).await?);
             checkpoint(worker, &audit, Step::Map).await?;
+            // Detect landed fixes before dedup: code that returned after a real merge
+            // must be classified as a regression in this same audit (R09).
+            limitations.extend(crate::merge::run(worker, &audit, Some(run)).await?);
             limitations.extend(hunt::run(run).await?);
             checkpoint(worker, &audit, Step::Hunt).await?;
             limitations.extend(verification::run(run).await?);

@@ -27,3 +27,5 @@ pub use report::{
 };
 pub use reverification::reverification_body;
 pub use sarif::findings_sarif;
+
+pub use report::incremental_scope_text;

@@ -8,6 +8,7 @@
 //! `ext::` transport, no interactive prompts, `--` / `--end-of-options` before every
 //! user-provided value, and credentials in URLs redacted from error messages.
 
+mod changes;
 mod error;
 mod git;
 #[cfg(any(test, feature = "test-support"))]

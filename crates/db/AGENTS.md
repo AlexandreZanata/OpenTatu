@@ -55,3 +55,9 @@ worker queue is the `audits` table (ADR-0021).
 
 Every repository function is tested against `Database::in_memory()` (SQL is checked at
 runtime). The `r04_*` tests prove the event log rejects UPDATE and DELETE.
+
+Phase 7: migration `0008_incremental.sql` adds watcher indexes. `audits::{has_active,
+last_on_branch}` support the transactional enqueue decision; `last_final` excludes
+reverifications and resolves same-second ties by insertion order.
+`tasks::decide_verification` can update task/finding/decision under the single approval
+event; its private task writer is never a standalone public mutation.

@@ -11,7 +11,7 @@ pub fn reverification_body(reverification: &Reverification, task: &Task) -> Stri
     let mut md = String::from("## 1. Decisão\n\n");
     let decision = match reverification.result {
         Some(ReverificationResult::Passed) => {
-            "APROVADA — a correção foi verificada pelo OpenTatu e o achado foi fechado."
+            "APROVADA — correção verificada pelo OpenTatu; o achado permanece aberto, aguardando merge."
         }
         Some(ReverificationResult::Failed) => {
             "REJEITADA — o achado continua aberto e a tarefa voltou para a fila."
@@ -134,6 +134,7 @@ mod tests {
             finding_id: finding.clone(),
             branch: "fix/orders".into(),
             commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+            fix_identity: None,
             result: Some(ReverificationResult::Failed),
             reasons: vec!["Regressão: DEMO-SEC-0002.".into()],
             regression_test_found: Some(false),

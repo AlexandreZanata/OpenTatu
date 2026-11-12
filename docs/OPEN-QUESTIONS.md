@@ -305,3 +305,14 @@ authorize implementation, deployment or a production action.
   the budget (1.95M tokens, 28 calls). A larger application or a new test target reopens
   this question (owner).
 
+
+## Q-032 — When and how a budget-stopped audit resumes
+- **Status:** open · **Blocks:** nothing in phase 7
+- **Context:** Q-002 defines resumable PAUSED versus final PARTIAL; the phase-7 request
+  explicitly defers resumption. Current budget exhaustion remains a final PARTIAL audit.
+- **Options:** a later explicit owner command with a renewed bounded budget and validated
+  checkpoint; or a separately approved scheduling policy with concurrency/idempotency rules.
+- **Working interpretation:** no automatic or manual resumption is implemented in phase 7.
+  A new audit is distinct from resuming the stopped run. The owner must choose trigger,
+  cumulative budget, retry semantics and handling of changed code/provider configuration
+  before resumption is implemented.

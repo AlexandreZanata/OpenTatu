@@ -25,14 +25,16 @@ const FILE_BYTES: usize = 40_000;
 pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
     let services = &run.worker.services;
     let mut waiting: Vec<Finding> = services
-        .findings_of_app(&run.audit.app)
+        .actionable_findings(&run.audit)
         .await?
         .into_iter()
         .filter(|f| {
-            matches!(
-                f.state,
-                FindingState::Upheld | FindingState::Downgraded | FindingState::Regression
-            )
+            (run.audit.kind != opentatu_core::AuditKind::Incremental
+                || f.last_detected.audit_id == run.audit.id)
+                && matches!(
+                    f.state,
+                    FindingState::Upheld | FindingState::Downgraded | FindingState::Regression
+                )
         })
         .collect();
     waiting.sort_by(|a, b| {

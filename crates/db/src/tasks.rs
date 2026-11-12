@@ -69,6 +69,17 @@ pub async fn update_task(
     finding: Option<&Finding>,
     event: &NewEvent,
 ) -> Result<EventId, Error> {
+    write_task(conn, task, finding).await?;
+    crate::events::append(conn, event).await
+}
+
+/// Writes the task projection within a transaction whose decision already appends its
+/// event (e.g. REVERIFICATION_PASSED). Call only with the associated history mutation.
+async fn write_task(
+    conn: &mut SqliteConnection,
+    task: &Task,
+    finding: Option<&Finding>,
+) -> Result<(), Error> {
     if let Some(finding) = finding {
         crate::investigation::write_finding(conn, finding).await?;
     }
@@ -88,7 +99,7 @@ pub async fn update_task(
     if result.rows_affected() != 1 {
         return Err(Error::NotFound(task.task_id.to_string()));
     }
-    crate::events::append(conn, event).await
+    Ok(())
 }
 
 /// The task with this id.
@@ -173,6 +184,7 @@ pub async fn decide_verification(
     conn: &mut SqliteConnection,
     reverification: &Reverification,
     finding: Option<&Finding>,
+    task: Option<&Task>,
     event: &NewEvent,
 ) -> Result<EventId, Error> {
     let result = sqlx::query(
@@ -193,6 +205,9 @@ pub async fn decide_verification(
     }
     if let Some(finding) = finding {
         crate::investigation::write_finding(conn, finding).await?;
+    }
+    if let Some(task) = task {
+        write_task(conn, task, None).await?;
     }
     crate::events::append(conn, event).await
 }
@@ -455,6 +470,7 @@ mod tests {
             finding_id: finding.clone(),
             branch: "fix/orders".into(),
             commit,
+            fix_identity: None,
             result: None,
             reasons: vec![],
             regression_test_found: None,
@@ -469,11 +485,11 @@ mod tests {
         reverification.result = Some(ReverificationResult::Failed);
         reverification.decided_at = Some(reaudit.created_at);
         let failed = event(EventKind::ReverificationFailed, &reaudit);
-        decide_verification(&mut conn, &reverification, None, &failed)
+        decide_verification(&mut conn, &reverification, None, None, &failed)
             .await
             .unwrap();
         assert!(
-            decide_verification(&mut conn, &reverification, None, &failed)
+            decide_verification(&mut conn, &reverification, None, None, &failed)
                 .await
                 .is_err(),
             "R04: a decision is final"

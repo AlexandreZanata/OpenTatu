@@ -53,6 +53,8 @@ pub struct ReverificationOutcome {
     pub regressions: Vec<FindingId>,
     /// Whether the fix adds or changes a regression test (R19); `None` when unknown.
     pub regression_test_found: Option<bool>,
+    /// Stable patch identity computed at approval (ADR-0032).
+    pub fix_identity: Option<opentatu_core::FixIdentity>,
     /// Extra owner-facing reasons (pt-BR), e.g. why the reverification could not run.
     pub notes: Vec<String>,
 }
@@ -255,6 +257,7 @@ impl Services {
             finding_id: id.finding().clone(),
             branch: branch.to_owned(),
             commit: fix.commit.clone(),
+            fix_identity: None,
             result: None,
             reasons: vec![],
             regression_test_found: None,
@@ -279,8 +282,8 @@ impl Services {
         Ok((task, audit))
     }
 
-    /// Decides the reverification run by `audit` (R06, R09, R19): `PASSED` closes the
-    /// finding (`REVERIFICATION_PASSED` + `FINDING_CLOSED`, task `DONE`); `FAILED` rejects
+    /// Decides the reverification run by `audit` (R06, R09, R19): `PASSED` approves the
+    /// fix (`REVERIFICATION_PASSED`, finding `FIX_APPROVED`, task `DONE`); `FAILED` rejects
     /// the fix (`REVERIFICATION_FAILED`, finding `FIX_REJECTED`) and reopens the task with
     /// the reasons (`TASK_CREATED`, finding `TASK_CREATED`).
     pub async fn record_reverification(
@@ -298,10 +301,16 @@ impl Services {
                 "reverification {audit} was already decided"
             )));
         }
+        reverification.fix_identity = outcome.fix_identity;
         reverification.verification = outcome.verification;
         reverification.regressions = outcome.regressions;
         reverification.regression_test_found = outcome.regression_test_found;
         let (result, mut reasons) = reverification.decide();
+        if result == ReverificationResult::Passed && reverification.fix_identity.is_none() {
+            return Err(Error::Conflict(
+                "approval requires persisted fix patch identity (ADR-0032)".into(),
+            ));
+        }
         reasons.extend(outcome.notes);
         if reverification.regression_test_found == Some(false) {
             reasons.push(
@@ -323,6 +332,7 @@ impl Services {
             "finding_id": finding.finding_id,
             "commit": reverification.commit,
             "result": result,
+            "fix_identity": reverification.fix_identity,
             "reasons": reasons,
             "regressions": reverification.regressions,
         });
@@ -333,19 +343,23 @@ impl Services {
                     .with_audit(audit.clone())
                     .with_target(&task_id)
                     .with_data(data.clone());
-                opentatu_db::tasks::decide_verification(&mut tx, &reverification, None, &passed)
-                    .await?;
                 task.state.validate_transition(TaskState::Done)?;
                 task.state = TaskState::Done;
                 if at_submission {
-                    finding.state = FindingState::Closed;
+                    finding
+                        .state
+                        .validate_transition(FindingState::FixApproved)?;
+                    finding.state = FindingState::FixApproved;
                 }
-                let closed = NewEvent::new(EventKind::FindingClosed, Actor::System, now)
-                    .with_audit(audit.clone())
-                    .with_target(&finding.finding_id)
-                    .with_data(data);
-                let finding = at_submission.then_some(&finding);
-                opentatu_db::tasks::update_task(&mut tx, &task, finding, &closed).await?;
+                // State, task and decision share the one REVERIFICATION_PASSED event.
+                opentatu_db::tasks::decide_verification(
+                    &mut tx,
+                    &reverification,
+                    at_submission.then_some(&finding),
+                    Some(&task),
+                    &passed,
+                )
+                .await?;
             }
             ReverificationResult::Failed => {
                 if at_submission {
@@ -360,6 +374,7 @@ impl Services {
                     &mut tx,
                     &reverification,
                     rejected,
+                    None,
                     &failed,
                 )
                 .await?;
@@ -388,6 +403,61 @@ impl Services {
         }
         tx.commit().await?;
         Ok(reverification)
+    }
+
+    /// Closes only a previously approved finding after the worker detected its fix on
+    /// the configured branch (ADR-0032). The detection and optional semantic evidence
+    /// are appended with the state change; agent tools never expose this use case.
+    pub async fn close_merged_fix(
+        &self,
+        audit_id: &AuditId,
+        finding_id: &FindingId,
+        approval: &AuditId,
+        method: &str,
+        verification: Option<Verification>,
+    ) -> Result<(), Error> {
+        let mut tx = self.db.begin().await?;
+        let audit = opentatu_db::audits::get(&mut tx, audit_id)
+            .await?
+            .ok_or_else(|| Error::UnknownAudit(audit_id.clone()))?;
+        let app = opentatu_db::apps::get(&mut tx, &audit.app)
+            .await?
+            .ok_or_else(|| Error::UnknownApp(audit.app.clone()))?;
+        let approved = opentatu_db::tasks::verification_of_audit(&mut tx, approval)
+            .await?
+            .ok_or_else(|| Error::Conflict("missing approval".into()))?;
+        if !matches!(audit.kind, AuditKind::Full | AuditKind::Incremental)
+            || audit.branch.as_deref() != Some(app.profile.branch.as_str())
+            || approved.finding_id != *finding_id
+            || approved.result != Some(ReverificationResult::Passed)
+        {
+            return Err(Error::Conflict(
+                "merge closure requires a passed reverification and a configured-branch audit"
+                    .into(),
+            ));
+        }
+        if !matches!(
+            method,
+            "ancestry" | "patch_id_rebase" | "patch_id_squash" | "semantic_reverification"
+        ) || (method == "semantic_reverification"
+            && verification
+                .as_ref()
+                .is_none_or(|v| v.verdict != opentatu_core::Verdict::Dismissed))
+        {
+            return Err(Error::Conflict("invalid merge detection proof".into()));
+        }
+        let mut finding = opentatu_db::investigation::finding(&mut tx, finding_id)
+            .await?
+            .ok_or_else(|| Error::UnknownFinding(finding_id.clone()))?;
+        if finding.app != audit.app {
+            return Err(Error::Conflict("cross-application merge closure".into()));
+        }
+        finding.state.validate_transition(FindingState::Closed)?;
+        finding.state = FindingState::Closed;
+        let event = NewEvent::new(EventKind::FindingClosed, Actor::System, self.clock.now()).with_audit(audit_id.clone()).with_target(finding_id).with_data(serde_json::json!({"finding_id":finding_id,"approved_audit_id":approval,"approved_commit":approved.commit,"branch_commit":audit.commit,"detection":method,"verification":verification}));
+        opentatu_db::investigation::update_finding(&mut tx, &finding, &event).await?;
+        tx.commit().await?;
+        Ok(())
     }
 
     /// The task with this id.
@@ -693,6 +763,12 @@ mod tests {
                 &reaudit.id,
                 ReverificationOutcome {
                     verification: Some(verification(Verdict::Dismissed)),
+                    fix_identity: Some(opentatu_core::FixIdentity {
+                        base: audit.commit.clone(),
+                        branch_head: audit.commit.clone(),
+                        commits: vec!["patch".into()],
+                        whole: Some("whole".into()),
+                    }),
                     regression_test_found: Some(true),
                     ..Default::default()
                 },
@@ -701,6 +777,44 @@ mod tests {
             .unwrap();
         assert_eq!(passed.result, Some(ReverificationResult::Passed));
         assert_eq!(services.task(first).await.unwrap().state, TaskState::Done);
+        assert_eq!(
+            services.finding(&finding).await.unwrap().state,
+            FindingState::FixApproved
+        );
+        let merge_audit = services
+            .create_audit(NewAudit {
+                app: audit.app.clone(),
+                kind: AuditKind::Full,
+                commit: FIX.parse().unwrap(),
+                branch: Some("main".into()),
+                requested_by: Actor::Owner,
+            })
+            .await
+            .unwrap();
+        assert!(
+            services
+                .close_merged_fix(&reaudit.id, &finding, &reaudit.id, "ancestry", None)
+                .await
+                .is_err(),
+            "a fix-branch reverification is not a configured-branch audit"
+        );
+        assert!(
+            services
+                .close_merged_fix(
+                    &merge_audit.id,
+                    &finding,
+                    &reaudit.id,
+                    "semantic_reverification",
+                    None
+                )
+                .await
+                .is_err(),
+            "semantic closure requires proof"
+        );
+        services
+            .close_merged_fix(&merge_audit.id, &finding, &reaudit.id, "ancestry", None)
+            .await
+            .unwrap();
         assert_eq!(
             services.finding(&finding).await.unwrap().state,
             FindingState::Closed

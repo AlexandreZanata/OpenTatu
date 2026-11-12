@@ -29,3 +29,6 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 ## How to extend
 
 [../../docs/recipes/add-mcp-tool.md](../../docs/recipes/add-mcp-tool.md)
+
+Phase 7: tool/server instructions explain FIX_APPROVED versus CLOSED. MCP submission
+still only queues reverification; no tool gains merge-closure authority.

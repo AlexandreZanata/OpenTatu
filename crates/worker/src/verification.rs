@@ -79,7 +79,7 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
     }
 
     let confirmed: Vec<Finding> = services
-        .findings_of_app(&run.audit.app)
+        .actionable_findings(&run.audit)
         .await?
         .into_iter()
         .filter(|f| f.state == FindingState::Confirmed && f.last_detected.audit_id == run.audit.id)

@@ -20,7 +20,7 @@ crate::text_enum! {
         Claimed => "CLAIMED",
         /// A fix was submitted; a reverification is queued or running.
         FixSubmitted => "FIX_SUBMITTED",
-        /// The reverification approved the fix; the finding is closed.
+        /// The reverification approved the fix; the finding awaits merge.
         Done => "DONE",
     }
 }
@@ -146,7 +146,7 @@ pub struct Task {
 crate::text_enum! {
     /// Outcome of a reverification.
     pub enum ReverificationResult {
-        /// The fix removes the vulnerability without regressions: the finding is closed.
+        /// The fix removes the vulnerability without regressions: the finding awaits merge.
         Passed => "PASSED",
         /// Not approved: the task is reopened with the reasons.
         Failed => "FAILED",
@@ -166,6 +166,9 @@ pub struct Reverification {
     pub branch: String,
     /// Commit verified.
     pub commit: CommitHash,
+    /// Patch identity persisted at approval, before branch cleanup (ADR-0032).
+    #[serde(default)]
+    pub fix_identity: Option<crate::FixIdentity>,
     /// Outcome, once decided.
     pub result: Option<ReverificationResult>,
     /// Why (pt-BR).
@@ -243,6 +246,7 @@ mod tests {
             finding_id: "DEMO-SEC-0001".parse().unwrap(),
             branch: "fix/sql".into(),
             commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+            fix_identity: None,
             result: None,
             reasons: vec![],
             regression_test_found: None,

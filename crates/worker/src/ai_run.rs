@@ -24,6 +24,7 @@ pub(crate) struct AiRun {
     pub app: App,
     pub previous_audit: Option<Audit>,
     pub files: Arc<SnapshotFiles>,
+    pub incremental: Option<crate::incremental::Incremental>,
     pub catalog: &'static AsvsCatalog,
     pub budget: Arc<BudgetGuard>,
 }
@@ -44,7 +45,8 @@ impl AiRun {
             None => None,
         };
         let limits = ai.llm.config().budget.per_audit.get(&audit.kind).copied();
-        Ok(Some(Self {
+        let mut run = Self {
+            incremental: None,
             app: services.app(&audit.app).await?,
             files: Arc::new(SnapshotFiles::scan(source)?),
             catalog: AsvsCatalog::embedded().map_err(opentatu_services::Error::from)?,
@@ -53,7 +55,9 @@ impl AiRun {
             audit: audit.clone(),
             previous_audit,
             ai,
-        }))
+        };
+        run.incremental = crate::incremental::Incremental::load(&run).await?;
+        Ok(Some(run))
     }
 
     /// Whether one more model call fits the budget.

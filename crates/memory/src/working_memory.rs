@@ -125,6 +125,14 @@ pub fn render_memory(input: &MemoryInput<'_>) -> String {
         out,
         "Tasks awaiting a fix: {tasks}. Awaiting reverification: {reverification}."
     );
+    let awaiting_merge = open
+        .iter()
+        .filter(|f| f.state == FindingState::FixApproved)
+        .count();
+    let _ = writeln!(
+        out,
+        "Fix approved, awaiting merge: {awaiting_merge} (not a regression before merge)."
+    );
     match input.coverage {
         Some(coverage) => {
             let _ = writeln!(

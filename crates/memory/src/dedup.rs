@@ -190,4 +190,18 @@ pub(crate) mod tests {
         );
         assert!(matches!(result, DedupOutcome::DuplicateInAudit(_)));
     }
+
+    #[test]
+    fn r09_an_approved_unmerged_fix_is_persistent_not_a_regression() {
+        let approved = finding(
+            1,
+            FindingState::FixApproved,
+            "unchanged",
+            "AUD-ABASTEVO-20261101-0900",
+        );
+        assert!(matches!(
+            outcome("unchanged", &[approved], &[]),
+            DedupOutcome::Persistent(_)
+        ));
+    }
 }

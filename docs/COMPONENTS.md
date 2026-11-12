@@ -42,7 +42,7 @@ it replaces.
 | Audit pipeline steps and limitations | `opentatu_worker::pipeline` (`Step`, `PENDING_STEPS`) | status logic in other crates |
 | Credentials in memory | `opentatu_core::Secret` | plain `String` keys/tokens |
 | Fixing-agent tokens | `opentatu_core::AgentToken` (stored only as `hash()`) | storing or logging the token |
-| Who may close a finding | `Services::record_reverification` (`Reverification::decide`, R06) | closing a finding anywhere else |
+| Who may close a finding | `Services::close_merged_fix` after `record_reverification` approved it (R06, ADR-0032) | fixing agents or approval alone closing it |
 | MCP protocol | `rmcp` inside `opentatu-mcp` (`FixServer`) | hand-written JSON-RPC |
 | Test-file detection | `opentatu_context::is_test_path` | test-name heuristics elsewhere |
 | Benchmark ground truth and scoring | `opentatu_benchmark` (`expected_flaws`, `score`) + `benchmark/` | known flaws typed by hand or by a model |
@@ -329,12 +329,6 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps (snapshot, scanners, map, hunt, verify, plan, report, artifacts), the REVERIFICATION path (`REVERIFY`) and the limitation of the missing dynamic lab; COMPLETED only without limitations |
 | `verification::ask_verifier` (crate-private) | One verifier call with the system's checks — used by the audit and by reverifications |
 
-## Planned crates (structure only)
-
-| Crate | Phase | Planned components (see the crate's AGENTS.md) |
-|---|---|---|
-| `opentatu-context` (`crates/context`) | 7 | diff (INCREMENTAL) |
-
 ## Binary and tooling
 
 | Component | Where | Purpose |
@@ -348,3 +342,25 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `benchmark::{prepare, run, rescore, scoreboard}` | `apps/opentatu/src/commands/benchmark.rs` | The IO of the benchmark (clone, copy, register, audit, score, write; rescore a past run from its data) |
 | `worker::build(data_dir, configs, &Overrides, ai_required)`, `worker::Overrides` (`describe`) | `apps/opentatu/src/commands/worker.rs` | The one place the production `Worker` is built; per-run role models and FULL budget |
 | Repository checks | `xtask/src/` (crate `xtask`) | `architecture`, `docs`, `glossary` |
+
+## Phase 7 additions and extensions
+
+- Core: `FileChange`, `FixIdentity::matched_by`, `IncrementalScope` (`change.rs`);
+  `MapContent::preserve_unchanged`; `FindingState::FixApproved`; `Reverification.fix_identity`.
+- Snapshots: `changed_files` (NUL-delimited rename/delete-aware names), `unified_diff`
+  (literal selected paths), `fix_identity`, `patch_ids`; one `Git::run_input` caller.
+- Context: `diff_allowed`, `render_diff` -> existing `Selection`;
+  `affected_entry_points` -> existing depth-2 `entry_point_code`.
+- Database: migration 0008, `audits::has_active`, `audits::last_on_branch`; the existing
+  verification decision updates task/finding and stored patch identity atomically.
+- Services: `audit_new_commit`, `close_merged_fix`, `actionable_findings` (new work only),
+  `original_hypothesis` (original confirmed evidence); incremental baseline/coverage guards.
+- Worker: `Worker::{watch_once, with_watch_minutes}`, `incremental::Incremental`,
+  `merge::run`, `reporting::incremental_scope`; existing role path and budget reused.
+- Reports: `incremental_scope_text`, `ReportData.incremental_scope/merge_detections`,
+  `AuditRecord::with_incremental_scope`; existing header and body path reused.
+- Test git helpers: `testing::{checkout, merge, squash_merge, rebase}`; reuse these for
+  branch rewrite scenarios instead of adding process callers elsewhere.
+- Binary: `config::watch_minutes`, `commands::worker::watch`; existing CLI/worker wiring.
+- Dashboard/memory: existing finding table, badge and working-memory renderer extended
+  for approved fixes awaiting merge; no parallel UI component or CSS implementation.

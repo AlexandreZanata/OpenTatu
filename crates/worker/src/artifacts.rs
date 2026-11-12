@@ -138,6 +138,16 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
         .await?;
     }
     let mut touched: BTreeSet<FindingId> = detected.iter().map(|f| f.finding_id.clone()).collect();
+    for event in services.audit_events(&audit.id).await? {
+        if event.content.kind == opentatu_core::EventKind::FindingClosed
+            && let Some(id) = event
+                .content
+                .target
+                .and_then(|t| t.parse::<FindingId>().ok())
+        {
+            touched.insert(id);
+        }
+    }
     let mut planning_audits = BTreeSet::new();
     let planned = services.tasks_of_audit(&audit.id).await?;
     if !planned.is_empty() {
@@ -215,6 +225,7 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
         .with_ai(models, prompt_versions)
         .with_usage(usage)
         .with_results(results)
+        .with_incremental_scope(reporting::incremental_scope(worker, audit).await?)
         .with_coverage(coverage.map(|c| c.summary))
         .to_json()?;
     write_atomic(&layout.audit_record_file(&audit.id), &record).await?;

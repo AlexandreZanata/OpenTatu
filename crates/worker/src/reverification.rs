@@ -49,7 +49,7 @@ pub(crate) async fn run(
             outcome.notes.push(NO_AI.to_owned());
         }
         Some(run) => {
-            let hypothesis = services.hypothesis(&finding.hypothesis_id).await?;
+            let hypothesis = services.original_hypothesis(&finding.finding_id).await?;
             let map = services.current_map(&audit.app).await?;
             let unchanged = run.code_present(&finding);
             let fix = FixUnderReview {
@@ -68,6 +68,23 @@ pub(crate) async fn run(
             outcome.regressions = regressions;
             outcome.notes.extend(notes);
             outcome.regression_test_found = regression_test_found(worker, run, &task).await;
+            if outcome
+                .verification
+                .as_ref()
+                .is_some_and(|v| v.verdict == opentatu_core::Verdict::Dismissed)
+                && outcome.regressions.is_empty()
+            {
+                let branch_head = worker
+                    .snapshots
+                    .resolve(&audit.app, &run.app.profile.branch)
+                    .await?;
+                outcome.fix_identity = Some(
+                    worker
+                        .snapshots
+                        .fix_identity(&audit.app, &branch_head, &audit.commit)
+                        .await?,
+                );
+            }
         }
     }
 
@@ -156,6 +173,13 @@ async fn regressions(
 /// The commit whose approved reverification closed `finding`, if any.
 async fn closing_commit(run: &AiRun, finding: &FindingId) -> Result<Option<CommitHash>, Error> {
     let services = &run.worker.services;
+    for event in services.finding_timeline(finding).await?.into_iter().rev() {
+        if event.content.kind == opentatu_core::EventKind::FindingClosed
+            && let Some(hash) = event.content.data["branch_commit"].as_str()
+        {
+            return Ok(hash.parse().ok());
+        }
+    }
     let mut commit = None;
     for task in services.tasks_of_finding(finding).await? {
         let status = services.task_status(&task.task_id).await?;

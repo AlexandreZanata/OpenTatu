@@ -17,8 +17,8 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
   finding; severity comes from a fixed matrix, not from impressions.
 - **Memory across audits** — append-only event log, per-app working memory, fingerprints
   that detect regressions and never reopen known false positives.
-- **Verified fixes** — fixing agents take tasks over MCP; only OpenTatu's own reverification
-  closes a finding.
+- **Verified fixes** — fixing agents take tasks over MCP; OpenTatu approves the fix, then closes the finding only after detecting it on the app's
+  configured branch.
 - **Local and private** — runs on your machine (dashboard on `127.0.0.1`, no JavaScript, no
   Node, no Postgres); scanners in disposable containers without network; model allowlist and
   explicit consent before any model that trains on prompts.
@@ -28,7 +28,10 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 6** — a benchmark measures how well OpenTatu finds known flaws in
+> Status: **roadmap phase 7 complete** — verified on a local Abastevo clone (2026-11-12).
+> Incremental audits use changed-code scope,
+> configured-branch polling and layered detection of approved fixes reaching the branch.
+> The phase-6 benchmark measures how well OpenTatu finds known flaws in
 > intentionally vulnerable apps (OWASP Juice Shop), per prompt version and per model:
 > [benchmark/SCOREBOARD.md](benchmark/SCOREBOARD.md). Fix trail over MCP with OpenTatu's own
 > reverification (phase 5), investigation with evidence and computed severity (phase 4),
@@ -88,3 +91,13 @@ CI runs the same command. The repository checks enforce the crate layering
 
 [MIT](LICENSE) — free to use for any purpose. The embedded OWASP ASVS 5.0.0 catalog
 (`config/asvs/`) keeps its own license, CC BY-SA 4.0 (© OWASP Foundation).
+
+### Incremental audits and polling
+
+After the first final FULL audit, `opentatu serve` / `worker` poll configured branches
+every ten minutes. Set `--watch-minutes N` or `OPENTATU_WATCH_MINUTES`; zero disables it.
+`opentatu watch --once` checks once and only queues eligible INCREMENTAL audits;
+`opentatu worker --once` drains queued work. Manual: `opentatu audit create --app myapp
+--kind incremental`. No baseline means a clear request for a FULL first, never an automatic
+FULL. Fix approval is displayed as awaiting merge until branch integration is detected.
+No webhook, monthly FULL schedule or PAUSED resumption is enabled.

@@ -27,7 +27,9 @@ pub struct Configs<'a> {
 
 /// `opentatu worker [--once]`.
 pub async fn run(data_dir: &Path, configs: Configs<'_>, args: &WorkerArgs) -> anyhow::Result<()> {
-    let worker = build(data_dir, configs, &Overrides::default(), false).await?;
+    let worker = build(data_dir, configs, &Overrides::default(), false)
+        .await?
+        .with_watch_minutes(crate::config::watch_minutes(args.watch_minutes)?);
     if args.once {
         let done = worker.drain().await?;
         output::line(&format!("processed {} audit(s)", done.len()));
@@ -50,7 +52,9 @@ pub async fn serve(
 ) -> anyhow::Result<()> {
     let config = DashboardConfig::local(address)?;
     let services = super::services(data_dir).await?;
-    let worker = build(data_dir, configs, &Overrides::default(), false).await?;
+    let worker = build(data_dir, configs, &Overrides::default(), false)
+        .await?
+        .with_watch_minutes(crate::config::watch_minutes(args.watch_minutes)?);
     output::line(&format!(
         "OpenTatu: http://{address}/ — dashboard and worker running (Ctrl+C to stop)"
     ));
@@ -162,4 +166,15 @@ async fn shutdown_signal() {
     if tokio::signal::ctrl_c().await.is_err() {
         std::future::pending::<()>().await;
     }
+}
+
+/// `opentatu watch --once`: fetch, resolve, and atomically enqueue without running AI.
+pub async fn watch(data_dir: &Path, configs: Configs<'_>) -> anyhow::Result<()> {
+    let worker = build(data_dir, configs, &Overrides::default(), false).await?;
+    let queued = worker.watch_once().await?;
+    output::line(&format!("queued {} incremental audit(s)", queued.len()));
+    for audit in queued {
+        output::line(audit.as_str());
+    }
+    Ok(())
 }

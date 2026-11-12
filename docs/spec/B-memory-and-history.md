@@ -257,3 +257,12 @@ ASVS coverage: 64% (82 of 128 applicable requirements verified).
 ## Owner notes
 (copied from OWNER-NOTES.md, written by the owner; the AI reads it but never edits it)
 ```
+
+## Phase 7 event semantics
+
+`AUDIT_CREATED` includes `trigger: "watcher"` for polling-created INCREMENTAL audits and
+references the previous final non-reverification audit. `REVERIFICATION_PASSED` records
+FIX_APPROVED, task DONE and persisted fix patch identity. It does not close the finding.
+`FINDING_CLOSED` records the approved reverification, approved commit, audited branch commit
+and detection method (`ancestry`, `patch_id_rebase`, `patch_id_squash`, or
+`semantic_reverification` with its evidence). Existing event kinds are reused (ADR-0032/0033).

@@ -65,3 +65,8 @@ coverage (phase 3) ✅; hypotheses and findings (phase 4) ✅; tasks, reverifica
 
 Unit tests at the bottom of each file. Rule tests are named `rNN_...`. Run
 `cargo test -p opentatu-core`.
+
+Phase 7: `src/change.rs` owns `FileChange`, `FixIdentity` and `IncrementalScope`;
+`src/map_incremental.rs` owns `MapContent::preserve_unchanged`. `FIX_APPROVED` separates
+reverification approval from CLOSED (ADR-0032). Verification JSON has optional persisted
+patch identity; old records deserialize without rewriting history.

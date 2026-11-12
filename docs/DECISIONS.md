@@ -468,8 +468,8 @@ Template:
   - **Budget (R13):** every model call asks the guard first; when tokens, calls or minutes of
     the audit kind run out, `BUDGET_EXHAUSTED` is recorded once, the remaining AI steps are
     skipped and the audit ends PARTIAL listing what was not done. Pausing and resuming a
-    budget-stopped audit (Q-002's PAUSED) waits for scheduling (phase 7); until then the
-    stop is final.
+    budget-stopped audit (Q-002's PAUSED) is deferred to Q-032; until that decision is
+    implemented the stop is final.
   - Tables `hypotheses` and `findings` (derived state, every change with its event),
     `hunt_rounds` and `audit_reports` (append-only), migration 0006. Without the planner
     (phase 5) every audit still ends PARTIAL.
@@ -653,3 +653,41 @@ Template:
   `MEMORY.md` ("approved, awaiting merge"), R09 detection and the snapshots crate (patch-ids,
   `git cherry`) change in phase 7.
 
+
+## ADR-0033 — Incremental audit scope and local polling
+- **Date:** 2026-11-12 · **Status:** accepted (owner's phase-7 implementation request)
+- **Context:** phase 7 must investigate changes, preserve memory, and observe pushes without
+  exposing the local dashboard. ADR-0032 additionally separates fix approval from integration.
+- **Decision:** snapshots remains the sole git caller: NUL-delimited changed paths,
+  explicit literal per-file unified diffs, stable patch IDs with piped stdin. Context
+  classifies both sides of renames before requesting diff bytes, packs an explicit budget
+  and reports exclusions. INCREMENTAL uses the app's previous final non-reverification
+  audit, updates the previous map, and hunts only new/affected entry points (depth-2
+  related code), falling back to changed source seeds. Scanner execution is unchanged,
+  but hunter scanner inputs are restricted to changed paths. Unexamined ASVS scope is
+  NOT_TESTED; reports record changed paths, examined entries and out-of-scope entries.
+  An empty diff creates a new map version from the prior map without model calls. The
+  incremental reporter runs only for new hypotheses/findings; otherwise the system writes
+  the report. Persistent findings retain their original confirmed evidence for future
+  reverifications and are not sent through verification, review or planning again.
+- **Trigger:** configured-branch polling, default ten minutes; zero disables it. A
+  transaction checks baseline, active work and last branch commit before creating a system
+  INCREMENTAL audit with watcher provenance. `watch --once` only queues. No automatic FULL,
+  webhook, monthly schedule, PR workflow or PAUSED resumption (Q-032).
+- **Merge detection:** record stable fix identity in the decided reverification JSON at
+  approval; FIX_SUBMITTED -> FIX_APPROVED and task DONE share REVERIFICATION_PASSED.
+  Configured-branch FULL/INCREMENTAL audits check ancestry, commit/whole-diff patch identity,
+  then code absence plus evidence-checked semantic reverification. FINDING_CLOSED records
+  approval, branch commit and detection method. Check merges before hunter dedup so a real
+  post-merge regression can be recognized in the same audit. Prior decided history is not
+  rewritten. The existing verification JSON is extended with a serde default; migration
+  0008 adds watcher indexes, not a replacement history table.
+- **Alternatives considered:** webhook (inbound exposure and authentication require a new
+  design); full re-investigation (wastes tokens, obscures changes); model-only merge
+  detection (unnecessary cost); ancestry alone (misses rebase/squash); auto FULL on first
+  discovery (owner did not authorize automatic baseline audits).
+- **Consequences:** polling observes the latest branch head, not each intermediate push;
+  git fetch is the watcher's only remote operation. Audits still use exact commits. A
+  missing baseline is logged and skipped. Full audits remain available manually. Scanner
+  runtime is unchanged; model context/work is reduced. Existing Clock, database transaction,
+  prompt fencing, role execution, memory and scanner guardrails remain authoritative.

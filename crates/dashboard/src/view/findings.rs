@@ -16,6 +16,7 @@ pub fn finding_state_badge(state: FindingState) -> Badge {
         S::Upheld => ("Mantido", "failed"),
         S::TaskCreated => ("Tarefa criada", "running"),
         S::FixSubmitted => ("Correção enviada", "running"),
+        S::FixApproved => ("Correção aprovada, aguardando merge", "paused"),
         S::FixRejected => ("Correção rejeitada", "failed"),
         S::Closed => ("Fechado", "ok"),
         S::RiskAccepted => ("Risco aceito", "paused"),

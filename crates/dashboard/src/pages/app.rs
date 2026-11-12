@@ -4,7 +4,7 @@
 use askama::Template;
 use axum::extract::{Path, State};
 use axum::response::Html;
-use opentatu_core::{App, Slug, TaskState};
+use opentatu_core::{App, FindingState, Slug, TaskState};
 
 use crate::PageError;
 use crate::render::render;
@@ -27,6 +27,7 @@ struct AppPage {
     app: App,
     map: Option<MapSummary>,
     findings: Vec<FindingRow>,
+    awaiting_merge: Vec<FindingRow>,
     tasks: Vec<TaskRow>,
     audits: Vec<AuditRow>,
     timeline: Vec<TimelineEntry>,
@@ -40,14 +41,18 @@ pub async fn page(
     let slug: Slug = slug.parse().map_err(|_| PageError::NotFound)?;
     let services = &state.services;
     let app = services.app(&slug).await?;
+    let findings = services.findings_of_app(&slug).await?;
     render(&AppPage {
         layout: Layout::default(),
         map: services.current_map(&slug).await?.as_ref().map(map_summary),
-        findings: services
-            .findings_of_app(&slug)
-            .await?
+        findings: findings
             .iter()
-            .filter(|f| f.is_open())
+            .filter(|f| f.is_open() && f.state != FindingState::FixApproved)
+            .map(finding_row)
+            .collect(),
+        awaiting_merge: findings
+            .iter()
+            .filter(|f| f.state == FindingState::FixApproved)
             .map(finding_row)
             .collect(),
         tasks: services

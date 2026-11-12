@@ -36,8 +36,18 @@ phase 2 ✅ (scanners step); phase 3 ✅ (cartographer, map, coverage); phase 4 
   COMPLETED only when every step of its kind ran (R13, R14).
 - Paths only from `DataLayout`; file contents only from `memory`/`reports`.
 - On budget exhaustion: `BUDGET_EXHAUSTED`, the remaining AI steps are skipped and the
-  audit ends PARTIAL (ADR-0025; resumable PAUSED with scheduling, phase 7); never report a
+  audit ends PARTIAL (ADR-0025; resumable PAUSED deferred to Q-032); never report a
   partial audit as complete (R13, R14).
 - Every model call asks `AiRun::allow_call` first.
 - Every AI output is validated before use; suspicious instructions become events (R11).
 - No parallel audits until an ADR says otherwise (§E.1).
+
+Phase 7: `src/incremental.rs` loads previous final scope/diff and old snapshot relations;
+`src/merge.rs` performs ADR-0032 detection before hunter dedup; `src/watcher.rs` provides
+`Worker::watch_once`, with independent configured polling in `run`. `AiRun.incremental`
+feeds the cartographer previous map/diff and limits hunter inputs. `reporting::incremental_scope`
+feeds report/audit provenance. No automatic FULL, webhook or resumption (Q-032).
+Empty diffs reuse the previous map in a new version without AI. An incremental report with
+no new hypotheses/findings is deterministic; persistent findings do not repeat later roles.
+When no new map can be produced, scope reports still list the last known map's entries as
+unexamined (R14); missing AI never implies empty unexamined scope.

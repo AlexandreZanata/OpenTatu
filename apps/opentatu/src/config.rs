@@ -41,8 +41,7 @@ pub fn init_logging(filter: &str) -> anyhow::Result<()> {
 /// except the provider client (R16).
 pub fn api_key(variable: &str) -> anyhow::Result<Secret> {
     // R16: the single authorized read of the provider API key.
-    #[allow(clippy::disallowed_methods)]
-    let value = std::env::var(variable).with_context(|| {
+    let value = env_value(variable).with_context(|| {
         format!("environment variable {variable} is not set (copy .env.example to .env)")
     })?;
     let secret = Secret::new(value);
@@ -57,8 +56,7 @@ pub fn api_key(variable: &str) -> anyhow::Result<Secret> {
 /// configuration, ADR-0012). Never logged; an invalid value is not echoed.
 pub fn mcp_token() -> anyhow::Result<AgentToken> {
     // R16: environment reads live only in this module.
-    #[allow(clippy::disallowed_methods)]
-    let value = std::env::var("OPENTATU_MCP_TOKEN").context(
+    let value = env_value("OPENTATU_MCP_TOKEN").context(
         "OPENTATU_MCP_TOKEN is not set (create a token with `opentatu agent add <name>`)",
     )?;
     Ok(AgentToken::parse(value.trim())?)
@@ -67,8 +65,7 @@ pub fn mcp_token() -> anyhow::Result<AgentToken> {
 /// Owner's name used in the prompts (`OPENTATU_OWNER`, Q-009); "the owner" when unset.
 pub fn owner_name() -> String {
     // R16: environment reads live only in this module.
-    #[allow(clippy::disallowed_methods)]
-    let value = std::env::var("OPENTATU_OWNER").unwrap_or_default();
+    let value = env_value("OPENTATU_OWNER").unwrap_or_default();
     let trimmed = value.trim();
     if trimmed.is_empty() {
         "the owner".to_owned()
@@ -96,4 +93,26 @@ fn restrict_permissions(dir: &Path) -> anyhow::Result<()> {
 #[cfg(not(unix))]
 fn restrict_permissions(_dir: &Path) -> anyhow::Result<()> {
     Ok(())
+}
+
+/// Watch interval: CLI overrides OPENTATU_WATCH_MINUTES, otherwise ten minutes; zero
+/// disables polling. Invalid configured values fail rather than silently enabling it.
+pub fn watch_minutes(cli: Option<u64>) -> anyhow::Result<u64> {
+    if let Some(minutes) = cli {
+        return Ok(minutes);
+    }
+    match env_value("OPENTATU_WATCH_MINUTES") {
+        Ok(value) => value
+            .parse()
+            .context("OPENTATU_WATCH_MINUTES must be a nonnegative integer"),
+        Err(std::env::VarError::NotPresent) => Ok(10),
+        Err(_) => anyhow::bail!("OPENTATU_WATCH_MINUTES must be valid text"),
+    }
+}
+
+// The existing authorized environment-read exception is centralized here, rather than
+// repeated per configuration value. No library or command handler reads the environment.
+#[allow(clippy::disallowed_methods)]
+fn env_value(name: &str) -> Result<String, std::env::VarError> {
+    std::env::var(name)
 }

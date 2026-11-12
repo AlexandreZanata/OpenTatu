@@ -434,7 +434,7 @@ async fn r05_r14_r18_full_investigation_produces_findings_report_and_coverage() 
         .unwrap()
         .unwrap();
     assert_eq!(map.content.entry_points.len(), 1);
-    assert_eq!(map.prompt_versions, ["base@1.1.0", "cartographer@2.1.0"]);
+    assert_eq!(map.prompt_versions, ["base@1.1.0", "cartographer@2.2.0"]);
 
     // Hypotheses, finding and R18 severity computed by the system.
     let hypotheses = setup.services.hypotheses_of_audit(&audit.id).await.unwrap();
@@ -538,7 +538,7 @@ async fn r05_r14_r18_full_investigation_produces_findings_report_and_coverage() 
     assert_eq!(record["coverage"]["failed"], 1);
     assert_eq!(record["prompt_versions"]["skeptic"], "2.0.0");
     assert_eq!(record["prompt_versions"]["reporter"], "2.1.0", "R17");
-    assert_eq!(record["prompt_versions"]["hunter"], "2.1.0");
+    assert_eq!(record["prompt_versions"]["hunter"], "2.2.0");
     let memory = std::fs::read_to_string(layout.memory_file(&slug)).unwrap();
     assert!(memory.contains("Open: 0 critical, 1 high"), "{memory}");
     assert!(
@@ -674,7 +674,7 @@ async fn submitted_fix(model: &Arc<FakeClient>, fixed: bool) -> (Setup, Audit) {
 }
 
 #[tokio::test]
-async fn r06_r19_reverification_approves_a_real_fix_and_closes_the_finding() {
+async fn r06_r19_reverification_approves_a_fix_and_waits_for_merge() {
     let model = Arc::new(FakeClient::new());
     let (setup, reverification) = submitted_fix(&model, true).await;
     assert_eq!(reverification.id.as_str(), "AUD-DEMO-20261112-0900-2");
@@ -713,7 +713,12 @@ async fn r06_r19_reverification_approves_a_real_fix_and_closes_the_finding() {
         .finding(&"DEMO-SEC-0001".parse().unwrap())
         .await
         .unwrap();
-    assert_eq!(finding.state, FindingState::Closed, "R06");
+    assert_eq!(
+        finding.state,
+        FindingState::FixApproved,
+        "R06: approval is not merge"
+    );
+    assert!(decided.fix_identity.is_some());
     let task = setup
         .services
         .task(&"DEMO-SEC-0001-T1".parse().unwrap())
@@ -728,7 +733,11 @@ async fn r06_r19_reverification_approves_a_real_fix_and_closes_the_finding() {
     let manifest = std::fs::read_to_string(layout.task_manifest_file(&planning)).unwrap();
     assert!(manifest.contains("\"state\": \"DONE\""), "{manifest}");
     let record = std::fs::read_to_string(layout.finding_file(&finding.finding_id)).unwrap();
-    assert!(record.contains("FINDING_CLOSED"), "{record}");
+    assert!(record.contains("REVERIFICATION_PASSED"), "{record}");
+    assert!(
+        !record.contains("FINDING_CLOSED"),
+        "not closed before branch audit"
+    );
 }
 
 #[tokio::test]
@@ -935,6 +944,26 @@ async fn r09_closed_code_is_a_regression_only_when_its_fix_is_in_the_history() {
         Some(ReverificationResult::Passed)
     );
 
+    assert_eq!(
+        services.finding(route.finding()).await.unwrap().state,
+        FindingState::FixApproved
+    );
+    // Approval alone is not closure: a branch audit must observe that merge first.
+    enqueue(&setup).await;
+    Worker::new(
+        services.clone(),
+        setup.snapshots.clone(),
+        Arc::new(FakeSuite::clean()),
+        DataLayout::new(setup.data.path()),
+    )
+    .drain()
+    .await
+    .unwrap();
+    assert_eq!(
+        services.finding(route.finding()).await.unwrap().state,
+        FindingState::Closed
+    );
+
     // A later commit on main fixes admin but brings the route code back: regression.
     testing::commit_files(
         dir,
@@ -972,5 +1001,517 @@ async fn r09_closed_code_is_a_regression_only_when_its_fix_is_in_the_history() {
             .any(|r| r.contains("não conta como regressão")),
         "{:?}",
         approved.reasons
+    );
+}
+
+#[tokio::test]
+async fn watcher_selects_only_changed_scope_and_filters_scanner_results() {
+    let source = tempfile::tempdir().unwrap();
+    let url = testing::create_repo(
+        source.path(),
+        &[
+            ("src/route.ts", "export const GET = 1;\n"),
+            ("unrelated/far.ts", "export const untouchedMarker = 1;\n"),
+        ],
+    );
+    let model = Arc::new(FakeClient::new());
+    let mut map: serde_json::Value = serde_json::from_str(CARTOGRAPHER_ANSWER).unwrap();
+    let mut other = map["entry_points"][0].clone();
+    other["id"] = "EP-002".into();
+    other["file"] = "unrelated/far.ts".into();
+    other["path"] = "/far".into();
+    map["entry_points"].as_array_mut().unwrap().push(other);
+    for answer in [
+        map.to_string(),
+        HUNTER_ANSWER.into(),
+        VERIFIER_ANSWER.into(),
+        SKEPTIC_ANSWER.into(),
+        PLANNER_ANSWER.into(),
+        REPORTER_ANSWER.into(),
+    ] {
+        model.push_answer(answer);
+    }
+    let scanners = FakeSuite::clean().with(
+        ScannerKind::Semgrep,
+        FakeOutcome::Results(vec![
+            FakeSuite::result(ScannerKind::Semgrep, 1, "changed-rule", "src/route.ts"),
+            FakeSuite::result(
+                ScannerKind::Semgrep,
+                2,
+                "untouched-rule",
+                "unrelated/far.ts",
+            ),
+        ]),
+    );
+    let setup = setup(Some(&url), scanners, Some((model.clone(), models()))).await;
+    assert!(
+        setup.worker.watch_once().await.unwrap().is_empty(),
+        "no baseline: never automatic FULL"
+    );
+    enqueue(&setup).await;
+    assert!(
+        setup.worker.watch_once().await.unwrap().is_empty(),
+        "queued: skip"
+    );
+    setup.worker.drain().await.unwrap();
+    assert!(
+        setup.worker.watch_once().await.unwrap().is_empty(),
+        "unchanged: skip"
+    );
+    testing::commit_files(
+        source.path(),
+        &[("src/route.ts", "export const GET = 2;\n")],
+        "change handler",
+    );
+    let queued = setup.worker.watch_once().await.unwrap();
+    assert_eq!(queued.len(), 1);
+    assert!(
+        setup.worker.watch_once().await.unwrap().is_empty(),
+        "duplicate poll"
+    );
+    let audit = setup.services.audit(&queued[0]).await.unwrap();
+    assert_eq!(audit.kind, AuditKind::Incremental);
+    let baseline_requests = model.requests().len();
+    let adapt = |answer: &str| answer.replace("AUD-DEMO-20261112-0900", audit.id.as_str());
+    let mut update: serde_json::Value = serde_json::from_str(&adapt(CARTOGRAPHER_ANSWER)).unwrap();
+    update["changes_since_previous_map"] = serde_json::json!(["handler changed"]);
+    let mut empty_hunt: serde_json::Value = serde_json::from_str(&adapt(HUNTER_ANSWER)).unwrap();
+    empty_hunt["hypotheses"] = serde_json::json!([]);
+    model.push_answer(update.to_string());
+    model.push_answer(empty_hunt.to_string());
+    setup.worker.drain().await.unwrap();
+    let requests = model.requests();
+    assert_eq!(
+        requests.len() - baseline_requests,
+        2,
+        "map and scoped hunter only; no new hypotheses for the reporter"
+    );
+    let hunter = &requests[baseline_requests + 1].messages[1].content;
+    assert!(hunter.contains("changed-rule"));
+    assert!(!hunter.contains("untouched-rule"));
+    assert!(!hunter.contains("untouchedMarker"));
+    assert!(
+        requests[baseline_requests].messages[1]
+            .content
+            .contains("<previous_map>")
+    );
+    assert!(
+        requests[baseline_requests].messages[1]
+            .content
+            .contains("+export const GET = 2")
+    );
+    let map = setup
+        .services
+        .map_of_audit(&audit.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        map.content.entry_points.len(),
+        2,
+        "unchanged map entry retained"
+    );
+    let rounds = setup.services.hunt_rounds(&audit.id).await.unwrap();
+    assert_eq!(rounds[0].entry_points, ["EP-001"]);
+    let report = setup
+        .services
+        .report_of_audit(&audit.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(report.body_md.contains("Escopo incremental (sistema)"));
+    assert!(report.body_md.contains("EP-002"));
+    let coverage = setup
+        .services
+        .coverage_of_audit(&audit.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(
+        coverage
+            .requirements
+            .iter()
+            .filter(|r| r.entry_points.contains(&"EP-002".to_owned()))
+            .all(|r| r.status != RequirementStatus::Verified)
+    );
+    let before = model.requests().len();
+    let unchanged = setup
+        .services
+        .create_audit(NewAudit {
+            app: audit.app.clone(),
+            kind: AuditKind::Incremental,
+            commit: audit.commit.clone(),
+            branch: audit.branch.clone(),
+            requested_by: Actor::Owner,
+        })
+        .await
+        .unwrap();
+    setup.worker.drain().await.unwrap();
+    assert_eq!(
+        model.requests().len(),
+        before,
+        "empty diff needs no AI roles"
+    );
+    assert!(
+        setup
+            .services
+            .hunt_rounds(&unchanged.id)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    let reused = setup
+        .services
+        .map_of_audit(&unchanged.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(reused.content.entry_points, map.content.entry_points);
+    assert_eq!(reused.model, "system");
+    let without_ai = setup
+        .services
+        .create_audit(NewAudit {
+            app: audit.app.clone(),
+            kind: AuditKind::Incremental,
+            commit: audit.commit.clone(),
+            branch: audit.branch.clone(),
+            requested_by: Actor::Owner,
+        })
+        .await
+        .unwrap();
+    Worker::new(
+        setup.services.clone(),
+        setup.snapshots.clone(),
+        Arc::new(FakeSuite::clean()),
+        DataLayout::new(setup.data.path()),
+    )
+    .drain()
+    .await
+    .unwrap();
+    let artifact: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(
+            DataLayout::new(setup.data.path()).audit_record_file(&without_ai.id),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        artifact["incremental_scope"]["out_of_scope"],
+        serde_json::json!(["EP-001", "EP-002"]),
+        "R14: missing AI must not hide known unexamined entries"
+    );
+}
+
+#[tokio::test]
+async fn r06_merge_detection_closes_by_ancestry_squash_rebase_or_semantic_proof() {
+    for mode in [
+        "ancestry",
+        "patch_id_squash",
+        "patch_id_rebase",
+        "semantic_reverification",
+        "semantic_unproven",
+        "never_merged",
+    ] {
+        let model = Arc::new(FakeClient::new());
+        for answer in [
+            CARTOGRAPHER_ANSWER,
+            HUNTER_ANSWER,
+            VERIFIER_ANSWER,
+            SKEPTIC_ANSWER,
+            PLANNER_ANSWER,
+            REPORTER_ANSWER,
+        ] {
+            model.push_answer(answer);
+        }
+        let setup = setup(None, FakeSuite::clean(), Some((model.clone(), models()))).await;
+        enqueue(&setup).await;
+        setup.worker.drain().await.unwrap();
+        let dir = setup._source.path();
+        testing::checkout_new_branch(dir, "fix", "main");
+        testing::commit_files(
+            dir,
+            &[("src/route.ts", "export const GET = withAuth(handler);\n")],
+            "fix",
+        );
+        testing::commit_files(
+            dir,
+            &[("tests/route.test.ts", "test('authorization', () => {});\n")],
+            "test",
+        );
+        testing::checkout(dir, "main");
+        testing::commit_files(
+            dir,
+            &[("unrelated.txt", "advance branch\n")],
+            "advance main",
+        );
+        let slug = Slug::new("demo").unwrap();
+        let app = setup.services.app(&slug).await.unwrap();
+        setup
+            .snapshots
+            .refresh_mirror(&slug, &app.profile.repo_url)
+            .await
+            .unwrap();
+        let approved_commit = setup.snapshots.resolve(&slug, "fix").await.unwrap();
+        let agent = setup
+            .services
+            .register_agent("fixer", &AgentToken::from_random([3; 32]))
+            .await
+            .unwrap();
+        let task: TaskId = "DEMO-SEC-0001-T1".parse().unwrap();
+        setup.services.claim_task(&task, &agent).await.unwrap();
+        let (_, reaudit) = setup
+            .services
+            .submit_fix(
+                &task,
+                &agent,
+                NewFix {
+                    branch: "fix".into(),
+                    commit: approved_commit.clone(),
+                    summary: "fix".into(),
+                },
+            )
+            .await
+            .unwrap();
+        model.push_answer(reverifier_answer(reaudit.id.as_str(), "dismissed"));
+        setup.worker.drain().await.unwrap();
+        assert_eq!(
+            setup.services.finding(task.finding()).await.unwrap().state,
+            FindingState::FixApproved
+        );
+        match mode {
+            "ancestry" => testing::merge(dir, "fix"),
+            "patch_id_squash" => testing::squash_merge(dir, "fix"),
+            "patch_id_rebase" => {
+                testing::checkout(dir, "fix");
+                testing::rebase(dir, "main");
+                testing::checkout(dir, "main");
+                testing::merge(dir, "fix");
+            }
+            "semantic_reverification" | "semantic_unproven" => testing::commit_files(
+                dir,
+                &[(
+                    "src/route.ts",
+                    "export const GET = requireSession(otherHandler);\n",
+                )],
+                "different safe implementation",
+            ),
+            _ => {}
+        }
+        let branch_audit = enqueue(&setup).await;
+        if mode.starts_with("semantic_") {
+            // The semantic safety net uses one evidence-checked verifier call after
+            // the map, before ordinary scoped hunting/deduplication.
+            let adapt =
+                |answer: &str| answer.replace("AUD-DEMO-20261112-0900", branch_audit.id.as_str());
+            let mut hunt: serde_json::Value = serde_json::from_str(&adapt(HUNTER_ANSWER)).unwrap();
+            hunt["hypotheses"] = serde_json::json!([]);
+            model.push_answer(adapt(CARTOGRAPHER_ANSWER));
+            let mut proof: serde_json::Value =
+                serde_json::from_str(&reverifier_answer(branch_audit.id.as_str(), "dismissed"))
+                    .unwrap();
+            if mode == "semantic_unproven" {
+                proof["evidence"] = serde_json::json!([]);
+            }
+            model.push_answer(proof.to_string());
+            model.push_answer(hunt.to_string());
+            model.push_answer(adapt(REPORTER_ANSWER));
+            setup.worker.drain().await.unwrap();
+        } else {
+            Worker::new(
+                setup.services.clone(),
+                setup.snapshots.clone(),
+                Arc::new(FakeSuite::clean()),
+                DataLayout::new(setup.data.path()),
+            )
+            .drain()
+            .await
+            .unwrap();
+        }
+        let finding = setup.services.finding(task.finding()).await.unwrap();
+        assert_eq!(
+            finding.state,
+            if matches!(mode, "never_merged" | "semantic_unproven") {
+                FindingState::FixApproved
+            } else {
+                FindingState::Closed
+            },
+            "{mode}"
+        );
+        assert!(
+            !finding.regression,
+            "r09: unmerged approved code is not a regression"
+        );
+        if !matches!(mode, "never_merged" | "semantic_unproven") {
+            let events = setup
+                .services
+                .finding_timeline(task.finding())
+                .await
+                .unwrap();
+            let closed = events
+                .iter()
+                .find(|e| e.content.kind == EventKind::FindingClosed)
+                .unwrap();
+            assert_eq!(closed.content.data["detection"], mode);
+            assert_eq!(
+                closed.content.data["branch_commit"],
+                branch_audit.commit.as_str()
+            );
+        }
+    }
+}
+
+#[tokio::test]
+async fn r13_incremental_uses_its_budget_and_changed_source_fallback() {
+    for limited in [false, true] {
+        let model = Arc::new(FakeClient::new());
+        for answer in [
+            CARTOGRAPHER_ANSWER,
+            HUNTER_ANSWER,
+            VERIFIER_ANSWER,
+            SKEPTIC_ANSWER,
+            PLANNER_ANSWER,
+            REPORTER_ANSWER,
+        ] {
+            model.push_answer(answer);
+        }
+        let mut config = models();
+        if limited {
+            config
+                .budget
+                .per_audit
+                .get_mut(&AuditKind::Incremental)
+                .unwrap()
+                .max_calls = 1;
+        }
+        let setup = setup(None, FakeSuite::clean(), Some((model.clone(), config))).await;
+        enqueue(&setup).await;
+        setup.worker.drain().await.unwrap();
+        let before = model.requests().len();
+        testing::commit_files(
+            setup._source.path(),
+            &[("tools/check.py", "changedSeedMarker = 7\n")],
+            "standalone source",
+        );
+        let queued = setup.worker.watch_once().await.unwrap();
+        let audit = setup.services.audit(&queued[0]).await.unwrap();
+        let adapt = |answer: &str| answer.replace("AUD-DEMO-20261112-0900", audit.id.as_str());
+        model.push_answer(adapt(CARTOGRAPHER_ANSWER));
+        if !limited {
+            let mut hunter: serde_json::Value =
+                serde_json::from_str(&adapt(HUNTER_ANSWER)).unwrap();
+            hunter["hypotheses"] = serde_json::json!([]);
+            model.push_answer(hunter.to_string());
+        }
+        setup.worker.drain().await.unwrap();
+        assert_eq!(model.requests().len() - before, if limited { 1 } else { 2 });
+        if limited {
+            assert!(
+                setup
+                    .services
+                    .audit_events(&audit.id)
+                    .await
+                    .unwrap()
+                    .iter()
+                    .any(|e| e.content.kind == EventKind::BudgetExhausted)
+            );
+        } else {
+            assert!(
+                model.requests()[before + 1].messages[1]
+                    .content
+                    .contains("changedSeedMarker")
+            );
+            assert!(
+                setup.services.hunt_rounds(&audit.id).await.unwrap()[0]
+                    .entry_points
+                    .is_empty()
+            );
+        }
+        assert!(
+            setup
+                .services
+                .report_of_audit(&audit.id)
+                .await
+                .unwrap()
+                .unwrap()
+                .body_md
+                .contains("tools/check.py")
+        );
+    }
+}
+
+#[tokio::test]
+async fn incremental_persistence_does_not_replan_or_replace_original_evidence() {
+    let model = Arc::new(FakeClient::new());
+    let mut no_tasks: serde_json::Value = serde_json::from_str(PLANNER_ANSWER).unwrap();
+    no_tasks["tasks"] = serde_json::json!([]);
+    for answer in [
+        CARTOGRAPHER_ANSWER.to_owned(),
+        HUNTER_ANSWER.to_owned(),
+        VERIFIER_ANSWER.to_owned(),
+        SKEPTIC_ANSWER.to_owned(),
+        no_tasks.to_string(),
+        REPORTER_ANSWER.to_owned(),
+    ] {
+        model.push_answer(answer);
+    }
+    let setup = setup(None, FakeSuite::clean(), Some((model.clone(), models()))).await;
+    let baseline = enqueue(&setup).await;
+    setup.worker.drain().await.unwrap();
+    let finding = "DEMO-SEC-0001".parse().unwrap();
+    let original = setup
+        .services
+        .original_hypothesis(&finding)
+        .await
+        .unwrap()
+        .hypothesis_id;
+    assert_eq!(
+        setup.services.finding(&finding).await.unwrap().state,
+        FindingState::Upheld
+    );
+    testing::commit_files(
+        setup._source.path(),
+        &[(
+            "src/route.ts",
+            "export const GET = 1;\n// changed surrounding code\n",
+        )],
+        "change context",
+    );
+    let queued = setup.worker.watch_once().await.unwrap();
+    let audit = setup.services.audit(&queued[0]).await.unwrap();
+    let before = model.requests().len();
+    for answer in [CARTOGRAPHER_ANSWER, HUNTER_ANSWER] {
+        model.push_answer(answer.replace(baseline.id.as_str(), audit.id.as_str()));
+    }
+    setup.worker.drain().await.unwrap();
+    assert_eq!(
+        model.requests().len() - before,
+        2,
+        "no verifier, skeptic, planner or reporter for persistent findings"
+    );
+    assert!(
+        setup
+            .services
+            .actionable_findings(&audit)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        setup
+            .services
+            .original_hypothesis(&finding)
+            .await
+            .unwrap()
+            .hypothesis_id,
+        original
+    );
+    assert_eq!(
+        setup
+            .services
+            .tasks_of_finding(&finding)
+            .await
+            .unwrap()
+            .len(),
+        0
     );
 }

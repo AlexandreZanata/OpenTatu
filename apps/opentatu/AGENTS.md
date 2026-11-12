@@ -42,3 +42,8 @@ dashboard, mcp · Status: `serve`, `dashboard`, `worker`, `app`, `audit`, `scann
 ## How to extend
 
 [../../docs/recipes/add-cli-command.md](../../docs/recipes/add-cli-command.md)
+
+Phase 7: CLI `watch --once` calls `worker::watch` and only queues eligible increments.
+Worker/serve accept `--watch-minutes`; `config::watch_minutes` resolves CLI, then
+OPENTATU_WATCH_MINUTES, then 10 (0 off). The existing env-read exception is centralized
+in private `config::env_value`; command handlers do not read the environment.

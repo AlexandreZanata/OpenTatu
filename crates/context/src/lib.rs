@@ -14,8 +14,10 @@
 //! - [`entry_point_code`] — the code of entry points: handler files plus what they reach
 //!   (local imports, same package) up to depth 2, for the hunter, verifier and skeptic.
 //!
-//! Planned: `diff` for INCREMENTAL audits (phase 7). See AGENTS.md in this directory.
+//! [`render_diff`] packs safe incremental patches; [`affected_entry_points`] reuses
+//! depth-2 context to select changed scope (phase 7).
 
+mod diff;
 mod error;
 mod files;
 mod related;
@@ -27,3 +29,5 @@ pub use files::{FileKind, SnapshotFiles, SourceFile, TextFile, classify, is_test
 pub use related::{Seed, entry_point_code};
 pub use selection::{ContextBudget, Excerpt, Selection, cartographer_code, cartographer_config};
 pub use tree::render_tree;
+
+pub use diff::{affected_entry_points, diff_allowed, render_diff};

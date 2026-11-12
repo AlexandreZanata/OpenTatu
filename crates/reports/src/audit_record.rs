@@ -51,6 +51,8 @@ pub struct AuditRecord {
     pub results: Option<AuditResults>,
     /// ASVS coverage summary (R14); `null` when no map was produced.
     pub coverage: Option<CoverageSummary>,
+    /// Explicit changed/examined/out-of-scope paths for an incremental audit.
+    pub incremental_scope: Option<opentatu_core::IncrementalScope>,
     /// What this audit did not cover.
     pub limitations: Vec<String>,
 }
@@ -100,6 +102,7 @@ impl AuditRecord {
             usage: None,
             results: None,
             coverage: None,
+            incremental_scope: None,
             limitations: audit.limitations.clone(),
         }
     }
@@ -134,6 +137,16 @@ impl AuditRecord {
     #[must_use]
     pub fn with_results(mut self, results: Option<AuditResults>) -> Self {
         self.results = results;
+        self
+    }
+
+    /// Sets the explicit scope of an incremental run.
+    #[must_use]
+    pub fn with_incremental_scope(
+        mut self,
+        scope: Option<opentatu_core::IncrementalScope>,
+    ) -> Self {
+        self.incremental_scope = scope;
         self
     }
 

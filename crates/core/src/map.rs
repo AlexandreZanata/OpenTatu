@@ -494,6 +494,24 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn incremental_map_keeps_unchanged_parts_and_drops_deleted_handlers() {
+        let previous = content(vec![
+            entry("EP-001", "same.go", Some(1), &[]),
+            entry("EP-002", "gone.go", Some(1), &[]),
+        ]);
+        let update = content(vec![entry("EP-001", "new.go", Some(1), &[])]);
+        let merged = update.preserve_unchanged(&previous, &["gone.go".into(), "new.go".into()]);
+        assert!(merged.entry_points.iter().any(|e| e.file == "same.go"));
+        assert!(!merged.entry_points.iter().any(|e| e.file == "gone.go"));
+        assert_eq!(merged.components, previous.components);
+        let catalog = AsvsCatalog::embedded().unwrap();
+        let files = Files(BTreeMap::from([("same.go", 1), ("new.go", 1)]));
+        let (merged, _) = merged.sanitize(catalog, &files);
+        let ids: BTreeSet<_> = merged.entry_points.iter().map(|e| &e.id).collect();
+        assert_eq!(ids.len(), 2);
+    }
+
+    #[test]
     fn numbers_written_as_text_or_text_written_as_numbers_are_accepted() {
         let entry: EntryPoint = serde_json::from_value(serde_json::json!({
             "id": "EP-1", "method": "GET", "path": "/", "file": "a.rs", "line": "12-14",

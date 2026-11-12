@@ -27,3 +27,8 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (
 - Owner-facing text (report body, task instructions written for the owner) is pt-BR;
   JSON keys are English.
 - Dates via `Timestamp::iso()` / `display_pt_br()` only.
+
+Phase 7: `ReportData`/`AuditRecord` include optional `IncrementalScope`;
+`incremental_scope_text` is the deterministic scope section even with an AI reporter.
+`ReportData.merge_detections` records system-observed closure methods. A passing
+reverification report says awaiting merge, not closed.

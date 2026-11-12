@@ -46,7 +46,7 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `findings` | finding_id, app, number, state, severity, fingerprint, first/last audit, content (JSON live record) | 4 ✅ |
 | `hunt_rounds`, `audit_reports` | audit_id, round / report, content (JSON) — append-only | 4 ✅ |
 | `tasks` | task_id, finding_id, app, audit_id, number, state, priority, claimed_by, branch, fix_commit, created_at, content (JSON) — never deleted | 5 ✅ |
-| `verifications` | audit_id (the REVERIFICATION audit), task_id, result, created_at, decided_at, content (JSON) — decided once | 5 ✅ |
+| `verifications` | audit_id (the REVERIFICATION audit), task_id, result, created_at, decided_at, content (JSON, including approved fix base/branch head, per-commit and whole-diff patch IDs in phase 7) — decided once | 5–7 ✅ |
 | `agents` | name, token_hash (never the token, R16), registered_at, revoked_at — never deleted (ADR-0030) | 5 ✅ |
 | `decisions` | id, kind, target, justification, expires_at, occurred_at | 4 |
 | `scanner_results` | id, audit_id, scanner, result_id, rule_id, message, file, start_line, end_line, reported_severity, cwe — append-only | 2 ✅ |
@@ -88,7 +88,9 @@ Implementation (ADR-0030): `opentatu mcp` is spawned by the agent's MCP client w
 `OPENTATU_MCP_TOKEN` (created by `opentatu agent add <name>`, stored only as a hash); the
 token identifies the agent, so `agent` in `opentatu_claim_task` is optional and must match.
 `opentatu_submit_fix` takes the full commit hash; the REVERIFICATION audit that it queues
-runs before every other queued audit and is the only way a finding becomes CLOSED (R06).
+runs before every other queued audit. A passing decision moves the finding to FIX_APPROVED
+and the task to DONE. A FULL/INCREMENTAL audit of the configured app branch later closes it
+only after detecting integration of that approved fix (ADR-0032, R06).
 
 ## E.7 Roadmap
 
@@ -104,3 +106,8 @@ Moved to [../ROADMAP.md](../ROADMAP.md) (with status tracking).
 - OpenTatu must audit itself as one more registered application, from phase 4 on.
 
 How these are implemented: [../SECURITY.md](../SECURITY.md).
+
+Phase 7 adds indexes on `audits(app, branch, created_at)` and `audits(app, status)`
+(migration 0008), not a second queue. The polling enqueue decision uses one write transaction.
+Approved patch identity extends verification JSON with a backward-compatible optional field;
+past decided rows and append-only history are not rewritten.

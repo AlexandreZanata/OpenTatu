@@ -25,7 +25,7 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
 | 4 — Hunter, verifier (static) and skeptic | ✅ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage (verified 2026-11-12 on the owner's app Abastevo) |
 | 5 — Fix trail and MCP | ✅ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own (verified 2026-11-12) |
 | 6 — Benchmark | ✅ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
-| 7 — Incremental audit | ⬜ | Diff between commits, trigger by push (webhook or schedule); a finding whose approved fix reaches the app's branch becomes CLOSED (Q-030, ADR-0032) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed |
+| 7 — Incremental audit | ✅ | Diff between commits, trigger by configured-branch polling (no webhook); a finding whose approved fix reaches the app's branch becomes CLOSED (Q-030, ADR-0032) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed (verified 2026-11-12 on a local Abastevo clone; fix approval, never-merged, squash and normal merge verified) |
 | 8 — Dynamic lab | ⬜ (on request) | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab |
 | 9 — Host inspection (read-only) | ⬜ (on request) | Restricted SSH user, closed allowlist of commands, every command recorded | — |
 | 10 — Monitoring and defense | ⬜ (on request) | Integration with established sensors (e.g. Wazuh, Falco, osquery, CrowdSec), detection rules from the map, reversible response playbooks with owner approval | — |
@@ -226,3 +226,62 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   vendored frontend libraries.
 - Q-031 answered by the owner (2026-11-12): the FULL budget stays; Abastevo is the base
   application of every real test from now on.
+
+## Phase 7: what exists
+
+- Hardened changed-file/unified-diff queries and stable patch identity in snapshots;
+  context excludes protected paths before requesting diff bytes and records budget
+  omissions, renames and deletions (ADR-0033).
+- INCREMENTAL uses the previous final non-reverification audit. It preserves unchanged
+  map parts, hunts affected/new entry points through depth-2 related code, and falls back
+  to changed source seeds. Scanner execution stays unchanged; only changed-path results
+  reach the hunter. Later roles process new work; persistent findings retain their original
+  confirmed evidence. Empty diffs reuse the map without AI calls.
+- `watch --once`, `worker/serve --watch-minutes N`, and `OPENTATU_WATCH_MINUTES` (default
+  10, zero disables polling). Services transactionally skips missing baselines, active
+  audits and unchanged heads; no automatic FULL or inbound webhook.
+- ADR-0032: reverification approves (`FIX_APPROVED`, task DONE), then configured-branch
+  FULL/INCREMENTAL audits close by ancestry, all-commit rebase identity, whole-diff squash
+  identity, or code absence plus evidence-checked semantic reverification. UI, working
+  memory, scope/merge reports and event provenance show this distinction.
+- Automated tests cover diff safety/budgets, scope/fallback/map preservation, watcher
+  guards, approval/closure, every merge-detection layer, absent evidence, never-merged
+  fixes and post-merge regressions. PAUSED resumption remains Q-032; phases 8–10 have not
+  started.
+- Real Abastevo acceptance (2026-11-12): a local clone of `6a19bcc` and a scratch data
+  directory; no application push or server execution. FULL baseline
+  `AUD-ABASTEVO-20261112-1516`: 38m09s, 30 calls, 1,683,222 input + 293,540 output tokens,
+  recorded US$0.25596559, 19 hypotheses, 5 confirmed findings, 60/114 entries examined.
+  Local commit `b331d75` adds an unsafe file handler and its route; `watch --once` queued
+  `AUD-ABASTEVO-20261112-1556` automatically. INCREMENTAL: 14m34s, 9 calls, 609,564 input
+  + 83,193 output tokens, recorded US$0.08440039; 1/115 entries examined, 114 out of scope,
+  3 hypotheses all in the new handler, 2 findings upheld (CRITICAL file read and MEDIUM
+  resource consumption), 1 INCONCLUSIVE. The five baseline findings were not reverified,
+  reviewed or replanned. Calls fell 70%, recorded cost 67% and elapsed time 62% in this
+  run; scanner execution still covered the whole snapshot.
+- Both investigative audits ended PARTIAL, honestly: limited static context, declared
+  omissions and no dynamic lab. No budget was increased or exhausted. The inconclusive
+  hypothesis was not promoted to a finding; this run does not claim unchanged code safe.
+- Real fix trail: the MCP agent claimed `ABASTEVO-SEC-0006-T1` and submitted local branch
+  `phase7/fix-files` at `852e092` (handler + test in two commits). The regression test fails
+  on the vulnerable handler (200) and passes on the fix (403, no fixture disclosure).
+  REVERIFICATION `AUD-ABASTEVO-20261112-1611` completed in 37s: 1 call, 62,012 input +
+  2,588 output tokens, recorded US$0.00651276; finding FIX_APPROVED, task DONE, no closure
+  event, both commit patch IDs and the whole-diff ID stored. Unchanged-main audit
+  `-1612` took 87s with zero calls: still FIX_APPROVED, no regression.
+- Squash head `0020be2` does not contain the approved commit by ancestry. Audit `-1614`
+  closed it with `patch_id_squash` in 92s, zero model calls. This check exposed a missing
+  unexamined-entry list in reports without AI; the fallback now retains last-known map
+  entries, protected by an integration test.
+- A consistent approved-state checkpoint was replayed independently for normal merge
+  `9775954`: audit `AUD-ABASTEVO-20261112-1617` closed by `ancestry` in 95s, zero calls,
+  with all 115 known entries explicitly unexamined in its report. Only immutable snapshots
+  and the offline scanner cache were shared. Both real merge audits deliberately ran
+  without AI to prove deterministic detection, with all scanners enabled; they ended
+  PARTIAL and did not claim a new AI investigation. Rebase and semantic detection are
+  covered by hermetic integration tests, not claimed as additional real model runs.
+- `cargo xtask check` passes (279 tests passed, one existing container/network smoke test
+  ignored by default; all four real scanners ran above). Total recorded model cost for
+  this workflow was US$0.34687874, counting the shared baseline/reverification only once.
+  No production application was run and no Abastevo commit was pushed. Q-032 remains open;
+  phase 8 was not started.

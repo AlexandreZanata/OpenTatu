@@ -348,6 +348,43 @@ impl Services {
             .ok_or_else(|| Error::UnknownFinding(id.clone()))
     }
 
+    /// Original evidence-confirmed hypothesis, retained across persistent re-detections.
+    pub async fn original_hypothesis(&self, id: &FindingId) -> Result<Hypothesis, Error> {
+        let mut conn = self.db.connection().await?;
+        let hypotheses = opentatu_db::investigation::hypotheses_of_finding(&mut conn, id).await?;
+        hypotheses
+            .into_iter()
+            .find(|h| {
+                h.verification
+                    .as_ref()
+                    .is_some_and(|v| v.verdict == opentatu_core::Verdict::Confirmed)
+            })
+            .ok_or_else(|| {
+                Error::Conflict(format!("finding {id} has no original confirmed hypothesis"))
+            })
+    }
+
+    /// Findings eligible for fresh role work: new confirmations and newly detected
+    /// regressions only in INCREMENTAL, all app findings in a FULL audit. Persistence
+    /// updates last-detection metadata without turning an old finding into new work.
+    pub async fn actionable_findings(&self, audit: &Audit) -> Result<Vec<Finding>, Error> {
+        let mut findings = self.findings_of_app(&audit.app).await?;
+        if audit.kind == opentatu_core::AuditKind::Incremental {
+            let regressions: Vec<String> = self
+                .audit_events(&audit.id)
+                .await?
+                .into_iter()
+                .filter(|e| e.content.kind == EventKind::RegressionDetected)
+                .filter_map(|e| e.content.target)
+                .collect();
+            findings.retain(|f| {
+                f.first_detected.audit_id == audit.id
+                    || regressions.iter().any(|id| id == f.finding_id.as_str())
+            });
+        }
+        Ok(findings)
+    }
+
     /// Events about a finding and its tasks (its timeline, §B.7), oldest first.
     pub async fn finding_timeline(&self, id: &FindingId) -> Result<Vec<Event>, Error> {
         let target = id.to_string();
