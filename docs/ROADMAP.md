@@ -223,4 +223,5 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   false-positive rate. Runs 1–3 used the binary before the transport retry (run 2 lost 3
   verifier calls, run 3 one verifier and one planner call) and run 1 a copy without 9
   vendored frontend libraries.
-- Open: Q-031 (FULL budget for large apps).
+- Q-031 answered by the owner (2026-11-12): the FULL budget stays; Abastevo is the base
+  application of every real test from now on.

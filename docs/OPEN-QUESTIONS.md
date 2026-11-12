@@ -20,7 +20,7 @@ Template:
 Q-001 to Q-010 were answered on 2026-11-12: the owner delegated the decisions ("implement
 them") and asked for the license; the recommended options were adopted (ADR-0019). Q-011 and
 Q-012 were answered by the owner the same day (ADR-0022); Q-013 was also answered.
-Q-030 (phase 5) and Q-031 (phase 6) are open.
+Q-030 (phase 5) is open; Q-031 (phase 6) was answered.
 Sentinel planning adds Q-014 onward below. Answers selecting a planning direction do not
 authorize implementation, deployment or a production action.
 
@@ -288,7 +288,7 @@ authorize implementation, deployment or a production action.
 ---
 
 ## Q-031 — FULL audit budget for large applications
-- **Status:** open · **Blocks:** nothing yet
+- **Status:** answered (2026-11-12) · **Blocks:** nothing
 - **Context:** the FULL budget in `config/models.toml` (3M tokens, 300 calls, 90 min) was a
   provisional value to tune with real usage. On OWASP Juice Shop (benchmark run 1, about
   1,100 files, 60 hypotheses) it ran out during verification: 16 hypotheses were never
@@ -298,6 +298,8 @@ authorize implementation, deployment or a production action.
   budget (e.g. 10M tokens / 180 min — about US$1–2 per large audit at list prices);
   (c) cap verification per audit (e.g. the 30 most severe hypotheses) so later steps always
   run, and report the rest as not verified.
-- **Working interpretation:** (a) — production budgets unchanged; the owner's apps so far
-  fit (Abastevo: 1.95M tokens, 28 calls).
+- **Answer:** (a) — keep the FULL budget (3M tokens, 300 calls, 90 min). For now the test
+  scope is Abastevo: the owner's application is the base of every real test, and it fits
+  the budget (1.95M tokens, 28 calls). A larger application or a new test target reopens
+  this question (owner).
 

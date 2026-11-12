@@ -76,6 +76,12 @@ Quality of the AI roles is not a unit test: it is measured by the benchmark
 flaws, one result file per run, per prompt version and model. Run it after changing a
 prompt or a model.
 
+Real end-to-end runs (real models and containers) use the owner's application **Abastevo**
+(<https://github.com/AlexandreZanata/Abastevo>) as the base of every test (owner, Q-031):
+a mirror and snapshots only — never push to it; changes a test needs (e.g. a fix for the
+fix trail) are commits in a local clone in the session scratch area. The benchmark is the
+one exception: it measures against apps with known flaws.
+
 ## Planned (when the features arrive)
 
 - Snapshot tests for `MEMORY.md`, `report.md` and SARIF (phase 1/4) — add `insta` through

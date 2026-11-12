@@ -62,7 +62,10 @@ max_plan_share = 0.60
 
 # Per-audit limits. Provisional values sized from list prices ($0.15/M input, $0.60/M
 # output off-peak; x2 at peak): a FULL audit at its limit costs at most ~$3.60 at peak,
-# well inside the 5-hour window. Tune them with real `llm_usage` data in phase 4.
+# well inside the 5-hour window. Kept by the owner (Q-031, 2026-11-12): Abastevo, the base
+# application of every real test, fits (1.95M tokens); a large app such as OWASP Juice Shop
+# runs out during verification (benchmark/SCOREBOARD.md) — raise per run with
+# `opentatu benchmark run --max-tokens`, not here.
 [budget.per_audit.FULL]
 max_tokens = 3_000_000
 max_calls = 300
