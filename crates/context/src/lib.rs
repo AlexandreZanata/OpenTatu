@@ -11,15 +11,19 @@
 //! - [`cartographer_code`], [`cartographer_config`] — the `<code>` and `<config>` blocks of
 //!   the cartographer (§C.7 step 5), ranked and line-numbered.
 //!
-//! Planned: per-entry-point selection for the hunter (phase 4), `diff` for INCREMENTAL
-//! audits (phase 7). See AGENTS.md in this directory.
+//! - [`entry_point_code`] — the code of entry points: handler files plus what they reach
+//!   (local imports, same package) up to depth 2, for the hunter, verifier and skeptic.
+//!
+//! Planned: `diff` for INCREMENTAL audits (phase 7). See AGENTS.md in this directory.
 
 mod error;
 mod files;
+mod related;
 mod selection;
 mod tree;
 
 pub use error::Error;
 pub use files::{FileKind, SnapshotFiles, SourceFile, TextFile, classify};
+pub use related::{Seed, entry_point_code};
 pub use selection::{ContextBudget, Excerpt, Selection, cartographer_code, cartographer_config};
 pub use tree::render_tree;

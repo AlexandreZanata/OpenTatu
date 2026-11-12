@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}Relatório {{ audit.id }} · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card("Relatório da auditoria") %}
+  <dl class="c-meta">
+    <dt>Auditoria</dt><dd><a href="/audits/{{ audit.id }}"><code>{{ audit.id }}</code></a></dd>
+    <dt>Aplicação</dt><dd><a href="/apps/{{ audit.app }}">{{ audit.app }}</a></dd>
+    <dt>Status</dt><dd>{% call ui::badge(audit.status) %}{% endcall %}</dd>
+    <dt>Escrito por</dt><dd><code>{{ author }}</code></dd>
+  </dl>
+  <p class="c-list__meta">O cabeçalho completo (modelos, prompts, scanners, consumo e duração) está no arquivo report.md da auditoria.</p>
+{% endcall %}
+
+{% call ui::card("Texto") %}
+  {% call ui::report_text(body) %}{% endcall %}
+{% endcall %}
+{% endblock %}

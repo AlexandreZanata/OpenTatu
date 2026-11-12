@@ -7,13 +7,22 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use opentatu_core::{App, Audit, CoverageSummary, SecurityMap, Timestamp};
+use opentatu_core::{
+    App, Audit, CoverageSummary, Finding, FindingState, Hypothesis, SecurityMap, Severity,
+    Timestamp,
+};
 
 /// Audits listed one by one in the timeline; older ones are summarized per month.
 const TIMELINE_LIMIT: usize = 10;
 
 /// Months of older audits summarized (keeps the file within ~2,000 tokens).
 const MONTH_SUMMARY_LIMIT: usize = 12;
+
+/// Open findings listed one by one (most severe first).
+const OPEN_FINDINGS_LIMIT: usize = 20;
+
+/// Known false positives listed (most recent first).
+const FALSE_POSITIVES_LIMIT: usize = 15;
 
 /// Everything `MEMORY.md` is built from.
 #[derive(Debug, Clone, Copy)]
@@ -30,6 +39,10 @@ pub struct MemoryInput<'a> {
     pub map: Option<&'a SecurityMap>,
     /// ASVS coverage of the latest audit that produced a map, if any.
     pub coverage: Option<&'a CoverageSummary>,
+    /// The app's findings (any state).
+    pub findings: &'a [Finding],
+    /// Hypotheses dismissed as false positives (R08), oldest first.
+    pub false_positives: &'a [Hypothesis],
 }
 
 /// Renders `MEMORY.md`.
@@ -84,8 +97,34 @@ pub fn render_memory(input: &MemoryInput<'_>) -> String {
     }
 
     out.push_str("\n## Current situation\n");
-    out.push_str("Open findings: none recorded yet.\n");
-    out.push_str("Tasks awaiting a fix: 0. Awaiting reverification: 0.\n");
+    let mut open: Vec<&Finding> = input.findings.iter().filter(|f| f.is_open()).collect();
+    open.sort_by(|a, b| {
+        b.severity
+            .cmp(&a.severity)
+            .then(a.finding_id.number().cmp(&b.finding_id.number()))
+    });
+    let count = |severity: Severity| open.iter().filter(|f| f.severity == severity).count();
+    let _ = writeln!(
+        out,
+        "Open: {} critical, {} high, {} medium, {} low, {} info.",
+        count(Severity::Critical),
+        count(Severity::High),
+        count(Severity::Medium),
+        count(Severity::Low),
+        count(Severity::Info)
+    );
+    let tasks = open
+        .iter()
+        .filter(|f| f.state == FindingState::TaskCreated)
+        .count();
+    let reverification = open
+        .iter()
+        .filter(|f| f.state == FindingState::FixSubmitted)
+        .count();
+    let _ = writeln!(
+        out,
+        "Tasks awaiting a fix: {tasks}. Awaiting reverification: {reverification}."
+    );
     match input.coverage {
         Some(coverage) => {
             let _ = writeln!(
@@ -124,8 +163,51 @@ pub fn render_memory(input: &MemoryInput<'_>) -> String {
         let _ = writeln!(out, "- {month}: {count} older audit(s)");
     }
 
-    out.push_str("\n## Open findings (summary)\n- None recorded yet.\n");
-    out.push_str("\n## Known false positives (do not reopen without code changes)\n- None.\n");
+    out.push_str("\n## Open findings (summary)\n");
+    if open.is_empty() {
+        out.push_str("- None.\n");
+    }
+    for finding in open.iter().take(OPEN_FINDINGS_LIMIT) {
+        let regression = if finding.regression {
+            ", regression"
+        } else {
+            ""
+        };
+        let _ = writeln!(
+            out,
+            "- {} {} — {} in {} ({}{regression})",
+            finding.finding_id,
+            finding.severity,
+            finding.title,
+            finding.location.file,
+            finding.state
+        );
+    }
+    if open.len() > OPEN_FINDINGS_LIMIT {
+        let _ = writeln!(out, "- … and {} more.", open.len() - OPEN_FINDINGS_LIMIT);
+    }
+    out.push_str("\n## Known false positives (do not reopen without code changes)\n");
+    if input.false_positives.is_empty() {
+        out.push_str("- None.\n");
+    }
+    for hypothesis in input
+        .false_positives
+        .iter()
+        .rev()
+        .take(FALSE_POSITIVES_LIMIT)
+    {
+        let c = &hypothesis.content;
+        let _ = writeln!(
+            out,
+            "- {} — \"{}\" ({} in {} {}) — dismissed in {}",
+            hypothesis.fingerprint,
+            c.title,
+            c.cwe,
+            c.location.file,
+            c.location.symbol,
+            hypothesis.audit_id
+        );
+    }
     out.push_str("\n## Accepted risks\n- None.\n");
 
     out.push_str("\n## Poorly covered areas / pending investigations\n");
@@ -210,6 +292,8 @@ mod tests {
             updated_at: &updated,
             audits: &audits,
             owner_notes: Some("Webhook de pagamento é crítico."),
+            findings: &[],
+            false_positives: &[],
             map: None,
             coverage: Some(&CoverageSummary {
                 applicable_requirements: 128,
@@ -227,6 +311,7 @@ mod tests {
             "- Scanners estáticos ainda não executados.",
             "Webhook de pagamento é crítico.",
             "Mapped entry points: no map yet.",
+            "Open: 0 critical, 0 high, 0 medium, 0 low, 0 info.",
             "ASVS coverage: 64% (82 of 128 applicable requirements verified; 3 failed, 43 not tested).",
         ] {
             assert!(
@@ -256,6 +341,8 @@ mod tests {
             owner_notes: None,
             map: None,
             coverage: None,
+            findings: &[],
+            false_positives: &[],
         });
         assert!(memory.contains("- 2026-11: 5 older audit(s)"), "{memory}");
         assert!(memory.contains("- 2026-10: 15 older audit(s)"), "{memory}");
@@ -275,6 +362,8 @@ mod tests {
             owner_notes: None,
             map: None,
             coverage: None,
+            findings: &[],
+            false_positives: &[],
         });
         assert!(memory.contains("Last audit: none"));
         assert!(memory.contains("- Everything: no audit has run yet."));

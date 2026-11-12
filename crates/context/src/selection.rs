@@ -359,7 +359,7 @@ fn config_score(path: &str) -> u32 {
     }
 }
 
-fn is_low_value(path: &str) -> bool {
+pub(crate) fn is_low_value(path: &str) -> bool {
     let name = path.rsplit('/').next().unwrap_or(path);
     let stem = name.split('.').next().unwrap_or(name);
     path.split('/')
@@ -378,7 +378,7 @@ fn pack(mut candidates: Vec<(String, u32, String)>, total: usize, per_file: usiz
     let mut selection = Selection::default();
     let mut skipped_without_signal = 0usize;
     for (path, score, content) in candidates {
-        let excerpt = render_file(&path, &content, per_file);
+        let excerpt = render_file(&path, &content, per_file, &[]);
         if selection.bytes + excerpt.text.len() <= total {
             selection.bytes += excerpt.text.len();
             selection.excerpts.push(excerpt);
@@ -398,7 +398,9 @@ fn pack(mut candidates: Vec<(String, u32, String)>, total: usize, per_file: usiz
 
 /// Line-numbered file text, cut to header + windows around route signals when larger
 /// than `per_file`.
-fn render_file(path: &str, content: &str, per_file: usize) -> Excerpt {
+/// Line-numbered file text; when larger than `per_file`, cut to the header plus windows
+/// around route signals and around the `focus` lines (0-based).
+pub(crate) fn render_file(path: &str, content: &str, per_file: usize, focus: &[usize]) -> Excerpt {
     let lines: Vec<&str> = content.lines().collect();
     let full = number(path, &lines, &[(0, lines.len())], lines.len(), false);
     if full.len() <= per_file {
@@ -409,14 +411,21 @@ fn render_file(path: &str, content: &str, per_file: usize) -> Excerpt {
         };
     }
     let mut ranges = vec![(0, HEADER_LINES.min(lines.len()))];
-    for (index, line) in lines.iter().enumerate() {
-        if ROUTE_SIGNALS.iter().any(|s| line.contains(s)) {
-            let start = index.saturating_sub(WINDOW_LINES / 3);
-            let end = (index + WINDOW_LINES).min(lines.len());
-            match ranges.last_mut() {
-                Some(last) if start <= last.1 => last.1 = last.1.max(end),
-                _ => ranges.push((start, end)),
-            }
+    let mut anchors: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| ROUTE_SIGNALS.iter().any(|s| line.contains(s)))
+        .map(|(index, _)| index)
+        .collect();
+    anchors.extend(focus.iter().copied().filter(|index| *index < lines.len()));
+    anchors.sort_unstable();
+    anchors.dedup();
+    for index in anchors {
+        let start = index.saturating_sub(WINDOW_LINES / 3);
+        let end = (index + WINDOW_LINES).min(lines.len());
+        match ranges.last_mut() {
+            Some(last) if start <= last.1 => last.1 = last.1.max(end),
+            _ => ranges.push((start, end)),
         }
     }
     let mut text = number(path, &lines, &ranges, lines.len(), true);

@@ -9,7 +9,8 @@ use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    AuditRow, Layout, MapSummary, TimelineEntry, audit_row, map_summary, timeline_entry,
+    AuditRow, FindingRow, Layout, MapSummary, TimelineEntry, audit_row, finding_row, map_summary,
+    timeline_entry,
 };
 
 /// Audits listed on the page.
@@ -24,6 +25,7 @@ struct AppPage {
     layout: Layout,
     app: App,
     map: Option<MapSummary>,
+    findings: Vec<FindingRow>,
     audits: Vec<AuditRow>,
     timeline: Vec<TimelineEntry>,
 }
@@ -39,6 +41,13 @@ pub async fn page(
     render(&AppPage {
         layout: Layout::default(),
         map: services.current_map(&slug).await?.as_ref().map(map_summary),
+        findings: services
+            .findings_of_app(&slug)
+            .await?
+            .iter()
+            .filter(|f| f.is_open())
+            .map(finding_row)
+            .collect(),
         audits: services
             .audits_of_app(&slug, AUDITS)
             .await?

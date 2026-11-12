@@ -17,6 +17,7 @@ mod apps;
 mod audits;
 mod error;
 mod health;
+mod investigation;
 mod maps;
 mod scanners;
 mod timeline;
@@ -30,7 +31,9 @@ use opentatu_db::Database;
 pub use audits::NewAudit;
 pub use error::Error;
 pub use health::HealthReport;
+pub use investigation::NewHypothesis;
 pub use maps::{NewMap, Reporter};
+pub use opentatu_memory::{DedupOutcome, DismissedBefore};
 pub use scanners::{ScannerOutcome, ScannerRunSummary};
 
 /// Entry point to every use case. Cheap to clone.

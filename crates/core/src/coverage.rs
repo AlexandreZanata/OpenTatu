@@ -5,7 +5,7 @@
 //! (phase 4+), never stored as a source of truth. A requirement without a result is
 //! `NOT_TESTED` — never "safe" (R14).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -72,6 +72,29 @@ pub struct Coverage {
     pub summary: CoverageSummary,
     /// Applicable requirements, in catalog order.
     pub requirements: Vec<RequirementCoverage>,
+}
+
+/// Status of each requirement from what the audit did (ADR-0025):
+/// - `FAILED` — a confirmed finding of the audit (not dismissed by the skeptic) cites it;
+/// - `NOT_TESTED` — a hypothesis citing it is unresolved (inconclusive or not verified);
+/// - `VERIFIED` — the hunter reported checking it and nothing above applies;
+/// - everything else stays `NOT_TESTED` (missing from the map) — never "safe" (R14).
+pub fn requirement_statuses(
+    checked: &BTreeSet<String>,
+    failed: &BTreeSet<String>,
+    unresolved: &BTreeSet<String>,
+) -> BTreeMap<String, RequirementStatus> {
+    let mut statuses = BTreeMap::new();
+    for id in checked {
+        statuses.insert(id.clone(), RequirementStatus::Verified);
+    }
+    for id in unresolved {
+        statuses.insert(id.clone(), RequirementStatus::NotTested);
+    }
+    for id in failed {
+        statuses.insert(id.clone(), RequirementStatus::Failed);
+    }
+    statuses
 }
 
 impl Coverage {
@@ -201,6 +224,27 @@ mod tests {
         );
         assert_eq!(coverage.catalog_requirements, 345);
         assert_eq!(coverage.map_id.as_str(), "MAP-DEMO-20261112-0900");
+    }
+
+    #[test]
+    fn r14_failures_win_and_unresolved_hypotheses_are_not_verified() {
+        let set = |ids: &[&str]| {
+            ids.iter()
+                .map(|id| (*id).to_owned())
+                .collect::<BTreeSet<_>>()
+        };
+        let statuses = requirement_statuses(
+            &set(&["V1.1.1", "V8.2.1", "V6.2.1"]),
+            &set(&["V8.2.1"]),
+            &set(&["V6.2.1"]),
+        );
+        assert_eq!(statuses["V1.1.1"], RequirementStatus::Verified);
+        assert_eq!(statuses["V8.2.1"], RequirementStatus::Failed);
+        assert_eq!(statuses["V6.2.1"], RequirementStatus::NotTested);
+        assert!(
+            !statuses.contains_key("V13.1.1"),
+            "unknown = NOT_TESTED by default"
+        );
     }
 
     #[test]

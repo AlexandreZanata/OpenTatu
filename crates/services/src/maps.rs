@@ -1,11 +1,10 @@
 //! Use cases: security map versions, ASVS coverage and what the AI roles reported about the
 //! analyzed content (spec §C.1, §C.7 steps 5 and 13; R11, R14).
 
-use std::collections::BTreeMap;
-
 use opentatu_core::{
     APPLICABLE_LEVEL, ASVS_VERSION, Actor, AiRole, AsvsCatalog, Audit, AuditId, Coverage,
     EventKind, MapContent, MapId, NewEvent, SecurityMap, Slug, SuspiciousInstruction,
+    requirement_statuses,
 };
 
 use crate::{Error, Services};
@@ -139,8 +138,8 @@ impl Services {
         let Some(map) = self.map_of_audit(audit).await? else {
             return Ok(None);
         };
-        // PENDING(phase-4): statuses from the verifier's verdicts (VERIFIED / FAILED).
-        let statuses = BTreeMap::new();
+        let (checked, failed, unresolved) = self.requirement_sets(audit).await?;
+        let statuses = requirement_statuses(&checked, &failed, &unresolved);
         let catalog = AsvsCatalog::embedded()?;
         Ok(Some(Coverage::compute(
             &map,
@@ -152,7 +151,7 @@ impl Services {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use opentatu_core::{
         AuditKind, Authentication, AuthenticationRequirement, Authorization, EntryPoint,
         Infrastructure, RequirementStatus, SecurityConfiguration,

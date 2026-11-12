@@ -1255,6 +1255,7 @@ name = "opentatu-db"
 version = "0.1.0"
 dependencies = [
  "opentatu-core",
+ "serde",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -1298,6 +1299,7 @@ name = "opentatu-memory"
 version = "0.1.0"
 dependencies = [
  "opentatu-core",
+ "serde",
  "serde_json",
 ]
 
@@ -1330,6 +1332,7 @@ version = "0.1.0"
 dependencies = [
  "opentatu-core",
  "opentatu-db",
+ "opentatu-memory",
  "serde",
  "serde_json",
  "thiserror",

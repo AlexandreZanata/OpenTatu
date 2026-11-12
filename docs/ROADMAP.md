@@ -13,8 +13,8 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
 | 0 — Foundation and research | ✅ | Part D research recorded in [opencode-go.md](opencode-go.md); `config/models.toml` filled; OpenCode Go client in `opentatu-llm`; `llm_usage` table and accounting | `cargo run -p opentatu -- llm ping` answers with DeepSeek Flash and records tokens (verified 2026-11-12) |
 | 1 — Apps, audits and memory | ✅ | App registration, snapshot by commit, audit creation with ID and dates, append-only event log use cases, `MEMORY.md` generation, timeline in the dashboard, `opentatu serve` and `opentatu worker` | Creating an "empty" audit produces `AUD-<SLUG>-<YYYYMMDD>-<HHMM>`, the right events, and shows in the timeline with date and time in Brasília time (verified 2026-11-12) |
 | 2 — Static scanners | ✅ | Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner in isolated containers; normalization to the common format | An audit saves the four outputs and shows the normalized results in the dashboard (verified 2026-11-12) |
-| 3 — Cartographer and coverage | 🟡 | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right |
-| 4 — Hunter, verifier (static) and skeptic | ⬜ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage |
+| 3 — Cartographer and coverage | ✅ | Context selection, versioned map, applicable ASVS requirements, coverage matrix | The map lists the real entry points of one of the owner's apps and the owner confirms they are right (TBG map reviewed; owner approved phase 4 on 2026-11-12) |
+| 4 — Hunter, verifier (static) and skeptic | ✅ | Hypotheses, verdicts, evidence, severity by the matrix, fingerprint and dedup, report; OpenTatu audits itself from here on | A FULL audit produces `report.md` with findings, comparison and coverage (verified 2026-11-12 on the owner's app Abastevo) |
 | 5 — Fix trail and MCP | ⬜ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own |
 | 6 — Benchmark | ⬜ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
 | 7 — Incremental audit | ⬜ | Diff between commits, trigger by push (webhook or schedule) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed |
@@ -120,5 +120,32 @@ Status: ✅ done · 🟡 in progress · ⬜ not started
   fallback, both WebSocket servers with one entry per message type, CLIs, deploy jobs),
   none dropped by validation, and 163 applicable ASVS requirements, all NOT_TESTED. The
   first call of an earlier run returned ports as numbers and was retried (now accepted).
-- Done criterion pending: the owner confirms that the entry points are right.
-- Next: phase 4 (hunter, verifier and skeptic) — waits for the owner's approval.
+- The owner reviewed the TBG map and approved moving to phase 4 (2026-11-12).
+
+## Phase 4: what exists
+
+- Context per entry point (`entry_point_code`): handler files and what they reach (local
+  imports, same package) up to depth 2.
+- Hunter rounds (at most 3, prioritized batches, stop rule of §C.7), hypotheses validated
+  against the commit and fingerprinted from its code; memory decisions: persistent,
+  regression (R09), known false positive (R08), accepted risk.
+- Verifier (up to 4 calls at a time) with the R05 evidence check; skeptic with the final
+  severity computed by the system (R18); findings `<SLUG>-SEC-NNNN` with live records.
+- Coverage statuses VERIFIED / FAILED / NOT_TESTED; comparison with the previous audit;
+  `report.md` (reporter body + R17 header, deterministic fallback), `findings.sarif`,
+  `findings.json`, `hypotheses.json`, `evidence/`, `findings/<ID>.json`, `results` in
+  `audit.json`; open findings and false positives in `MEMORY.md`.
+- Per-audit budget guard: `BUDGET_EXHAUSTED`, remaining AI steps skipped, audit PARTIAL (R13).
+- Prompts: hunter 2.1.0, verifier 1.1.0, skeptic 2.0.0, reporter 2.1.0.
+- Dashboard: findings and hypotheses on the audit page, open findings on the app page,
+  `/findings/{id}`, `/audits/{id}/report`.
+- Verified on the owner's app Abastevo (commit `6a19bcc`, Go backend, 139 mapped entry
+  points): FULL audit `AUD-ABASTEVO-20261112-1025` in 29 min, 28 model calls, US$0.235 —
+  3 hunter rounds over 60 prioritized entry points, 20 hypotheses (2 confirmed, 5
+  dismissed, 13 inconclusive with what is missing), 2 findings downgraded to INFO by the
+  skeptic, ASVS coverage 43% (36 of 83 verified), `report.md` with comparison, SARIF and
+  live records. An earlier run showed hunter answers can exceed 5 minutes: the provider
+  timeout is now 900 s and rounds hold 20 entry points. After the run, prompts were refined
+  (hunter 2.1.0 asks for the violated ASVS ids; reporter 2.1.0 fixes the headings) and model
+  text accepts `null`; covered by tests, not re-run end to end.
+- Next: phase 5 (fix trail and MCP) — waits for the owner's approval.

@@ -13,11 +13,16 @@
 //! `PARTIAL`: an audit that did not analyze anything is never reported as complete
 //! (R13, R14). Later phases replace limitations with real steps.
 
+mod ai_run;
 mod artifacts;
+mod budget;
 mod cartography;
 mod error;
+mod hunt;
 pub mod pipeline;
+mod reporting;
 mod usage;
+mod verification;
 
 use std::future::Future;
 use std::sync::Arc;

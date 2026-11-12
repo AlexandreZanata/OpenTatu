@@ -196,6 +196,58 @@
 {% endif %}
 {% endmacro %}
 
+{#- findings_table(rows, empty): findings; `rows` are view::FindingRow (view::finding_row). -#}
+{% macro findings_table(rows, empty) %}
+{% if rows.is_empty() %}
+<p class="c-empty__message">{{ empty }}</p>
+{% else %}
+<table class="c-table">
+  <thead><tr><th>Achado</th><th>Severidade</th><th>Estado</th><th>Título</th><th>Local</th><th>CWE</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><a href="/findings/{{ row.id }}"><code>{{ row.id }}</code></a></td>
+      <td>{% call badge(row.severity) %}{% endcall %}</td>
+      <td>{% call badge(row.state) %}{% endcall %}{% if row.regression %} <span class="c-list__meta">regressão</span>{% endif %}</td>
+      <td>{{ row.title }}</td>
+      <td class="c-table__detail"><code>{{ row.location }}</code></td>
+      <td>{{ row.cwe }}</td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{#- hypotheses_table(rows): hypotheses of an audit; `rows` are view::HypothesisRow. -#}
+{% macro hypotheses_table(rows) %}
+{% if rows.is_empty() %}
+{% call empty_state("Nenhuma hipótese registrada.", "O caçador gera hipóteses a partir do mapa e do código das entradas.") %}{% endcall %}
+{% else %}
+<table class="c-table">
+  <thead><tr><th>Hipótese</th><th>Título</th><th>Entrada</th><th>Local</th><th>Potencial</th><th>Confiança</th><th>Estado</th><th>Achado</th><th>Observação</th></tr></thead>
+  <tbody>
+  {%- for row in rows %}
+    <tr>
+      <td><code>{{ row.id }}</code></td>
+      <td>{{ row.title }}</td>
+      <td><code>{{ row.entry_point }}</code></td>
+      <td class="c-table__detail"><code>{{ row.location }}</code></td>
+      <td>{% call badge(row.potential) %}{% endcall %}</td>
+      <td>{{ row.confidence }}</td>
+      <td>{% call badge(row.state) %}{% endcall %}</td>
+      <td>{% if !row.finding.is_empty() %}<a href="/findings/{{ row.finding }}"><code>{{ row.finding }}</code></a>{% endif %}</td>
+      <td class="c-table__detail">{{ row.note }}</td>
+    </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{#- report_text(text): Markdown report body shown as preformatted text (escaped). -#}
+{% macro report_text(text) %}<pre class="c-report">{{ text }}</pre>{% endmacro %}
+
 {#- timeline(entries): events, newest first; `entries` are view::TimelineEntry. -#}
 {% macro timeline(entries) %}
 {% if entries.is_empty() %}

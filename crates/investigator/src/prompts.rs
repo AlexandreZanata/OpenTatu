@@ -72,13 +72,6 @@ pub const VARIABLES: &[(&str, &str)] = &[
         "lab_url",
         "Isolated lab URL, or `none` (production is always out of scope)",
     ),
-    ("finished_display", "Audit end, pt-BR display"),
-    ("finished_iso", "Audit end, ISO 8601 with offset"),
-    ("duration", "Audit duration, human readable"),
-    ("models", "Model id per role"),
-    ("prompt_versions", "name@version of every prompt used"),
-    ("scanners", "Scanner versions and image digests"),
-    ("usage", "Tokens and calls consumed"),
 ];
 
 /// A versioned prompt.
@@ -241,6 +234,6 @@ mod tests {
     fn system_template_joins_base_and_role() {
         let (template, tags) = system_template(AiRole::Verifier).unwrap();
         assert!(template.contains("{{audit_id}}"));
-        assert_eq!(tags, ["base@1.1.0", "verifier@1.0.0"]);
+        assert_eq!(tags, ["base@1.1.0", "verifier@1.1.0"]);
     }
 }

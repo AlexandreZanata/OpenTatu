@@ -47,6 +47,8 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | An `Llm` over the fake and prompt values | `opentatu_investigator::run::tests::{llm, variables}` (inside the investigator); `AiSettings` in `crates/worker/tests/audit_pipeline.rs` |
 | An app with a queued audit (db) | `opentatu_db::audits::tests::insert_queued` |
 | A snapshot directory for context selection | `tempfile::tempdir()` + `SnapshotFiles::scan` |
+| A hypothesis / dedup inputs (db, memory) | `opentatu_db::investigation::tests::sample_hypothesis`, `opentatu_memory::dedup::tests::{finding, fp}` |
+| A full investigation with fake answers | `crates/worker/tests/audit_pipeline.rs` (`*_ANSWER` constants, `models()`) |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |

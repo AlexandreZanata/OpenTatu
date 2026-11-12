@@ -1,7 +1,7 @@
 # opentatu-core — pure domain
 
 Layer: **domain** · May depend on: nothing internal (`architecture.toml`) · Status: base ✅; scanners (phase 2), ASVS, map and
-coverage (phase 3) ✅
+coverage (phase 3) ✅; hypotheses and findings (phase 4) ✅
 
 ## Responsibility
 
@@ -35,8 +35,11 @@ coverage (phase 3) ✅
 | `src/map.rs` | `SecurityMap`, `MapContent` + `sanitize`, map parts, `FileIndex` | §C.1, §B.4 |
 | `src/coverage.rs` | `Coverage::compute`, `CoverageSummary`, `RequirementCoverage`, `RequirementStatus` | §B.5, R14 |
 | `src/suspicious.rs` | `SuspiciousInstruction` | R11 |
+| `src/hypothesis.rs` | `Hypothesis`, `HypothesisContent`, `CodeLocation`, `Confidence`, `Verdict`, `Verification` (R05 check), `EvidenceItem`, `HuntRound`, `ScannerTriage` | §C.2, §C.3, §C.9 |
+| `src/finding.rs` | `Finding`, `Detection`, `SkepticReview::decide` (R18), `Comparison`, `ReportText` | §B.7, §C.4, §C.6 |
+| `src/lenient.rs` | `any_case` — enum values written by models in any letter case | — |
 
-Planned: per-audit budget tracking types (phase 4), finding records (phase 4).
+Planned: fix tasks and verifications (phase 5).
 
 ## Local rules
 

@@ -191,9 +191,25 @@ impl Clock for FixedClock {
     }
 }
 
+/// Owner-facing duration (pt-BR): `75` → `"1 min 15 s"`, `4507` → `"75 min 7 s"`.
+pub fn duration_label(seconds: i64) -> String {
+    match (seconds / 60, seconds % 60) {
+        (0, s) => format!("{s} s"),
+        (m, 0) => format!("{m} min"),
+        (m, s) => format!("{m} min {s} s"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn durations_read_naturally_in_pt_br() {
+        assert_eq!(duration_label(42), "42 s");
+        assert_eq!(duration_label(120), "2 min");
+        assert_eq!(duration_label(4507), "75 min 7 s");
+    }
 
     const EXAMPLE: &str = "2026-11-29T14:32:00-03:00";
 

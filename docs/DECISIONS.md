@@ -415,3 +415,66 @@ Template:
 - **Consequences:** one cartographer call per audit with about 250K input tokens (about
   US$0.04 at list price); very large apps lose lower-ranked files, which the audit reports.
 
+## ADR-0025 — Investigation: hunter rounds, verification, skeptic, findings and report (phase 4)
+- **Date:** 2026-11-12 · **Status:** accepted
+- **Context:** phase 4 implements §C.7 steps 6–14: hypotheses, verdicts with evidence,
+  severity by the matrix, identity and deduplication by fingerprint, coverage statuses, the
+  comparison with the previous audit and the report, within a per-audit budget (R13).
+- **Decision:**
+  - **Context per entry point** (`opentatu_context::entry_point_code`): the handler files
+    plus what they reach — local imports (Go module/package, Rust `mod`/`use crate::`,
+    relative JS/TS and Python imports) and same-package files — up to depth 2, ranked by
+    defining the functions the handlers call, within a byte budget.
+  - **Hunter rounds:** at most 3; each covers the next batch of entry points in priority
+    order (no or unknown authentication, sensitive data, administrative paths and
+    state-changing methods first; at most 20 entry points over 10 handler files), with the
+    scanner results of those files (plus secrets and dependency results in round 1), open
+    findings, remembered false positives and the hypotheses already recorded. The hunt stops
+    early when a round yields fewer than 2 new medium/high-confidence hypotheses (§C.7
+    step 7). Entry points never reached are a limitation (R14). `hunter.md` 2.x: ids are
+    assigned by the system and the hunter lists the ASVS ids it examined
+    (`requirements_checked`).
+  - **Validation and identity:** hypotheses citing files absent from the commit are dropped;
+    lines outside the file, unknown entry points, unknown ASVS ids and malformed CWEs are
+    removed with notes. The fingerprint is computed from the code at the cited lines of the
+    commit (at most 60 lines), never from model text (§B.8). Memory decisions
+    (`opentatu_memory::classify`): exact fingerprint of an open finding = persistent (not
+    re-verified, last detection updated); of a closed finding = regression (R09); of a
+    dismissal = known false positive, recorded as dismissed without a model call (R08); an
+    active accepted risk is not reopened. Same CWE + file + symbol with different code is a
+    new hypothesis noted "possibly the same as".
+  - **Verifier:** one call per open hypothesis, by potential severity, at most 4 calls at a
+    time; a "confirmed" verdict whose evidence cites no existing file and line of the commit
+    becomes "inconclusive" (R05, §C.9; `verifier.md` 1.1.0). Evidence ids `-EV-NNN` are
+    assigned in the transaction that records the verdict; evidence lives inside the
+    verification (no separate table). A confirmation creates the finding
+    (`<SLUG>-SEC-NNNN`, numbers never reused).
+  - **Skeptic** (`skeptic.md` 2.0.0): returns only the matrix base level, the adjustment facts
+    and whether it dismisses; the system applies `Severity::adjusted` and decides upheld or
+    downgraded by comparing with the potential severity (R18).
+  - **Coverage statuses:** FAILED when a non-dismissed finding of the audit cites the
+    requirement; NOT_TESTED when an unresolved hypothesis cites it; VERIFIED when the hunter
+    examined it and nothing above applies; everything else NOT_TESTED (R14).
+  - **Report:** the reporter (`reporter.md` 2.x) writes only the body from system data
+    (`ReportData`, also its `<data>` input); the system adds the R17 header when the audit
+    ends. Without AI, without budget or when the role fails, a deterministic body is
+    recorded, so every audit has `report.md`. Exports: `findings.sarif` (SARIF 2.1.0),
+    `findings.json`, `hypotheses.json`, `evidence/`, `findings/<ID>.json` (live record with
+    timeline), `results` in `audit.json`, open findings and false positives in `MEMORY.md`.
+  - **Budget (R13):** every model call asks the guard first; when tokens, calls or minutes of
+    the audit kind run out, `BUDGET_EXHAUSTED` is recorded once, the remaining AI steps are
+    skipped and the audit ends PARTIAL listing what was not done. Pausing and resuming a
+    budget-stopped audit (Q-002's PAUSED) waits for scheduling (phase 7); until then the
+    stop is final.
+  - Tables `hypotheses` and `findings` (derived state, every change with its event),
+    `hunt_rounds` and `audit_reports` (append-only), migration 0006. Without the planner
+    (phase 5) every audit still ends PARTIAL.
+- **Alternatives considered:** sweeping every entry point in every round (cost grows with
+  the app; diminishing returns); fuzzy identity on CWE+file+symbol (merges different bugs);
+  letting the skeptic return the final severity (impression, not the matrix); a separate
+  evidence table (duplicates the verification); rendering Markdown in the dashboard (a new
+  dependency; the report is shown as escaped text for now).
+- **Consequences:** a FULL audit costs a few cents to tens of cents and minutes per hunter
+  round; large apps get their riskiest entry points first and report the rest as not
+  analyzed.
+

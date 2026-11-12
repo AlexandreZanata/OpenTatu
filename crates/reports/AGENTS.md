@@ -1,6 +1,6 @@
 # opentatu-reports — audit artifacts (pure)
 
-Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (phase 1); report, SARIF, manifest planned
+Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (phase 1); report, SARIF, finding records ✅ (phase 4); manifest = phase 5
 
 ## Responsibility
 
@@ -14,9 +14,10 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: `audit.json` ✅ (
 
 | File | Contents | Phase |
 |---|---|---|
-| `src/audit_record.rs` | ✅ `AuditRecord` — `audit.json` (§B.5); `with_scanners` (phase 2), `with_ai`, `with_usage`, `with_coverage` (phase 3); uncomputed sections `null` (R14) | 1–3 |
-| `src/report.rs` | header with models, prompt versions, scanners, usage, duration + reporter text | 4 |
-| `src/sarif.rs` | SARIF 2.1.0 export for GitHub code scanning | 4 |
+| `src/audit_record.rs` | ✅ `AuditRecord` — `audit.json` (§B.5); `with_scanners` (phase 2), `with_ai`, `with_usage`, `with_coverage` (phase 3), `with_results` (phase 4); uncomputed sections `null` (R14) | 1–4 |
+| `src/report.rs` | ✅ `ReportData`, `ReportHeader`, `render_report` (R17 header + body), `fallback_body` | 4 |
+| `src/sarif.rs` | ✅ `findings_sarif` — SARIF 2.1.0 for GitHub code scanning | 4 |
+| `src/finding_record.rs` | ✅ `FindingRecord` — `findings/<ID>.json` with evidence and timeline (§B.7) | 4 |
 | `src/manifest.rs` | `MANIFEST.json` and per-task Markdown | 5 |
 
 ## Local rules

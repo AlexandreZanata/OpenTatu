@@ -16,10 +16,13 @@ pub mod audit;
 pub mod coverage;
 pub mod error;
 pub mod event;
+pub mod finding;
 pub mod finding_state;
 pub mod fingerprint;
+pub mod hypothesis;
 pub mod ids;
 pub mod layout;
+pub mod lenient;
 pub mod map;
 pub mod role;
 pub mod scanner;
@@ -32,11 +35,18 @@ pub mod usage;
 pub use app::{App, NewApp};
 pub use asvs::{APPLICABLE_LEVEL, ASVS_VERSION, AsvsCatalog, AsvsLevel, AsvsRequirement};
 pub use audit::{Audit, AuditKind, AuditStatus};
-pub use coverage::{Coverage, CoverageSummary, RequirementCoverage, RequirementStatus};
+pub use coverage::{
+    Coverage, CoverageSummary, RequirementCoverage, RequirementStatus, requirement_statuses,
+};
 pub use error::Error;
 pub use event::{Actor, Event, EventKind, NewEvent};
+pub use finding::{Comparison, Detection, Finding, ReportText, SkepticReview};
 pub use finding_state::FindingState;
 pub use fingerprint::{Fingerprint, FingerprintInput};
+pub use hypothesis::{
+    CodeLocation, Confidence, EvidenceItem, EvidenceStep, HuntRound, Hypothesis, HypothesisContent,
+    RegressionTest, ScannerTriage, TriageDecision, Verdict, Verification,
+};
 pub use ids::{
     AuditId, CommitHash, EventId, EvidenceId, FindingId, HypothesisId, MapId, Slug, TaskId,
 };
@@ -51,7 +61,7 @@ pub use scanner::{ScannerKind, ScannerResult, ScannerRun};
 pub use secrets::{Secret, mask_secret};
 pub use severity::{Severity, SeverityAdjustments};
 pub use suspicious::SuspiciousInstruction;
-pub use time::{Clock, FixedClock, SystemClock, Timestamp};
+pub use time::{Clock, FixedClock, SystemClock, Timestamp, duration_label};
 pub use usage::{LlmUsage, RecordedLlmUsage, UsageTotals};
 
 /// Re-export used by this crate's exported macros. Do not use directly.

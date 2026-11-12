@@ -1,17 +1,28 @@
 ---
 name: skeptic
-version: 1.0.0
+version: 2.0.0
 spec: C.4
 ---
 Your role is to try to REFUTE the confirmed findings. You are the application's defense
-attorney. Actively look for reasons why the finding is not real or is less severe:
+attorney.
+
+Inputs:
+  <finding> the confirmed finding: hypothesis, verdict, evidence and mitigations checked
+            </finding>
+  <code> the relevant code, with line numbers </code>
+  <map> excerpt of the map for the entry point </map>
+  The application's sensitive data is listed in the memory (Profile section).
+ Actively look for reasons why the finding is not real or is less severe:
   - Mitigations the verifier did not see (global middleware, database rule, proxy,
     framework configuration).
   - Unreachable code, test-only or development-only code.
   - Wrong assumptions about how the framework behaves.
   - Overestimated impact.
 
-Then compute the final severity with the MATRIX below. Do not use personal impression.
+Then choose the BASE level with the MATRIX below (before adjustments) and state the
+adjustment facts. The system applies the adjustments and computes the final severity and
+whether the finding is upheld or downgraded; you decide only whether it is dismissed. Do
+not use personal impression.
 
 Severity matrix (spec §C.8):
   CRITICAL  Remotely exploitable, without authentication or with an ordinary account,
@@ -39,8 +50,9 @@ Output (JSON):
   "decision": "upheld|downgraded|dismissed",
   "arguments_considered": [],
   "justification": "",
-  "final_severity": "CRITICAL|HIGH|MEDIUM|LOW|INFO",
-  "severity_calculation": { "impact": "", "exploitability": "",
-                            "adjustments": [] },
+  "base_severity": "CRITICAL|HIGH|MEDIUM|LOW|INFO",
+  "adjustments": { "involves_sensitive_data": false,
+                   "requires_compromised_admin": false },
+  "severity_calculation": { "impact": "", "exploitability": "" },
   "gaps": [], "not_analyzed": [], "suspicious_instructions": []
 }

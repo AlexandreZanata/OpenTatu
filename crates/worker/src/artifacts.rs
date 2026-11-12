@@ -4,18 +4,23 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use opentatu_core::{App, Audit, UsageTotals};
+use opentatu_core::{App, Audit, Finding, Severity, UsageTotals};
 use opentatu_memory::{MemoryInput, render_history, render_memory};
-use opentatu_reports::AuditRecord;
+use opentatu_reports::{
+    AuditRecord, AuditResults, FindingRecord, ReportHeader, fallback_body, findings_sarif,
+    render_report,
+};
 use opentatu_services::ScannerOutcome;
 
-use crate::{Error, Worker};
+use crate::{Error, Worker, reporting};
 
 /// Audits listed in `MEMORY.md` (older ones are summarized per month by the renderer).
 const MEMORY_AUDITS: u32 = 200;
 
-/// Writes `app.json`, the audit's map version, `coverage.json`, `llm_usage.jsonl` and
-/// `audit.json`, then `history.jsonl` and `MEMORY.md`.
+/// Writes `app.json`, the audit's map version, `coverage.json`, `llm_usage.jsonl`, the
+/// investigation files (`hypotheses.json`, `evidence/`, `findings.json`, `findings.sarif`,
+/// `findings/<ID>.json`), `report.md` and `audit.json`, then `history.jsonl` and
+/// `MEMORY.md`.
 pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Error> {
     let layout = &worker.layout;
     let services = &worker.services;
@@ -73,7 +78,15 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
         }
     }
 
-    let scanner_versions = services
+    let report = services.report_of_audit(&audit.id).await?;
+    if let Some((name, version)) = report
+        .as_ref()
+        .and_then(|r| r.prompt_version.split_once('@'))
+    {
+        prompt_versions.insert(name.to_owned(), version.to_owned());
+    }
+
+    let scanner_versions: BTreeMap<String, String> = services
         .scanner_runs(&audit.id)
         .await?
         .into_iter()
@@ -82,10 +95,104 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
             ScannerOutcome::Failed { .. } => None,
         })
         .collect();
+
+    let hypotheses = services.hypotheses_of_audit(&audit.id).await?;
+    let rounds = services.hunt_rounds(&audit.id).await?;
+    let hunted = !rounds.is_empty() || !hypotheses.is_empty();
+    if hunted {
+        let text = serde_json::to_string_pretty(&serde_json::json!({
+            "hypotheses": hypotheses,
+            "rounds": rounds,
+        }))? + "\n";
+        write_atomic(&layout.hypotheses_file(&audit.id), &text).await?;
+        for hypothesis in &hypotheses {
+            let items = hypothesis.verification.iter().flat_map(|v| &v.evidence);
+            for item in items {
+                if let Some(id) = &item.evidence_id {
+                    let text = serde_json::to_string_pretty(&serde_json::json!({
+                        "evidence_id": id,
+                        "hypothesis_id": hypothesis.hypothesis_id,
+                        "finding_id": hypothesis.finding_id,
+                        "evidence": item,
+                    }))? + "\n";
+                    write_atomic(&layout.evidence_file(id), &text).await?;
+                }
+            }
+        }
+    }
+    let detected: Vec<Finding> = services
+        .findings_of_app(app.slug())
+        .await?
+        .into_iter()
+        .filter(|f| f.last_detected.audit_id == audit.id)
+        .collect();
+    if hunted {
+        let text = serde_json::to_string_pretty(&detected)? + "\n";
+        write_atomic(&layout.findings_file(&audit.id), &text).await?;
+        let sarif = findings_sarif(&detected, env!("CARGO_PKG_VERSION"));
+        write_atomic(
+            &layout.sarif_file(&audit.id),
+            &(serde_json::to_string_pretty(&sarif)? + "\n"),
+        )
+        .await?;
+    }
+    for finding in &detected {
+        let evidence = services.evidence_of_finding(&finding.finding_id).await?;
+        let timeline = services.finding_timeline(&finding.finding_id).await?;
+        let record = FindingRecord::new(finding.clone(), evidence, &timeline).to_json()?;
+        write_atomic(&layout.finding_file(&finding.finding_id), &record).await?;
+    }
+
+    let data = reporting::report_data(worker, audit, &audit.limitations).await?;
+    let body = match report {
+        Some(report) => report.body_md,
+        None => fallback_body(&data),
+    };
+    let header = ReportHeader {
+        audit_id: audit.id.clone(),
+        app_name: app.profile.name.clone(),
+        app_slug: app.slug().clone(),
+        commit: audit.commit.clone(),
+        kind: audit.kind,
+        status: audit.status,
+        started_at: audit.started_at,
+        completed_at: audit.completed_at,
+        duration_seconds: audit.duration_seconds(),
+        models: models.clone(),
+        prompt_versions: prompt_versions.clone(),
+        scanners: scanner_versions.clone(),
+        usage,
+    };
+    write_atomic(
+        &layout.report_file(&audit.id),
+        &render_report(&header, &body),
+    )
+    .await?;
+
+    let results = hunted.then(|| AuditResults {
+        hypotheses: data.hypotheses.total,
+        confirmed: data.hypotheses.confirmed,
+        dismissed: data.hypotheses.dismissed,
+        inconclusive: data.hypotheses.inconclusive,
+        new: data.comparison.new.len(),
+        persistent: data.comparison.persistent.len(),
+        fixed_since_previous: data.comparison.not_redetected.len(),
+        regressions: data.comparison.regressions.len(),
+        by_severity: Severity::ALL
+            .iter()
+            .map(|s| {
+                (
+                    s.to_string(),
+                    data.comparison.by_severity.get(s).copied().unwrap_or(0),
+                )
+            })
+            .collect(),
+    });
     let record = AuditRecord::from_audit(audit)
         .with_scanners(scanner_versions)
         .with_ai(models, prompt_versions)
         .with_usage(usage)
+        .with_results(results)
         .with_coverage(coverage.map(|c| c.summary))
         .to_json()?;
     write_atomic(&layout.audit_record_file(&audit.id), &record).await?;
@@ -108,6 +215,8 @@ pub(crate) async fn memory_text(worker: &Worker, app: &App) -> Result<String, Er
         Some(map) => services.coverage_of_audit(&map.audit_id).await?,
         None => None,
     };
+    let findings = services.findings_of_app(app.slug()).await?;
+    let false_positives = services.false_positives(app.slug()).await?;
     let updated_at = services.now();
     Ok(render_memory(&MemoryInput {
         app,
@@ -116,6 +225,8 @@ pub(crate) async fn memory_text(worker: &Worker, app: &App) -> Result<String, Er
         owner_notes: notes.as_deref(),
         map: map.as_ref(),
         coverage: coverage.as_ref().map(|c| &c.summary),
+        findings: &findings,
+        false_positives: &false_positives,
     }))
 }
 

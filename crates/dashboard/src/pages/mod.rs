@@ -3,6 +3,8 @@
 pub mod app;
 pub mod audit;
 pub mod coverage;
+pub mod finding;
 pub mod health;
 pub mod home;
 pub mod map;
+pub mod report;

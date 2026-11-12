@@ -42,9 +42,9 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `events` | id, kind, app, audit_id, occurred_at, actor, target, data (JSON), model, prompt_version, references_event_id — **no UPDATE or DELETE (SQLite triggers)** | base |
 | `llm_usage` | id, audit_id, role, model, input_tokens, output_tokens, reasoning_tokens, cost_usd, duration_ms, occurred_at — append-only | 0 ✅ |
 | `maps` | id, map_id, app, audit_id, commit_hash, content (JSON), created_at — append-only | 3 ✅ |
-| `hypotheses` | id, audit_id, content (JSON), verdict | 4 |
-| `findings` | id, app, state, severity, cwe, fingerprint, location, first_detected, last_detected | 4 |
-| `evidence` | id, finding_id, audit_id, kind, content (JSON), artifact_file | 4 |
+| `hypotheses` | hypothesis_id, audit_id, fingerprint, state, finding_id, content (JSON with the verification and its evidence) | 4 ✅ |
+| `findings` | finding_id, app, number, state, severity, fingerprint, first/last audit, content (JSON live record) | 4 ✅ |
+| `hunt_rounds`, `audit_reports` | audit_id, round / report, content (JSON) — append-only | 4 ✅ |
 | `tasks` | id, finding_id, state, priority, content (JSON), claimed_by, branch, fix_commit | 5 |
 | `verifications` | id, task_id, audit_id, result, occurred_at | 5 |
 | `decisions` | id, kind, target, justification, expires_at, occurred_at | 4 |

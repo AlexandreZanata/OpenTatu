@@ -1,7 +1,7 @@
 # opentatu-investigator — AI roles of the internal investigator
 
 Layer: **ai** · May depend on: `opentatu-core`, `opentatu-llm` · Status: base ✅ (prompts,
-rendering, fencing); role execution and the cartographer (phase 3) ✅; other roles = phases 4–5
+rendering, fencing); role execution and the cartographer (phase 3) ✅; hunter, verifier, skeptic, reporter (phase 4) ✅; planner = phase 5
 
 ## Responsibility
 
@@ -22,12 +22,12 @@ rendering, fencing); role execution and the cartographer (phase 3) ✅; other ro
 | `src/run.rs` | `run_role`, `RoleCall`, `RoleAnswer`, `RoleOutput`, `MAX_RETRIES` — render, fence, call, validate, retry |
 | `src/variables.rs` | `RunContext::variables` — base-prompt values of the running audit |
 | `src/cartographer.rs` | `CartographerOutput`, `CartographerInputs::blocks`, `asvs_listing` |
+| `src/roles.rs` | `HunterOutput`, `VerifierOutput`, `SkepticOutput`, `ReporterOutput`; input formats `map_excerpt`, `scanner_lines`, `finding_lines`, `hypothesis_lines` |
 | `src/error.rs` | `Error` |
 | `../../prompts/*.md` | the prompt texts (normative, versioned) |
 
-Planned: one module per remaining role (hunter, verifier, skeptic — phase 4; planner,
-reporter — phase 5), each an output type embedding `CommonFields` with `#[serde(flatten)]`
-and implementing `RoleOutput`. The serde type is the schema (ADR-0024).
+Planned: the planner's output type (phase 5), embedding `CommonFields` with
+`#[serde(flatten)]` and implementing `RoleOutput`. The serde type is the schema (ADR-0024).
 
 ## Local rules
 

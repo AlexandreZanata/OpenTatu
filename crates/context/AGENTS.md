@@ -1,7 +1,7 @@
 # opentatu-context — what the AI roles see of the analyzed commit
 
 Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 3 ✅ (tree,
-configuration, cartographer selection); per-entry-point selection = phase 4; diff = phase 7
+configuration, cartographer selection); per-entry-point selection (phase 4) ✅; diff = phase 7
 
 ## Responsibility
 
@@ -18,10 +18,10 @@ configuration, cartographer selection); per-entry-point selection = phase 4; dif
 | `src/files.rs` | `SnapshotFiles` (safe walk, `read_text`, `FileIndex`), `classify`, `FileKind`, ignored directories, secret file patterns |
 | `src/tree.rs` | `render_tree` — `<structure>` (code/config listed, the rest summarized per directory) |
 | `src/selection.rs` | `ContextBudget`, `Selection`, `Excerpt`, `cartographer_code`, `cartographer_config` (ranking signals, packing, excerpts of large files) |
+| `src/related.rs` | `Seed`, `entry_point_code` — handler files + imports/same package up to depth 2 (Go, Rust, JS/TS, Python) |
 | `src/error.rs` | `Error` |
 
-Planned: per-entry-point selection — handler + middlewares + callees up to depth N — for the
-hunter (phase 4); `src/diff.rs` for INCREMENTAL audits (phase 7).
+Planned: `src/diff.rs` for INCREMENTAL audits (phase 7).
 
 ## Local rules
 

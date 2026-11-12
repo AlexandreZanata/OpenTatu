@@ -1,6 +1,6 @@
 # opentatu-memory — what OpenTatu remembers (pure)
 
-Layer: **logic** · May depend on: `opentatu-core` · Status: phase 1 ✅ (memory, history); comparison and dedup = phase 4
+Layer: **logic** · May depend on: `opentatu-core` · Status: phase 1 ✅ (memory, history); comparison and dedup (phase 4) ✅
 
 ## Responsibility
 
@@ -14,10 +14,10 @@ Layer: **logic** · May depend on: `opentatu-core` · Status: phase 1 ✅ (memor
 
 | File | Contents | Phase |
 |---|---|---|
-| `src/working_memory.rs` | ✅ `render_memory` — `MEMORY.md` within ~2,000 tokens; older audits summarized per month; owner notes copied; mapped entry points and ASVS coverage (phase 3) | 1–3 |
+| `src/working_memory.rs` | ✅ `render_memory` — `MEMORY.md` within ~2,000 tokens; older audits summarized per month; owner notes copied; mapped entry points and ASVS coverage (phase 3); open findings and false positives (phase 4) | 1–4 |
 | `src/history.rs` | ✅ `render_history` — one JSON line per `Event` | 1 |
-| `src/comparison.rs` | diff of two audits' findings by fingerprint | 4 |
-| `src/dedup.rs` | match hypotheses against known findings, false positives and closed findings | 4 |
+| `src/comparison.rs` | ✅ `compare` — new / persistent / not re-detected / regressions | 4 |
+| `src/dedup.rs` | ✅ `classify` → `DedupOutcome`, `DismissedBefore` (R08, R09) | 4 |
 
 ## Local rules
 

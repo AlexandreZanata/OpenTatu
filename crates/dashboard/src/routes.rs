@@ -31,6 +31,8 @@ pub fn router(state: DashboardState, config: &DashboardConfig) -> Router {
         .route("/apps/{slug}", get(pages::app::page))
         .route("/audits/{id}", get(pages::audit::page))
         .route("/audits/{id}/coverage", get(pages::coverage::page))
+        .route("/audits/{id}/report", get(pages::report::page))
+        .route("/findings/{id}", get(pages::finding::page))
         .route("/maps/{map_id}", get(pages::map::page))
         .route("/health", get(pages::health::json))
         .route("/assets/app.css", get(assets::stylesheet))
@@ -322,6 +324,154 @@ mod tests {
             let (status, _, _) = get_from(router.clone(), missing, host).await;
             assert_eq!(status, StatusCode::NOT_FOUND, "{missing}");
         }
+    }
+
+    #[tokio::test]
+    async fn findings_hypotheses_and_report_pages_show_the_investigation() {
+        use opentatu_core::{
+            CodeLocation, Confidence, EvidenceItem, EvidenceStep, Fingerprint, FingerprintInput,
+            HypothesisContent, ReportText, Severity, Verdict, Verification,
+        };
+        use opentatu_services::DedupOutcome;
+
+        let services = services().await;
+        services
+            .register_app(opentatu_core::NewApp {
+                slug: opentatu_core::Slug::new("demo").unwrap(),
+                name: "Demo".into(),
+                repo_url: "/srv/demo".into(),
+                branch: "main".into(),
+                stack: vec![],
+                sensitive_data: vec![],
+                lab_url: None,
+            })
+            .await
+            .unwrap();
+        services
+            .create_audit(opentatu_services::NewAudit {
+                app: opentatu_core::Slug::new("demo").unwrap(),
+                kind: opentatu_core::AuditKind::Full,
+                commit: "4c4a5df92ace8d8068e57362a7308e8b9d031b3a".parse().unwrap(),
+                branch: None,
+                requested_by: opentatu_core::Actor::Owner,
+            })
+            .await
+            .unwrap();
+        let audit = services.start_next_audit().await.unwrap().unwrap();
+        let input = opentatu_services::NewHypothesis {
+            content: HypothesisContent {
+                title: "Pedido de outro usuário <b>acessível</b>".into(),
+                category: "Controle de acesso".into(),
+                cwe: "CWE-639".into(),
+                asvs: vec!["V8.2.2".into()],
+                entry_point: None,
+                location: CodeLocation {
+                    file: "api/orders.go".into(),
+                    lines: "10-20".into(),
+                    symbol: "GetOrder".into(),
+                },
+                reasoning: "x".into(),
+                impact_scenario: "x".into(),
+                required_conditions: vec![],
+                how_to_verify: "x".into(),
+                potential_severity: Severity::High,
+                confidence: Confidence::High,
+                origin: "manual_analysis".into(),
+                possible_regression_of: None,
+            },
+            fingerprint: Fingerprint::compute(&FingerprintInput {
+                cwe: "CWE-639",
+                file: "api/orders.go",
+                symbol: "GetOrder",
+                snippet: "x",
+            }),
+            model: "deepseek-v4.1-flash".into(),
+            prompt_version: "hunter@2.0.0".into(),
+            system_notes: vec![],
+        };
+        let outcome = DedupOutcome::New {
+            possibly_same_as: None,
+        };
+        let hypothesis = services
+            .record_hypothesis(&audit, input, &outcome)
+            .await
+            .unwrap()
+            .unwrap();
+        let verification = Verification {
+            verdict: Verdict::Confirmed,
+            justification: "x".into(),
+            evidence: vec![EvidenceItem {
+                evidence_id: None,
+                kind: "code_flow".into(),
+                description: "Sem checagem de dono".into(),
+                steps: vec![EvidenceStep {
+                    file: "api/orders.go".into(),
+                    line: "12".into(),
+                    what_happens: "carrega pedido".into(),
+                }],
+            }],
+            mitigations_found: vec![],
+            regression_test: None,
+            missing_to_conclude: String::new(),
+            model: "deepseek-v4.1-flash".into(),
+            prompt_version: "verifier@1.1.0".into(),
+            system_notes: vec![],
+        };
+        services
+            .record_verification(&hypothesis.hypothesis_id, verification)
+            .await
+            .unwrap();
+        services
+            .record_report(ReportText {
+                audit_id: audit.id.clone(),
+                body_md: "## 1. Resumo executivo\n\nUm achado <script>alto</script>.".into(),
+                memory_summary: String::new(),
+                pending_investigations: vec![],
+                model: "system".into(),
+                prompt_version: "system".into(),
+                created_at: audit.created_at,
+            })
+            .await
+            .unwrap();
+        let router = router_over(services);
+        let host = "127.0.0.1:7878";
+
+        let (status, _, body) = get_from(router.clone(), "/findings/DEMO-SEC-0001", host).await;
+        assert_eq!(status, StatusCode::OK);
+        for expected in [
+            "DEMO-SEC-0001",
+            "Confirmado",
+            "api/orders.go:10-20 (GetOrder)",
+            "AUD-DEMO-20261129-1432-EV-001",
+            "carrega pedido",
+            "Achado confirmado",
+            "&#60;b&#62;",
+        ] {
+            assert!(body.contains(expected), "finding page missing {expected:?}");
+        }
+        let (_, _, body) = get_from(router.clone(), "/audits/AUD-DEMO-20261129-1432", host).await;
+        for expected in [
+            "href=\"/findings/DEMO-SEC-0001\"",
+            "AUD-DEMO-20261129-1432-H-001",
+            "alta",
+            "/audits/AUD-DEMO-20261129-1432/report",
+        ] {
+            assert!(body.contains(expected), "audit page missing {expected:?}");
+        }
+        let (status, _, body) = get_from(
+            router.clone(),
+            "/audits/AUD-DEMO-20261129-1432/report",
+            host,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("## 1. Resumo executivo"));
+        assert!(body.contains("sistema (relatório determinístico)"));
+        assert!(!body.contains("<script>"), "escaped");
+        let (_, _, body) = get_from(router.clone(), "/apps/demo", host).await;
+        assert!(body.contains("Achados abertos") && body.contains("DEMO-SEC-0001"));
+        let (status, _, _) = get_from(router, "/findings/DEMO-SEC-0002", host).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
     }
 
     /// A small validated map: one WebSocket entry point and one app-wide requirement.

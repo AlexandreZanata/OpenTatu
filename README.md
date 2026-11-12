@@ -28,11 +28,12 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 3** (awaiting the owner's review of the first real map) — the
-> cartographer (DeepSeek V4.1 Flash) maps the real entry points of the audited commit,
-> validated against the code, with the OWASP ASVS 5.0.0 coverage matrix; static scanners in isolated containers (phase 2); apps, audits,
-> append-only history and working memory (phase 1); OpenCode Go integration (phase 0).
-> Hunting and verification arrive in phase 4. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> Status: **roadmap phase 4** — OpenTatu investigates: the hunter proposes hypotheses per
+> entry point, the verifier proves or refutes them with evidence from the exact commit, the
+> skeptic challenges every confirmed finding and the system computes its severity; each
+> audit ends with `report.md`, SARIF and OWASP ASVS 5.0.0 coverage. Security map (phase 3),
+> static scanners in isolated containers (phase 2), audits and history (phase 1). Fix tasks
+> over MCP arrive in phase 5. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Quick start
 

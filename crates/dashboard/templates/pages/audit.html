@@ -33,6 +33,15 @@
   {% endif %}
 {% endcall %}
 
+{% call ui::card("Achados desta auditoria") %}
+  {% call ui::findings_table(findings, "Nenhum achado confirmado nesta auditoria.") %}{% endcall %}
+  {% if has_report %}<p><a href="/audits/{{ audit.id }}/report">Ler o relatório da auditoria</a></p>{% endif %}
+{% endcall %}
+
+{% call ui::card("Hipóteses") %}
+  {% call ui::hypotheses_table(hypotheses) %}{% endcall %}
+{% endcall %}
+
 {% call ui::card("Scanners") %}
   {% call ui::scanner_runs_table(runs) %}{% endcall %}
 {% endcall %}

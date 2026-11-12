@@ -28,6 +28,9 @@ it replaces.
 | ASVS requirements and applicable level | `opentatu_core::AsvsCatalog` (`config/asvs/`), `APPLICABLE_LEVEL` | requirement ids or texts typed by hand |
 | What a role sees of the commit | `opentatu_context` (`SnapshotFiles`, `render_tree`, `cartographer_*`) | reading snapshot files in the worker or roles |
 | One AI role call (render, fence, validate, retry) | `opentatu_investigator::run_role` | calling `Llm::generate` for a role directly |
+| Hypothesis identity, memory decisions | `opentatu_memory::classify` + fingerprint of the commit's code (`AiRun::fingerprint`) | fingerprints of model text |
+| Final severity of a finding | `SkepticReview::decide` (`Severity::adjusted`, R18) | severity chosen by a model |
+| Per-audit budget | `crates/worker/src/budget.rs` (`BudgetGuard`) | model calls without asking the guard |
 | How each scanner runs and is normalized | `crates/scanners/src/adapters/<tool>.rs` | tool arguments or output parsing elsewhere |
 | Dashboard routes | `opentatu_dashboard::routes::router` | `.route(...)` elsewhere |
 | UI markup | `crates/dashboard/templates/components/ui.html` | copy markup into pages |
@@ -63,6 +66,15 @@ it replaces.
 | `FileIndex` | What validation needs to know about the commit (implemented by `opentatu-context`) | passing file lists around |
 | `Coverage::compute`, `CoverageSummary`, `RequirementCoverage`, `RequirementStatus` | ASVS coverage matrix, derived (R14) | storing coverage as truth |
 | `SuspiciousInstruction` (`bounded_excerpt`) | Instruction found in analyzed content (R11) | role-specific copies |
+| `Hypothesis`, `HypothesisContent`, `CodeLocation` (`line_range`), `Confidence`, `Verdict` (`state`) | Hypotheses (§C.2) | ad-hoc hypothesis JSON |
+| `Verification` (`evidence_problem`, R05), `EvidenceItem`, `EvidenceStep`, `RegressionTest` | Verifier answer after the system's checks (§C.3, §C.9) | trusting a "confirmed" verdict without evidence |
+| `Finding` (`is_open`, `fix_priority`), `Detection`, `SkepticReview` (`decide`) | Live finding record (§B.7), skeptic review (§C.4, R18) | — |
+| `HuntRound`, `ScannerTriage`, `TriageDecision` | One hunter round (§C.7 step 7) | — |
+| `Comparison` | New / persistent / not re-detected / regressions | — |
+| `ReportText` | Reporter body of an audit | — |
+| `requirement_statuses(checked, failed, unresolved)` | Coverage statuses (ADR-0025, R14) | statuses computed elsewhere |
+| `lenient::any_case` | Enum values written by models in any letter case | — |
+| `duration_label(seconds)` | pt-BR durations (report header, dashboard) | — |
 | `RecordedLlmUsage` | One line of `llm_usage.jsonl` | ad-hoc usage rows |
 | `Timestamp` | Whole-second instant; `iso()`, `display_pt_br()`, `local_minute()`, `local_month()`, `seconds_since()`, `start_of_month()` | `jiff`/`chrono` types outside core |
 | `Clock`, `SystemClock`, `FixedClock` | Injectable "now" (R03); fixed clock for tests | system time calls |
@@ -93,11 +105,14 @@ it replaces.
 | `scanner_results::{insert_run, list_by_audit}` | Normalized scanner results (append-only) + `SCANNER_RAN` |
 | `maps::{insert, get, by_audit, latest_by_app}` | Security map versions (append-only) + `MAP_UPDATED` |
 | `llm_usage::list_by_audit` | Model calls of one audit |
+| `investigation::{insert_hypothesis, update_hypothesis, hypothesis, hypotheses_of_audit, hypotheses_of_finding, hypothesis_count, dismissed_hypotheses, evidence_count}` | Hypotheses (derived state with events) |
+| `investigation::{next_finding_number, insert_finding, update_finding, finding, findings_of_app}` | Findings (numbers never reused) |
+| `investigation::{insert_round, rounds_of_audit, insert_report, report_of_audit}` | Hunter rounds and report texts (append-only) |
 | `health::schema_version` | Highest applied migration |
 | `rows::{parsed, parsed_opt, json, unsigned, to_i64}` (crate-private) | Typed column reading with column-named errors — use in every repository |
 
-Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`, `maps`
-(see `migrations/`). Test fixture: `audits::tests::insert_queued` (app + queued audit).
+Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`, `maps`,
+`hypotheses`, `findings`, `hunt_rounds`, `audit_reports` (see `migrations/`). Test fixture: `audits::tests::insert_queued` (app + queued audit).
 
 ## opentatu-services (`crates/services`)
 
@@ -117,6 +132,9 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`,
 | `Services::record_suspicious_instructions(audit, Reporter, items)` | One `SUSPICIOUS_INSTRUCTION_DETECTED` event per item (R11) |
 | `Services::current_map`, `map_of_audit`, `map`, `coverage_of_audit` | Map and coverage queries |
 | `Services::llm_usage_of_audit` | Calls of one audit (`llm_usage.jsonl`, `audit.json`) |
+| `Services::record_hypothesis(&Audit, NewHypothesis, &DedupOutcome)` | Hypothesis by memory decision: new, persistent, regression (R09), known false positive (R08), accepted risk |
+| `Services::record_verification`, `record_review`, `record_hunt_round`, `record_report`, `record_budget_exhausted` | Verdict (evidence ids, finding creation), skeptic review, rounds, report, R13 |
+| `Services::hypotheses_of_audit`, `hypothesis`, `hunt_rounds`, `findings_of_app`, `finding`, `finding_timeline`, `evidence_of_finding`, `dismissed_hypotheses`, `dismissed_before`, `false_positives`, `report_of_audit`, `comparison_of_audit` | Investigation queries (`DedupOutcome`, `DismissedBefore` re-exported from memory) |
 | `Services::record_llm_usage(&LlmUsage)` | Stores one model call, stamped with the clock |
 | `Services::llm_usage_this_month(model)` → `UsageTotals` | Monthly totals (plan share, §A.2) |
 
@@ -133,11 +151,12 @@ Tables: `apps`, `snapshots`, `audits`, `events`, `llm_usage`, `scanner_results`,
 | `view::Badge`, `view::severity_badge`, `view::audit_status_badge` | Badge data; pt-BR labels |
 | `view::{audit_kind_label, event_label}` | pt-BR names of audit kinds and event kinds |
 | `view::{AuditRow, audit_row, TimelineEntry, timeline_entry, AppSummary, app_summary}` | Rows for the table, timeline and apps list components |
-| `view::{AuditSummary, audit_summary, duration_label}` | Audit page header (pt-BR durations) |
+| `view::{AuditSummary, audit_summary}` | Audit page header |
 | `view::{ScannerRunRow, scanner_run_row, ScannerResultRow, scanner_result_row}` | Rows of the scanner tables |
 | `view::{MapSummary, map_summary, EntryPointRow, entry_point_row, authentication_badge}` | Map header and entry point rows |
 | `view::{Item, KeyValue}` + `component_items`, `trust_boundary_items`, `sensitive_data_items`, `integration_items`, `dependency_items`, `authentication_rows`, `authorization_rows`, `configuration_rows`, `infrastructure_rows`, `requirement_lines` | Map sections (in `view/map.rs`) |
 | `view::{CoverageRow, coverage_row, requirement_status_badge}` | Coverage matrix rows |
+| `view::{FindingRow, finding_row, HypothesisRow, hypothesis_row, finding_state_badge, confidence_label}` | Findings and hypotheses (in `view/findings.rs`) |
 | `PageError` | Logs details, shows a generic pt-BR error page |
 
 UI components (`templates/components/ui.html`, import as `ui`):
@@ -158,6 +177,9 @@ UI components (`templates/components/ui.html`, import as `ui`):
 | `ui::entry_points_table(rows)` | Entry points of a map (`view::EntryPointRow`) |
 | `ui::coverage_summary(summary)` | ASVS coverage numbers (`CoverageSummary`) |
 | `ui::coverage_table(rows)` | Applicable requirements (`view::CoverageRow`) |
+| `ui::findings_table(rows, empty)` | Findings (`view::FindingRow`) |
+| `ui::hypotheses_table(rows)` | Hypotheses of an audit (`view::HypothesisRow`) |
+| `ui::report_text(text)` | Report body as escaped preformatted text |
 
 CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge`, `c-empty`,
 `c-list`, `c-meta`, `c-table`, `c-timeline`,
@@ -210,6 +232,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `classify`, `FileKind` | Source / Config / Doc / Secret / Other |
 | `render_tree(files, max_lines)` | `<structure>` block |
 | `cartographer_code`, `cartographer_config` → `Selection { excerpts, left_out, bytes }` | Ranked, line-numbered `<code>` / `<config>` within `ContextBudget::CARTOGRAPHER` |
+| `entry_point_code(files, seeds: &[Seed], budget, per_file)` | Handler files + what they reach (imports, same package) up to depth 2 |
 
 ## opentatu-investigator role execution (`crates/investigator`)
 
@@ -218,7 +241,9 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `run_role::<T: RoleOutput>(&Llm, RoleCall)` → `RoleAnswer<T>` | Render, fence, call, validate, ≤ 2 retries (§C.7) |
 | `RunContext::variables()` | Base-prompt values of the running audit |
 | `CartographerOutput`, `CartographerInputs::blocks`, `asvs_listing` | The cartographer's output type and input blocks |
-| `Block::Asvs` | `<asvs>` input block |
+| `HunterOutput`, `VerifierOutput`, `SkepticOutput` (`dismissed`), `ReporterOutput` | The other roles' outputs (`roles.rs`) |
+| `map_excerpt`, `scanner_lines`, `finding_lines`, `hypothesis_lines` | Text formats of system-built inputs |
+| `Block::{Asvs, Hypotheses, Finding}` | `<asvs>`, `<hypotheses>`, `<finding>` input blocks |
 
 ## opentatu-snapshots (`crates/snapshots`)
 
@@ -235,12 +260,17 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 |---|---|
 | `render_memory(&MemoryInput)` | `MEMORY.md` (§B.9), deterministic, ~2,000 tokens max |
 | `render_history(&[Event])` | `history.jsonl` lines (§B.1) |
+| `classify(fingerprint, cwe, file, symbol, findings, dismissed, earlier)` → `DedupOutcome` | Memory decision for a hypothesis (R08, R09) |
+| `compare(audit, previous, findings)` → `Comparison` | New / persistent / not re-detected / regressions |
 
 ## opentatu-reports (`crates/reports`)
 
 | Component | Purpose |
 |---|---|
-| `AuditRecord::from_audit(&Audit)`, `with_scanners`, `with_ai`, `with_usage`, `with_coverage`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
+| `AuditRecord::from_audit(&Audit)`, `with_scanners`, `with_ai`, `with_usage`, `with_results(AuditResults)`, `with_coverage`, `to_json()` | `audit.json` (§B.5); uncomputed sections are `null` (R14) |
+| `ReportData`, `ReportHeader`, `render_report`, `fallback_body`, `FindingSummary`, `OpenHypothesis`, `HypothesisCounts` | `report.md`: system data, R17 header, deterministic body |
+| `findings_sarif(findings, version)` | `findings.sarif` (SARIF 2.1.0) |
+| `FindingRecord::new(finding, evidence, events)` | `findings/<ID>.json` (§B.7) |
 
 ## opentatu-worker (`crates/worker`)
 
@@ -249,13 +279,13 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Worker::{new, run_once, drain, run}` | Claims and runs queued audits; failures end the audit, not the worker |
 | `Worker::new(services, snapshots, scanners, layout)`, `with_ai(AiSettings)` | Takes an `Arc<dyn ScannerSuite>`; AI steps need `AiSettings { llm, owner }` |
 | `ServicesUsageRecorder` | `UsageRecorder` port over `Services` (worker and binary) |
-| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far (snapshot, scanners, map, artifacts) and the limitations of the missing ones |
+| `pipeline::{run, Step, PENDING_STEPS}` | §C.7 steps implemented so far (snapshot, scanners, map, hunt, verify, report, artifacts) and the limitations of the missing ones |
 
 ## Planned crates (structure only)
 
 | Crate | Phase | Planned components (see the crate's AGENTS.md) |
 |---|---|---|
-| `opentatu-context` (`crates/context`) | 4, 7 | per-entry-point selection (hunter), diff (INCREMENTAL) |
+| `opentatu-context` (`crates/context`) | 7 | diff (INCREMENTAL) |
 | `opentatu-mcp` (`crates/mcp`) | 5 | the eight MCP tools of §E.6 |
 
 ## Binary and tooling

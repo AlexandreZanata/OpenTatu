@@ -36,6 +36,10 @@ opentatu_core::text_enum! {
         Memory => "memory",
         /// OWASP ASVS requirements that may apply (system-provided catalog).
         Asvs => "asvs",
+        /// Hypotheses already recorded in this audit (hunter rounds).
+        Hypotheses => "hypotheses",
+        /// One confirmed finding with its verification (skeptic).
+        Finding => "finding",
     }
 }
 

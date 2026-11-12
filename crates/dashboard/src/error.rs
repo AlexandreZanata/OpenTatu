@@ -41,7 +41,9 @@ impl From<opentatu_services::Error> for PageError {
         match error {
             opentatu_services::Error::UnknownApp(_)
             | opentatu_services::Error::UnknownAudit(_)
-            | opentatu_services::Error::UnknownMap(_) => Self::NotFound,
+            | opentatu_services::Error::UnknownMap(_)
+            | opentatu_services::Error::UnknownFinding(_)
+            | opentatu_services::Error::UnknownHypothesis(_) => Self::NotFound,
             other => Self::Internal(other.to_string()),
         }
     }

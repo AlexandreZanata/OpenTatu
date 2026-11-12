@@ -1,6 +1,6 @@
 //! Use case errors.
 
-use opentatu_core::{AuditId, MapId, Slug};
+use opentatu_core::{AuditId, FindingId, HypothesisId, MapId, Slug};
 
 /// Errors of `opentatu-services`.
 #[derive(Debug, thiserror::Error)]
@@ -24,6 +24,14 @@ pub enum Error {
     /// No audit with this ID.
     #[error("audit `{0}` does not exist")]
     UnknownAudit(AuditId),
+
+    /// No hypothesis with this ID.
+    #[error("hypothesis `{0}` does not exist")]
+    UnknownHypothesis(HypothesisId),
+
+    /// No finding with this ID.
+    #[error("finding `{0}` does not exist")]
+    UnknownFinding(FindingId),
 
     /// No map version with this ID.
     #[error("map `{0}` does not exist")]

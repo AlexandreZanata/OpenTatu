@@ -47,12 +47,35 @@ pub struct AuditRecord {
     pub scanners: Option<BTreeMap<String, String>>,
     /// Model calls of the audit: count, tokens and cost (R17).
     pub usage: Option<UsageTotals>,
-    /// Finding counts (phase 4+).
-    pub results: Option<serde_json::Value>,
+    /// Hypothesis and finding counts (`null` until the hunter ran, R14).
+    pub results: Option<AuditResults>,
     /// ASVS coverage summary (R14); `null` when no map was produced.
     pub coverage: Option<CoverageSummary>,
     /// What this audit did not cover.
     pub limitations: Vec<String>,
+}
+
+/// The `results` section of `audit.json` (spec §B.5).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct AuditResults {
+    /// Hypotheses recorded.
+    pub hypotheses: usize,
+    /// Confirmed (or persistent).
+    pub confirmed: usize,
+    /// Dismissed.
+    pub dismissed: usize,
+    /// Inconclusive.
+    pub inconclusive: usize,
+    /// First detected in this audit.
+    pub new: usize,
+    /// Detected in this audit and before.
+    pub persistent: usize,
+    /// Open findings not re-detected (not closed, R06).
+    pub fixed_since_previous: usize,
+    /// Regressions (R09).
+    pub regressions: usize,
+    /// Open findings of this audit by severity.
+    pub by_severity: BTreeMap<String, usize>,
 }
 
 impl AuditRecord {
@@ -104,6 +127,13 @@ impl AuditRecord {
     #[must_use]
     pub fn with_usage(mut self, usage: UsageTotals) -> Self {
         self.usage = (usage.calls > 0).then_some(usage);
+        self
+    }
+
+    /// Sets the results section.
+    #[must_use]
+    pub fn with_results(mut self, results: Option<AuditResults>) -> Self {
+        self.results = results;
         self
     }
 

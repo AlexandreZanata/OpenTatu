@@ -2,7 +2,12 @@
 //! `templates/components/ui.html`, and the ONLY mapping of domain values to owner-facing
 //! (pt-BR) text and CSS modifiers.
 
+mod findings;
 mod map;
+
+pub use findings::{
+    FindingRow, HypothesisRow, confidence_label, finding_row, finding_state_badge, hypothesis_row,
+};
 
 pub use map::{
     CoverageRow, EntryPointRow, Item, KeyValue, MapSummary, authentication_badge,
@@ -144,15 +149,6 @@ pub fn audit_row(audit: &Audit) -> AuditRow {
     }
 }
 
-/// `75` → `"1 min 15 s"`.
-pub fn duration_label(seconds: i64) -> String {
-    match (seconds / 60, seconds % 60) {
-        (0, s) => format!("{s} s"),
-        (m, 0) => format!("{m} min"),
-        (m, s) => format!("{m} min {s} s"),
-    }
-}
-
 /// Header data of the audit page.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuditSummary {
@@ -194,7 +190,7 @@ pub fn audit_summary(audit: &Audit) -> AuditSummary {
         completed_at: audit.completed_at,
         duration: audit
             .duration_seconds()
-            .map_or_else(|| "—".to_owned(), duration_label),
+            .map_or_else(|| "—".to_owned(), opentatu_core::duration_label),
         limitations: audit.limitations.clone(),
     }
 }
@@ -361,9 +357,6 @@ mod tests {
 
     #[test]
     fn durations_and_scanner_rows_read_naturally_in_pt_br() {
-        assert_eq!(duration_label(42), "42 s");
-        assert_eq!(duration_label(120), "2 min");
-        assert_eq!(duration_label(4507), "75 min 7 s");
         let run = ScannerRunSummary {
             scanner: opentatu_core::ScannerKind::Semgrep,
             occurred_at: "2026-11-29T14:33:00-03:00".parse().unwrap(),

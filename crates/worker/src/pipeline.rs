@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 
 use opentatu_core::{Audit, AuditStatus, ScannerKind};
 
-use crate::{Error, Worker, artifacts, cartography};
+use crate::ai_run::AiRun;
+use crate::{Error, Worker, artifacts, cartography, hunt, reporting, verification};
 
 opentatu_core::text_enum! {
     /// Pipeline steps recorded as the audit checkpoint.
@@ -16,16 +17,21 @@ opentatu_core::text_enum! {
         Scanners => "SCANNERS",
         /// §C.7 step 5: the cartographer's map was stored (or became a limitation).
         Map => "MAP",
-        /// §C.7 step 15: artifacts written (`audit.json`, `history.jsonl`, `MEMORY.md`).
+        /// §C.7 steps 7–8: hunter rounds and deduplication.
+        Hunt => "HUNT",
+        /// §C.7 steps 9–11: verifier, skeptic, finding ids.
+        Verify => "VERIFY",
+        /// §C.7 step 14: report text recorded.
+        Report => "REPORT",
+        /// §C.7 step 15: artifacts written.
         Artifacts => "ARTIFACTS",
     }
 }
 
-/// Owner-facing (pt-BR) limitations of every audit while the analysis steps of spec §C.7
-/// (6–14) do not exist. Each later phase removes the sentence of the step it implements.
+/// Owner-facing (pt-BR) limitations of every audit while steps of spec §C.7 do not exist.
+/// Each later phase removes the sentence of the step it implements.
 pub const PENDING_STEPS: &[&str] = &[
-    "Nenhum requisito OWASP ASVS verificado: a cobertura lista os requisitos aplicáveis como não testados até a fase 4.",
-    "Nenhuma hipótese investigada: caçador, verificador e revisor cético ainda não executados.",
+    "Tarefas de correção não geradas: o planejador e o servidor MCP chegam na fase 5.",
     "Testes dinâmicos não executados (sem laboratório).",
 ];
 
@@ -33,22 +39,36 @@ pub const PENDING_STEPS: &[&str] = &[
 pub async fn run(worker: &Worker, audit: Audit) -> Result<Audit, Error> {
     let source = snapshot(worker, &audit).await?;
     let mut limitations = scanners(worker, &audit, &source).await?;
-    limitations.extend(cartography::run(worker, &audit, &source).await?);
-    worker
-        .services
-        .set_audit_checkpoint(&audit.id, Step::Map.as_str())
-        .await?;
+    let ai = AiRun::start(worker, &audit, &source).await?;
+    match &ai {
+        None => limitations.push(cartography::NO_AI.to_owned()),
+        Some(run) => {
+            limitations.extend(cartography::run(run).await?);
+            checkpoint(worker, &audit, Step::Map).await?;
+            limitations.extend(hunt::run(run).await?);
+            checkpoint(worker, &audit, Step::Hunt).await?;
+            limitations.extend(verification::run(run).await?);
+            checkpoint(worker, &audit, Step::Verify).await?;
+            limitations.extend(run.budget.limitation());
+        }
+    }
     limitations.extend(PENDING_STEPS.iter().map(|s| (*s).to_owned()));
+    limitations.extend(reporting::run(worker, ai.as_ref(), &audit, &limitations).await?);
+    checkpoint(worker, &audit, Step::Report).await?;
     let finished = worker
         .services
         .finish_audit(&audit.id, AuditStatus::Partial, &limitations)
         .await?;
     artifacts::write_all(worker, &finished).await?;
-    worker
-        .services
-        .set_audit_checkpoint(&audit.id, Step::Artifacts.as_str())
-        .await?;
+    checkpoint(worker, &audit, Step::Artifacts).await?;
     Ok(finished)
+}
+
+async fn checkpoint(worker: &Worker, audit: &Audit, step: Step) -> Result<(), Error> {
+    Ok(worker
+        .services
+        .set_audit_checkpoint(&audit.id, step.as_str())
+        .await?)
 }
 
 /// §C.7 step 2: mirror the repository and check out the audit's exact commit. Returns the

@@ -10,8 +10,9 @@ use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    AuditSummary, Layout, MapSummary, ScannerResultRow, ScannerRunRow, TimelineEntry,
-    audit_summary, map_summary, scanner_result_row, scanner_run_row, timeline_entry,
+    AuditSummary, FindingRow, HypothesisRow, Layout, MapSummary, ScannerResultRow, ScannerRunRow,
+    TimelineEntry, audit_summary, finding_row, hypothesis_row, map_summary, scanner_result_row,
+    scanner_run_row, timeline_entry,
 };
 
 /// Template data of the audit page.
@@ -24,6 +25,9 @@ struct AuditPage {
     results: Vec<ScannerResultRow>,
     map: Option<MapSummary>,
     coverage: Option<CoverageSummary>,
+    findings: Vec<FindingRow>,
+    hypotheses: Vec<HypothesisRow>,
+    has_report: bool,
     timeline: Vec<TimelineEntry>,
 }
 
@@ -54,6 +58,20 @@ pub async fn page(
             .collect(),
         map: services.map_of_audit(&id).await?.as_ref().map(map_summary),
         coverage: services.coverage_of_audit(&id).await?.map(|c| c.summary),
+        findings: services
+            .findings_of_app(&audit.app)
+            .await?
+            .iter()
+            .filter(|f| f.last_detected.audit_id == id)
+            .map(finding_row)
+            .collect(),
+        hypotheses: services
+            .hypotheses_of_audit(&id)
+            .await?
+            .iter()
+            .map(hypothesis_row)
+            .collect(),
+        has_report: services.report_of_audit(&id).await?.is_some(),
         timeline: events.iter().map(timeline_entry).collect(),
     })
 }

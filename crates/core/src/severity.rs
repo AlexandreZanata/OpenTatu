@@ -73,7 +73,8 @@ impl Severity {
 }
 
 /// Inputs of the fixed severity adjustments (spec §C.8).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct SeverityAdjustments {
     /// +1 level: involves sensitive data listed in the app profile.
     pub involves_sensitive_data: bool,

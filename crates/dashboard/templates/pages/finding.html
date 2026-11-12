@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+
+{% block title %}{{ finding.id }} · OpenTatu{% endblock %}
+
+{% block content %}
+{% call ui::card(finding.id) %}
+  <p><strong>{{ finding.title }}</strong></p>
+  {% call ui::key_values(details) %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Revisão do revisor cético") %}
+  {% call ui::text_list(review, "Ainda não revisado.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Evidências") %}
+  {% call ui::item_list(evidence, "Nenhuma evidência registrada.") %}{% endcall %}
+{% endcall %}
+
+{% call ui::card("Linha do tempo") %}
+  {% call ui::timeline(timeline) %}{% endcall %}
+{% endcall %}
+{% endblock %}

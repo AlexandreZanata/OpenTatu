@@ -20,7 +20,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::{AuditId, CommitHash, MapId, ScannerKind, Slug};
+use crate::{AuditId, CommitHash, EvidenceId, FindingId, MapId, ScannerKind, Slug};
 
 /// Paths of every artifact under the data directory.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,6 +79,40 @@ impl DataLayout {
     /// `audit.json` (spec §B.5).
     pub fn audit_record_file(&self, audit: &AuditId) -> PathBuf {
         self.audit_dir(audit).join("audit.json")
+    }
+
+    /// `report.md` (pt-BR report, spec §B.4).
+    pub fn report_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("report.md")
+    }
+
+    /// `hypotheses.json`: hypotheses and hunter rounds of the audit.
+    pub fn hypotheses_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("hypotheses.json")
+    }
+
+    /// `findings.json`: findings detected in the audit.
+    pub fn findings_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("findings.json")
+    }
+
+    /// `findings.sarif`: SARIF 2.1.0 export.
+    pub fn sarif_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("findings.sarif")
+    }
+
+    /// `evidence/<EV>.json`.
+    pub fn evidence_file(&self, evidence: &EvidenceId) -> PathBuf {
+        self.audit_dir(evidence.audit())
+            .join("evidence")
+            .join(format!("{}.json", evidence.as_str()))
+    }
+
+    /// `apps/<slug>/findings/<ID>.json`: live record of a finding (spec §B.7).
+    pub fn finding_file(&self, finding: &FindingId) -> PathBuf {
+        self.app_dir(finding.slug())
+            .join("findings")
+            .join(format!("{}.json", finding.as_str()))
     }
 
     /// `coverage.json` (ASVS × entry points, spec §B.4).

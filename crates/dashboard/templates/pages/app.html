@@ -22,6 +22,10 @@
   {% endif %}
 {% endcall %}
 
+{% call ui::card("Achados abertos") %}
+  {% call ui::findings_table(findings, "Nenhum achado aberto.") %}{% endcall %}
+{% endcall %}
+
 {% call ui::card("Auditorias") %}
   {% call ui::audits_table(audits) %}{% endcall %}
 {% endcall %}
