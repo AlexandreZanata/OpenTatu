@@ -628,13 +628,28 @@ Template:
   that branch is audited (FULL, and INCREMENTAL on push in phase 7). While the fix is not in
   the branch, the finding's code there is not a regression. R06 still holds: only
   OpenTatu's reverification approves; merging alone closes nothing that was not approved.
+- **How "reached the branch" is detected** (decided by the owner, 2026-11-12): in layers,
+  deterministic and free first, for every finding awaiting merge, each time the app's
+  configured branch is audited:
+  1. *History:* the approved commit is an ancestor of the branch head (merge, fast-forward).
+  2. *Same change, other hash:* squash and rebase merges rewrite the commit, so the change
+     is recognized by git patch identity — every commit of the fix branch has an
+     equivalent in the branch (`git cherry`, rebase), or one commit there has the
+     patch-id of the whole fix diff (base of the fix branch → approved commit; squash).
+     The patch-ids are computed and stored **at approval**: merged branches are often
+     deleted, and their commits can then vanish from the mirror.
+  3. *Semantic safety net:* the finding's identifying code (§B.8) is gone from the branch
+     head **and** a short reverification of the original hypothesis on that head passes
+     (one verifier call). Covers merges with conflicts or edits, and a fix written another
+     way by someone else.
+  If no layer confirms, the finding stays "fix approved, awaiting merge", shown as such on
+  the dashboard and in `MEMORY.md`.
 - **Alternatives considered:** (a) keep R09 literal — a misleading "regression" and a raised
   priority until the merge; (b) apply the ancestry rule only to the label — the finding
-  flips between CLOSED and reopened.
+  flips between CLOSED and reopened. For the detection: history only (misses every squash
+  and rebase merge); patch-id only (misses merges with conflicts or edits); the model only
+  (not deterministic, and a call per finding per audit where git usually answers free).
 - **Consequences:** spec §A.6 (`FindingState`), the `FINDING_CLOSED` trigger, the dashboard,
-  `MEMORY.md` ("approved, awaiting merge") and R09 detection change in phase 7. To decide
-  then: how "reached the branch" is detected when the merge rewrites the commit (squash or
-  rebase merges never make the approved commit an ancestor) — e.g. the identifying code is
-  gone from the branch head and a short reverification of the original hypothesis there
-  passes.
+  `MEMORY.md` ("approved, awaiting merge"), R09 detection and the snapshots crate (patch-ids,
+  `git cherry`) change in phase 7.
 
