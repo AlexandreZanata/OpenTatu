@@ -63,3 +63,9 @@ system-owned lab report section. `tests/support/lab.rs` covers orchestration/fix
 Actual role-call usage also supplies embedded prompt-version provenance when a proposal
 succeeds but the dynamic follow-up fails. This assumes the existing single-process audit
 lifetime; cross-binary resumption remains Q-032.
+
+Phase 9: `src/host.rs::inspect_host` orchestrates one explicit owner inspection through
+`HostSuite` and services. Each query start is committed before network access and each
+result is independently validated. No audit queue, AI calls, watcher or scheduled host
+collection is added. `tests/host_inspection.rs` covers hermetic admission/history/failures
+and opt-in actual loopback SSH acceptance for the Abastevo fixture.

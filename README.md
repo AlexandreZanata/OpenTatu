@@ -28,9 +28,11 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 8 complete** — offline QEMU lab verified on a fictitious local
-> Abastevo fixture (2026-11-13), with per-audit/commit approval, actual HTTP evidence and
-> passive ZAP. Setup and supported scope: [docs/LAB.md](docs/LAB.md).
+> Status: **roadmap phase 9 complete** — explicit read-only Linux host inventory over
+> restricted SSH, verified with a disposable local Abastevo-associated fixture (2026-11-13).
+> Setup, supported queries and rotation: [docs/HOST_INSPECTION.md](docs/HOST_INSPECTION.md).
+> The phase-8 offline QEMU lab keeps per-audit/commit approval, actual HTTP evidence and
+> passive ZAP: [docs/LAB.md](docs/LAB.md).
 > Incremental audits use changed-code scope,
 > configured-branch polling and layered detection of approved fixes reaching the branch.
 > The phase-6 benchmark measures how well OpenTatu finds known flaws in
@@ -105,3 +107,19 @@ every ten minutes. Set `--watch-minutes N` or `OPENTATU_WATCH_MINUTES`; zero dis
 --kind incremental`. No baseline means a clear request for a FULL first, never an automatic
 FULL. Fix approval is displayed as awaiting merge until branch integration is detected.
 No webhook, monthly FULL schedule or PAUSED resumption is enabled.
+
+
+### Read-only host inspection
+
+Register the app, provision the dedicated restricted account, verify the server key and
+prepare an explicit owner-controlled profile as described in
+[docs/HOST_INSPECTION.md](docs/HOST_INSPECTION.md). Then invoke one inspection:
+
+```bash
+cargo run -p opentatu -- --hosts-config /absolute/path/hosts.local.toml host inspect --app myapp --profile myapp-vpn
+cargo run -p opentatu -- host history --app myapp
+```
+
+Only OS identity/version, Linux kernel release and minimized TCP/UDP listeners are queried.
+Every attempt is recorded; no arbitrary command, model shell, scheduling or remediation.
+Partial/interrupted inventory never implies host safety. No host connects automatically.

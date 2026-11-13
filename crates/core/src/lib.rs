@@ -21,6 +21,7 @@ pub mod event;
 pub mod finding;
 pub mod finding_state;
 pub mod fingerprint;
+pub mod host;
 pub mod hypothesis;
 pub mod ids;
 pub mod lab;
@@ -49,6 +50,10 @@ pub use event::{Actor, Event, EventKind, NewEvent};
 pub use finding::{Comparison, Detection, Finding, ReportText, SkepticReview};
 pub use finding_state::FindingState;
 pub use fingerprint::{ContentHasher, Fingerprint, FingerprintInput};
+pub use host::{
+    HostBindScope, HostCommand, HostCommandRun, HostFailure, HostInspection, HostListener,
+    HostObservation, HostPolicy, HostResult, HostTransport, MAX_HOST_LISTENERS,
+};
 pub use hypothesis::{
     CodeLocation, Confidence, EvidenceItem, EvidenceStep, HuntRound, Hypothesis, HypothesisContent,
     RegressionTest, ScannerTriage, TriageDecision, Verdict, Verification,

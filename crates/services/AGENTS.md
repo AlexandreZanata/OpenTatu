@@ -63,3 +63,8 @@ Phase 8: `src/lab.rs` owns `create_lab_audit`, `approve_lab_audit`, `lab_approve
 `start_lab_run`, `complete_lab_run`, `lab_runs` and the persistence proof gate. Grants bind
 one queued audit/commit/profile, case source/symbol/CWE and cap. Completion recomputes outcomes;
 decisive lab verification and fix/semantic reverification require matching stored proof.
+
+Phase 9: `src/host.rs` admits explicit owner-only inspections for registered apps, enforces
+policy identity and exactly-once ordered queries, revalidates bounded observations and
+computes collection coverage. `host_inspection`/`host_inspections` expose minimized history.
+It does not grant host execution to model or MCP callers.

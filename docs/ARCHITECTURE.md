@@ -259,3 +259,18 @@ No new crate or internal dependency edge is introduced. Database projection `lab
 and system report/UI sections preserve provenance and failures. Lab resource/time limits
 are bounded by the audit budget. Static analysis remains available with declared missing
 dynamic coverage. See ADR-0034 and [LAB.md](LAB.md).
+
+## Phase 9 explicit live inventory
+
+`host inspect` wires the existing services and scanners `HostSuite` port to the worker
+`inspect_host` orchestrator. Services admits one explicit owner invocation for a registered
+app/profile, stamps its number/time and commits each fixed query before SSH access.
+`SshHosts` validates the endpoint/pinned public host key/private credential file, runs the
+fixed noninteractive SSH argv and validates the bounded receipt. The same executable
+serves as an unprivileged remote forced collector, with no dotenv/DB/model initialization.
+
+Migration 0010 projects live inspections and decided-once commands from their transactional
+events. Inventory has no source commit or audit kind and does not affect findings, tasks
+or ASVS coverage. CLI history and the app page read this minimized projection. Existing
+lab/static/model paths are unchanged; no new crate or internal dependency edge. See
+ADR-0035 and [HOST_INSPECTION.md](HOST_INSPECTION.md).

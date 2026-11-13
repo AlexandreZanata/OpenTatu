@@ -383,3 +383,22 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
   `DataLayout::lab_runs_file`; dashboard `lab_run_item` reuses `Item`/item-list.
 - CLI `--lab-config`, `lab profile|approve`, `audit create --approve-lab`, strict hidden
   `lab guest`; schema example/runbook in `config/lab.example.toml` / `docs/LAB.md`.
+
+## Phase 9 additions and extensions
+
+- Core `HostCommand` (exact requests), `HostPolicy`, `HostObservation`, `HostListener`,
+  `HostTransport`, `HostBindScope`, `HostFailure`, `HostResult`, `HostCommandRun`,
+  `HostInspection` and `MAX_HOST_LISTENERS`; no alternate audit/finding model.
+- DB migration 0010, `host::{next_number,insert,get,list,start_command,complete_command,complete}`;
+  services `start_host_inspection`, `start_host_command`, `complete_host_command`,
+  `complete_host_inspection`, `host_inspection`, `host_inspections`.
+- Scanners `HostsConfig`, `HostProfile`, `HostSuite`, `SshHosts`, `collect_host`,
+  `HOST_TIMEOUT_SECONDS`, `HOST_OUTPUT_BYTES`; `testing::FakeHosts`; existing single process
+  constructor extended through `engine::bounded_execute`, also reused by lab helpers.
+- Worker `inspect_host`: explicit one-shot orchestration, independent receipt checks,
+  transactional before/after trail, no queue/model/scheduler coupling.
+- CLI explicit `--hosts-config`, `host profile|inspect|history`, forced `host collect`,
+  `config::host_original_command` (no dotenv/DB in collector); configuration/runbook in
+  `config/hosts.example.toml` and `docs/HOST_INSPECTION.md`.
+- Dashboard `host_inspection_item` reuses Item/item-list on the app page; four new event
+  labels reuse the timeline. No new CSS, UI execution authority or MCP host tools.

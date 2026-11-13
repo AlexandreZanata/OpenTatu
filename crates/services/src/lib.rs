@@ -17,6 +17,7 @@ mod apps;
 mod audits;
 mod error;
 mod health;
+mod host;
 mod investigation;
 mod lab;
 mod maps;

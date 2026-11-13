@@ -10,6 +10,9 @@ use opentatu_core::{AiRole, AuditKind, ScannerKind, TaskState};
 #[derive(Debug, Parser)]
 #[command(name = "opentatu", version)]
 pub struct Cli {
+    /// Explicit owner SSH profiles; omitted means no host connection is available.
+    #[arg(long, global = true)]
+    pub hosts_config: Option<PathBuf>,
     /// Explicit owner lab profiles; omitted means no VM execution.
     #[arg(long, global = true)]
     pub lab_config: Option<PathBuf>,
@@ -71,6 +74,9 @@ pub enum LabCommand {
 /// Top-level commands.
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Explicit read-only Linux host inventory, without scheduling or remediation.
+    #[command(subcommand)]
+    Host(HostCommand),
     /// Review or authorize offline QEMU laboratory execution.
     #[command(subcommand)]
     Lab(LabCommand),
@@ -120,6 +126,41 @@ pub enum Command {
     /// Database commands.
     #[command(subcommand)]
     Db(DbCommand),
+}
+
+/// `opentatu host ...` — owner-only inspection and minimized history.
+#[derive(Debug, Subcommand)]
+pub enum HostCommand {
+    /// Review one non-secret digest and the complete fixed query set; no connection.
+    Profile {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+        /// Explicit configured host profile name.
+        #[arg(long)]
+        profile: String,
+    },
+    /// Authorize and run exactly one inspection, then print normalized JSON.
+    Inspect {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+        /// Explicit configured host profile name.
+        #[arg(long)]
+        profile: String,
+    },
+    /// Read past minimized inspections without connecting to any host.
+    History {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+        /// Most recent inspections, up to 50.
+        #[arg(long, default_value_t = 10)]
+        limit: u32,
+    },
+    /// Forced SSH collector: accepts only exact SSH_ORIGINAL_COMMAND requests.
+    #[command(hide = true)]
+    Collect,
 }
 
 /// `opentatu app ...`

@@ -128,3 +128,23 @@ ignored storage; the planted Abastevo disclosure reproduces with 200/200, then t
 commit gives 200/403. Both require passive ZAP completion. The prompt-regression benchmark
 ended PARTIAL at the existing FULL budget and matched 3/33 known flaws; this lower recall
 is documented as a quality limitation in ROADMAP, not treated as a passing accuracy gate.
+
+## Phase 9 verification
+
+Core tests exercise the exact query grammar and bounded typed inventory. Database tests
+cover round trips, rollback, monotonic numbering and immutable/no-delete identity/results.
+Services tests exercise registered-app/owner-only admission, fixed order, no replay,
+scoped policy, independently checked response schemas and interrupted history.
+Scanners tests cover strict profiles, private credential permissions/symlink refusal,
+SSH pinning/disabled config/agents/forwarding, bounded cleared-environment helpers and
+parsers that discard addresses/processes/free text. Worker tests use `testing::FakeHosts`
+for explicit invocation, cross-app refusal, query failures and no audit/finding effects.
+Dashboard tests show incomplete collection with the existing component and escaping path.
+
+Two opt-in SSH acceptance tests require the loopback-only disposable fixture documented in
+[HOST_INSPECTION.md](HOST_INSPECTION.md). They collect the three real OS/kernel/socket
+queries, reject wrong server identity and custom-client shell/write/injection/extra-argument
+requests and forwarding. The fixture is associated with Abastevo but never runs its code;
+all keys/data are synthetic and ignored locally. Existing real-provider HTTP fixture tests
+need permission to bind loopback when the execution sandbox restricts local sockets. No
+production host or scanner/model budget is used by phase-9 validation.

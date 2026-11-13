@@ -96,3 +96,26 @@ receipt plus static evidence is required; model test claims and ZAP alerts canno
 proof. Missing consent, unavailable/unsupported tests, failures and mismatches remain
 inconclusive/untested. Source exclusions and ZAP failures are limitations. Review
 [LAB.md](LAB.md) for preparation, credentials, digest changes and the supported envelope.
+
+## Read-only host inspection (phase 9)
+
+Q-035/ADR-0035 require an explicit owner invocation and a closed OS/kernel/listening-port
+query set. Both client and forced collector enforce typed exact requests; no arbitrary
+commands, model/MCP host tools, privileged operations or application tests exist. Profiles
+bind registered app, literal private/VPN endpoint, pinned Ed25519 server key, dedicated
+private identity file and resource envelope. No TOFU, inherited SSH config/environment,
+agent, proxy, port forwarding, PTY or connection multiplexing is used.
+
+Root-managed server provisioning must enforce forced command, restricted authorized key,
+non-root account with no sudo/supplementary groups, immutable binary/home/key configuration
+and no forwarding/TTY/rc/environment injection. Client flags do not substitute for server
+restrictions. The remote collector bypasses dotenv, refuses UID 0 and only emits bounded
+validated fields. It never sources os-release or requests process data, logs, credentials
+or arbitrary files. Server root/collector honesty is trusted, not remotely attested.
+
+Inventory and all failures/interrupted attempts are dated and append-only. Addresses,
+local credential paths and raw diagnostics never reach persisted results or models;
+ports are coarse inventory rather than reachability/vulnerability proof. Partial or
+unavailable collection never means safe. Production configuration/testing/installation
+is not performed by implementation validation. Provisioning, rotation, revocation and
+actual local SSH acceptance are in [HOST_INSPECTION.md](HOST_INSPECTION.md).

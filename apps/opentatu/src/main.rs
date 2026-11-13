@@ -21,6 +21,7 @@ async fn main() -> ExitCode {
     if !matches!(
         &cli.command,
         cli::Command::Lab(cli::LabCommand::Guest { .. })
+            | cli::Command::Host(cli::HostCommand::Collect)
     ) {
         config::load_dotenv();
         cli = cli::Cli::parse();

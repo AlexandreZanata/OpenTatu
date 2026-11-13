@@ -94,6 +94,14 @@ crate::text_enum! {
         /// A VM attempt completed, including failure. Data: run number and minimized
         /// execution receipt/provenance; state changes share this event (R04, R10).
         LabTestCompleted => "LAB_TEST_COMPLETED",
+        /// Explicit owner invocation: app, inspection number and non-secret policy digest.
+        HostInspectionStarted => "HOST_INSPECTION_STARTED",
+        /// Before SSH: inspection number, command id and fixed protocol request (Q-035).
+        HostCommandStarted => "HOST_COMMAND_STARTED",
+        /// Command result/failure: inspection number, command id and minimized inventory.
+        HostCommandCompleted => "HOST_COMMAND_COMPLETED",
+        /// All queries attempted: inspection number and computed collection coverage.
+        HostInspectionCompleted => "HOST_INSPECTION_COMPLETED",
     }
 }
 
@@ -270,9 +278,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn spec_b6_lists_37_event_kinds() {
-        // 32 base + MCP_TOOL_CALLED + two agent lifecycle + two lab events (ADR-0034).
-        assert_eq!(EventKind::ALL.len(), 37);
+    fn spec_b6_lists_41_event_kinds() {
+        // Base, MCP/agents, lab and four read-only host inspection events (ADR-0035).
+        assert_eq!(EventKind::ALL.len(), 41);
     }
 
     #[test]

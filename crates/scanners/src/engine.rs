@@ -1,4 +1,4 @@
-//! Starts one container run — the single place a scanner process is spawned (R12).
+//! Single process boundary for static containers, offline lab and fixed SSH inventory (R12).
 
 use std::process::Stdio;
 use std::time::Duration;
@@ -46,9 +46,9 @@ pub(crate) async fn execute(run: &ContainerRun, timeout: Duration) -> Result<Fin
     })
 }
 
-/// Single process-construction site for static tools and the offline VM (ADR-0034).
+/// Single process-construction site for static tools, offline VM and SSH (ADRs 0034/0035).
 fn command(program: &str) -> Command {
-    // R12: callers construct fixed tool/QEMU argv; guest app argv is owner-approved and
+    // R12: callers construct fixed tool/QEMU/SSH argv; guest app argv is owner-approved and
     // can reach this function only after the offline guest capability check.
     #[allow(clippy::disallowed_methods)]
     Command::new(program)
@@ -66,11 +66,23 @@ pub(crate) async fn lab_execute(
     args: &[String],
     timeout: Duration,
 ) -> Result<Captured, Error> {
+    bounded_execute(program, args, timeout, 256 * 1024).await
+}
+
+/// Shared bounded process boundary for lab helpers and fixed host-inspection operations.
+/// Stderr is discarded before it can enter an error, log, receipt or history (R15/R16).
+pub(crate) async fn bounded_execute(
+    program: &str,
+    args: &[String],
+    timeout: Duration,
+    max_bytes: u32,
+) -> Result<Captured, Error> {
     use tokio::io::AsyncReadExt as _;
     let mut child = command(program)
         .args(args)
         .env_clear()
         .env("PATH", "/usr/sbin:/usr/bin:/sbin:/bin")
+        .env("LC_ALL", "C")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -84,12 +96,12 @@ pub(crate) async fn lab_execute(
     let output = async {
         let mut bytes = Vec::new();
         stdout
-            .take(256 * 1024 + 1)
+            .take(u64::from(max_bytes) + 1)
             .read_to_end(&mut bytes)
             .await
             .map_err(|e| Error::Engine(e.to_string()))?;
-        if bytes.len() > 256 * 1024 {
-            return Err(Error::Engine("lab output exceeded 256 KiB".into()));
+        if bytes.len() > max_bytes as usize {
+            return Err(Error::OutputLimit);
         }
         let status = child
             .wait()
@@ -145,4 +157,35 @@ fn tail(text: &str) -> String {
     }
     let skip = count - MAX_STDERR_CHARS;
     format!("…{}", text.chars().skip(skip).collect::<String>())
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn r16_bounded_helpers_clear_inherited_environment_and_cap_output() {
+        let output = bounded_execute("/usr/bin/env", &[], Duration::from_secs(5), 1024)
+            .await
+            .unwrap();
+        assert_eq!(output.code, 0);
+        let environment = String::from_utf8(output.stdout).unwrap();
+        // Environment order is unspecified. Check names without ever printing values
+        // from an unexpected inherited variable if this security regression test fails.
+        let names = environment
+            .lines()
+            .filter_map(|s| s.split_once('=').map(|(name, _)| name))
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(names, ["LC_ALL", "PATH"].into_iter().collect());
+        assert!(
+            environment
+                .lines()
+                .any(|s| s == "PATH=/usr/sbin:/usr/bin:/sbin:/bin")
+        );
+        assert!(environment.lines().any(|s| s == "LC_ALL=C"));
+        assert!(matches!(
+            bounded_execute("/usr/bin/yes", &[], Duration::from_secs(5), 1024).await,
+            Err(Error::OutputLimit)
+        ));
+    }
 }

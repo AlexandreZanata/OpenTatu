@@ -327,3 +327,17 @@ authorize implementation, deployment or a production action.
 - **Answer:** owner approval per audit and exact commit, inside a restricted set of
   non-destructive HTTP probes (owner). The approval binds the complete owner-controlled
   lab-profile digest; changing the profile or commit requires a fresh approval.
+
+## Q-035 — Initial host-inspection command and authorization scope
+- **Status:** answered (2026-11-13) · **Blocks:** nothing
+- **Context:** phase 9 requires restricted SSH, a closed command allowlist and a record
+  of every command, but does not specify the collected fields or approval lifetime.
+- **Proposal:** Linux only, fixed OS identity/kernel/listening TCP+UDP port queries;
+  normalized bounded fields only, no processes, logs, environment, arbitrary files,
+  package installation or privileged commands. An explicit owner CLI invocation authorizes
+  one inspection of a configured registered app/host profile. No scheduled collection,
+  model/MCP execution authority or production test is introduced. Acceptance uses a
+  disposable local SSH fixture associated with the owner's Abastevo registration.
+- **Answer:** the owner accepted the proposed minimum scope, explicit invocation and
+  disposable local SSH acceptance. Existing security controls and phase-10/Sentinel gates
+  remain unchanged. See ADR-0035.

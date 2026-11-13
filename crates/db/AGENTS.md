@@ -65,3 +65,7 @@ event; its private task writer is never a standalone public mutation.
 Phase 8: migration `0009_lab_runs.sql` and `src/lab.rs` store ordered attempts with
 transactional start/completion events. Attempts count even while unfinished; identity and
 completed results are immutable, and deletion is refused. Owner grants remain events.
+
+Phase 9: migration `0010_host_inspections.sql` and `src/host.rs` store numbered live
+`host_inspections` and `host_commands`. Every start/result shares its event transaction;
+identity and completed results are immutable and never deleted. No second audit queue.

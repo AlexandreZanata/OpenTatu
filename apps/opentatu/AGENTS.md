@@ -55,3 +55,9 @@ The guest entry bypasses dotenv entirely; no host API key is sent into the VM.
 
 `prepare_data_dir` canonicalizes owner-only directories before constructing `DataLayout`,
 so relative CLI paths keep the existing absolute scanner-mount guard intact.
+
+Phase 9: explicit `--hosts-config`; `commands/host.rs` handles `host profile|inspect|history`
+and hidden forced `host collect`. `config::host_original_command` is the sole SSH request
+environment reader and accepts only exact protocol requests. Collector startup bypasses
+dotenv and never opens the database or loads controller credentials. No connection occurs
+without an explicit `host inspect` invocation.

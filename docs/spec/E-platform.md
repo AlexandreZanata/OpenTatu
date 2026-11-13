@@ -122,3 +122,12 @@ The one OpenTatu binary also serves as the trusted guest controller. `lab_runs` 
 identity and decided-once triggers. Start/result events share their write transactions.
 Owner approvals are existing append-only OWNER_DECISION events; no separate grant service
 or execution authority is exposed over MCP. See [../LAB.md](../LAB.md).
+
+## Phase 9 live inventory (ADR-0035, Q-035)
+
+The owner explicitly invokes a restricted Linux SSH collector for OS ID/version, kernel
+release and minimized listening TCP/UDP ports. `host_inspections` and `host_commands`
+(migration 0010) keep immutable identity and decided-once results with transactional
+start/completion events. These records are live inventory, separate from commit-scoped
+audits and findings. No scheduling, model/MCP shell, privileged operation, monitoring or
+response is authorized. Provisioning/rotation/security limits: [../HOST_INSPECTION.md](../HOST_INSPECTION.md).

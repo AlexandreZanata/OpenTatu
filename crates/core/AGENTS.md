@@ -76,3 +76,7 @@ Phase 8: `src/lab.rs` defines `LabCase`, `LabPolicy`, `LabContext`, `LabObservat
 outcome. `ContentHasher` provides streaming/length-framed source hashes; existing finding
 fingerprints keep their frozen algorithm. `Verification.lab_run_number` is system-owned
 and serde-defaulted; `ScannerKind::STATIC` excludes the VM-only ZAP variant.
+
+Phase 9: `src/host.rs` owns the closed query set, bounded typed OS/kernel/socket inventory,
+non-secret policy identity, safe failure categories, dated inspections and command attempts.
+Collection coverage is independent of vulnerability findings and source-code audits.

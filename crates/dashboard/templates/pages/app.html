@@ -41,4 +41,8 @@
 {% call ui::card("Linha do tempo") %}
   {% call ui::timeline(timeline) %}{% endcall %}
 {% endcall %}
+
+{% call ui::card("Inspeções de hosts somente para leitura") %}
+  {% call ui::item_list(host_inspections, "Nenhuma inspeção de host. A execução exige uma chamada explícita do proprietário pela CLI.") %}{% endcall %}
+{% endcall %}
 {% endblock %}

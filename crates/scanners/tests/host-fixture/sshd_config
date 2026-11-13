@@ -1,0 +1,25 @@
+# Isolated fixture configuration. Production administrators must apply the runbook.
+Port 2222
+ListenAddress 0.0.0.0
+HostKey /etc/ssh/ssh_host_ed25519_key
+PidFile /run/sshd.pid
+UsePAM no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+PermitRootLogin no
+StrictModes yes
+AuthorizedKeysFile /etc/ssh/opentatu_inspect_authorized_keys
+AllowUsers opentatu-inspect
+DisableForwarding yes
+PermitTTY no
+PermitTunnel no
+PermitUserEnvironment no
+PermitUserRC no
+MaxSessions 1
+MaxAuthTries 1
+LoginGraceTime 10
+ForceCommand /usr/local/bin/opentatu host collect
+LogLevel VERBOSE

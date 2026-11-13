@@ -8,8 +8,9 @@ Gitleaks, Trivy fs, OSV-Scanner)
 - **Does:** run Semgrep, Gitleaks, Trivy (fs) and OSV-Scanner offline in disposable
   containers, refresh their rules/databases in separate networked runs, and normalize their
   raw output to `opentatu_core::ScannerResult` (ADR-0023).
-- **Does not:** decide what is a vulnerability (the hunter triages), touch the database,
-  receive host/production API keys or real credentials (R16).
+- **Does not:** decide what is a vulnerability (the hunter triages), touch the database
+  or receive provider/production application API keys (R16). Host inventory uses only
+  the explicitly configured dedicated SSH identity file, never an administrative key.
 
 ## Files
 
@@ -60,3 +61,12 @@ capability, private source/build workspace, separate uid/gid and bounded GET con
 the offline guest capability. `testing::FakeLab` reuses the same policy/receipt port.
 Static containers iterate `ScannerKind::STATIC`; ZAP cannot use their adapters. See
 [../../docs/LAB.md](../../docs/LAB.md) for the actual VM acceptance and image requirements.
+
+Phase 9 (ADR-0035): `host_config.rs` validates explicit SSH profiles and private credentials;
+`host.rs` implements `HostSuite`/`SshHosts`, pinned trust, fixed argv and strict receipts;
+`host_collect.rs` implements the unprivileged forced collector. `engine::bounded_execute`
+reuses the existing process constructor for lab helpers and inventory, with cleared
+environments and capped output/deadlines. `testing::FakeHosts` reuses the same port. No
+general SSH command API or raw diagnostics are exposed. The only real credential consumed
+by SSH is its dedicated owner-private identity file; the provider API key is never passed.
+The opt-in local fixture lives in `tests/host-fixture/`; see `docs/HOST_INSPECTION.md`.

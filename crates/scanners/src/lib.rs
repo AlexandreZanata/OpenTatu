@@ -17,6 +17,9 @@ mod adapters;
 mod config;
 mod engine;
 mod error;
+mod host;
+mod host_collect;
+mod host_config;
 mod isolation;
 mod lab;
 mod lab_config;
@@ -28,6 +31,9 @@ pub mod testing;
 
 pub use config::{EngineConfig, ScannersConfig, ToolConfig};
 pub use error::Error;
+pub use host::{HOST_OUTPUT_BYTES, HOST_TIMEOUT_SECONDS, HostSuite, SshHosts};
+pub use host_collect::collect_host;
+pub use host_config::{HostProfile, HostsConfig};
 pub use isolation::{
     ContainerEngine, ContainerRun, ISOLATION_FLAGS, Mount, Network, SOURCE_TARGET,
 };

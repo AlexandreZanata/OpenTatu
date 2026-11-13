@@ -158,6 +158,10 @@ Event kinds (`opentatu_core::EventKind`):
 - Safety and budget: `SUSPICIOUS_INSTRUCTION_DETECTED`, `BUDGET_EXHAUSTED`
 - Audit end: `AUDIT_PAUSED`, `AUDIT_RESUMED`, `AUDIT_PARTIAL`, `AUDIT_COMPLETED`,
   `AUDIT_FAILED`
+- Live host inventory (ADR-0035): `HOST_INSPECTION_STARTED`, `HOST_COMMAND_STARTED`,
+  `HOST_COMMAND_COMPLETED`, `HOST_INSPECTION_COMPLETED`. Data includes app-local inspection
+  number, non-secret policy digest, fixed query and minimized result/failure; no credentials,
+  endpoint address or raw diagnostics.
 - Owner: `OWNER_DECISION`
 - MCP read-only calls (Q-007): `MCP_TOOL_CALLED` — state-changing tools record their domain
   event instead, so every MCP call produces exactly one event (a refused call is also

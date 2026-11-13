@@ -21,6 +21,10 @@ when each document matters.
 | [opencode-go.md](opencode-go.md) | You work on the LLM provider client (phase 0 research record) |
 | [Sentinel expansion plan](sentinel/SENTINEL_MASTER_PLAN.md) | You review the proposed post-foundation expansion: requirements, adapter contracts, continuous monitoring, MCP, teams, Android client and response gates |
 
+- [LAB.md](LAB.md): offline dynamic evidence and QEMU setup.
+- [HOST_INSPECTION.md](HOST_INSPECTION.md): explicit restricted SSH inventory, provisioning,
+  rotation and disposable acceptance.
+
 ## Keeping documentation trustworthy
 
 - Each fact lives in exactly one place; other documents link to it.

@@ -10,8 +10,8 @@ use crate::PageError;
 use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
-    AuditRow, FindingRow, Layout, MapSummary, TaskRow, TimelineEntry, audit_row, finding_row,
-    map_summary, task_row, timeline_entry,
+    AuditRow, FindingRow, Item, Layout, MapSummary, TaskRow, TimelineEntry, audit_row, finding_row,
+    host_inspection_item, map_summary, task_row, timeline_entry,
 };
 
 /// Audits listed on the page.
@@ -31,6 +31,7 @@ struct AppPage {
     tasks: Vec<TaskRow>,
     audits: Vec<AuditRow>,
     timeline: Vec<TimelineEntry>,
+    host_inspections: Vec<Item>,
 }
 
 /// Handler of `GET /apps/{slug}`.
@@ -44,6 +45,12 @@ pub async fn page(
     let findings = services.findings_of_app(&slug).await?;
     render(&AppPage {
         layout: Layout::default(),
+        host_inspections: services
+            .host_inspections(&slug, 5)
+            .await?
+            .iter()
+            .map(host_inspection_item)
+            .collect(),
         map: services.current_map(&slug).await?.as_ref().map(map_summary),
         findings: findings
             .iter()

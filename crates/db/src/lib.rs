@@ -27,6 +27,7 @@ pub mod apps;
 pub mod audits;
 pub mod events;
 pub mod health;
+pub mod host;
 pub mod investigation;
 pub mod lab;
 pub mod llm_usage;

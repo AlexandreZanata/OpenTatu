@@ -77,3 +77,9 @@ in backticks in the second column.
 | Hypothesis | candidate, suspicion |
 | AI role | agent, persona ("agents" are the external fixing agents) |
 | Event | log entry (logs are diagnostics, events are the history) |
+
+
+Phase-9 vocabulary: **Host inspection** is one explicit owner invocation collecting live,
+minimized Linux inventory (`HostInspection`); **Host command** is one of the three fixed
+read-only queries (`HostCommand`); **Host profile** is owner-controlled SSH configuration
+(`HostProfile`). Inventory is separate from an Audit and never establishes a Finding.

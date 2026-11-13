@@ -124,6 +124,10 @@ pub fn event_label(kind: EventKind) -> &'static str {
         K::McpToolCalled => "Ferramenta MCP consultada",
         K::LabTestStarted => "Teste no laboratório iniciado",
         K::LabTestCompleted => "Teste no laboratório concluído",
+        K::HostInspectionStarted => "Inspeção de host autorizada",
+        K::HostCommandStarted => "Consulta de host iniciada",
+        K::HostCommandCompleted => "Consulta de host concluída",
+        K::HostInspectionCompleted => "Inspeção de host encerrada",
     }
 }
 
@@ -388,3 +392,5 @@ mod tests {
 
 mod lab;
 pub use lab::lab_run_item;
+mod host;
+pub use host::host_inspection_item;

@@ -27,7 +27,7 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
 | 6 — Benchmark | ✅ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
 | 7 — Incremental audit | ✅ | Diff between commits, trigger by configured-branch polling (no webhook); a finding whose approved fix reaches the app's branch becomes CLOSED (Q-030, ADR-0032) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed (verified 2026-11-12 on a local Abastevo clone; fix approval, never-merged, squash and normal merge verified) |
 | 8 — Dynamic lab | ✅ | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab (verified 2026-11-13 on a fictitious Abastevo fixture) |
-| 9 — Host inspection (read-only) | ⬜ (on request) | Restricted SSH user, closed allowlist of commands, every command recorded | — |
+| 9 — Host inspection (read-only) | ✅ | Restricted SSH user, closed OS/kernel/listener queries, every attempt recorded | Explicit registered-app inspection collects all three queries; wrong host key, shell/write/subsystem/forwarding requests and revoked client key fail closed in disposable local SSH (verified 2026-11-13) |
 | 10 — Monitoring and defense | ⬜ (on request) | Integration with established sensors (e.g. Wazuh, Falco, osquery, CrowdSec), detection rules from the map, reversible response playbooks with owner approval | — |
 
 ## Base: what exists
@@ -347,3 +347,57 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   default; the two QEMU acceptance tests above passed individually, and all four actual
   static scanners ran in the benchmark. No production app was executed and no Abastevo
   commit was pushed. Q-032 remains open; phases 9/10 and Sentinel were not started.
+
+
+## Phase 9: what exists
+
+- Q-035 answered; ADR-0035 accepted: Linux controller/target, explicit owner invocation,
+  OS ID/version, kernel release and numeric TCP/UDP listener inventory only. The same
+  executable is the trusted unprivileged forced collector. No prompt/model change, new
+  crate, internal dependency edge, general shell, host queue, scheduler or remediation.
+- Core owns exact requests, validated bounded observations, coarse bind scopes, safe
+  failure categories and dated inspection/command records. These are live state, separate
+  from exact-commit audits; they cannot create/close findings or mark ASVS coverage safe.
+- Migration 0010 stores numbered `host_inspections` and decided-once `host_commands`,
+  with immutable identity/no-delete triggers. Services admits owner-only registered-app
+  inspection, checks profile identity, enforces fixed order/no replay, validates results
+  independently and computes collection coverage. Start events commit before SSH access;
+  failures and interrupted attempts remain visible. Every explicit invocation is fresh.
+- Scanners owns `HostsConfig`, `HostProfile`, `HostSuite`/`SshHosts`, fixed noninteractive
+  OpenSSH argv and forced `collect_host`. Literal private/VPN/loopback endpoints only,
+  strict independently pinned Ed25519 server identity, owner-private dedicated credential
+  file, no inherited SSH config/agent/environment/proxy/forwarding/PTY/multiplexing.
+  The remote account needs root-managed forced-command/authorized-key restrictions and
+  no sudo or supplementary groups; client flags cannot enforce server provisioning.
+- Shared `engine::bounded_execute` reuses the existing process constructor, with cleared
+  environment, discarded stderr and bounded stdout/deadlines; the lab helper reuses it.
+  Inventory has 10-second connection/20-second query deadlines, five-second collector
+  deadlines, 64-KiB output and 512-socket caps. No IPs, processes, logs, environment,
+  local private-key paths or raw diagnostics enter history or model context.
+- Worker `inspect_host` orchestrates only explicit CLI invocations through the typed port
+  and services, with no AI call or audit worker/polling coupling. `--hosts-config`,
+  `host profile|inspect|history` and strict hidden `host collect` are available. Collector
+  startup bypasses dotenv/database/provider wiring and refuses UID 0. The app page reuses
+  Item/item-list and timeline components; collection failure never implies host safety.
+- Actual local acceptance (2026-11-13): pinned Ubuntu 24.04 disposable SSH container,
+  OpenSSH 9.6p1 Ubuntu-3ubuntu13.20, root-owned unprivileged account configuration,
+  read-only filesystem, bounded tmpfs/resources, loopback listener, synthetic dedicated
+  key and no application/data mount. Abastevo was registered from its local phase-8 clone,
+  without executing its application, changing its repository or accessing production.
+  All three inventory queries succeeded; wrong server key yielded explicit TRANSPORT
+  failures. Custom-client empty/shell/write/injection/extra-argument requests, actual SFTP
+  subsystem and forwarding were refused. The forbidden marker remained absent and a root
+  collector invocation failed without stdout. A deliberately invalid account-home .env
+  did not affect the collector, proving its dotenv bypass.
+- Owner CLI acceptance retained inspection 1 with three OBSERVED results. An initial
+  revocation fixture bind mount was rejected under its host-file ownership constraints;
+  the final check used a valid root-owned empty authorized-key file in the server's tmpfs.
+  Inspection 3 then failed all queries with TRANSPORT and CLI exit 1, with unchanged
+  server key/profile digest and the original success retained. All three invocations,
+  including that earlier failed fixture attempt, remain in local history. The disposable
+  container/listener was removed. Keys/configuration/raw fixture logs remain ignored.
+- `cargo xtask check` passes: 312 tests, five opt-in infrastructure tests ignored by
+  default. Both new actual SSH tests passed individually. No production execution or
+  provider calls/budget changes; the previously documented benchmark limitation remains.
+  See [HOST_INSPECTION.md](HOST_INSPECTION.md) for setup, rotation and repeatable checks.
+  Q-032 remains open; phase 10 and Sentinel were not started.

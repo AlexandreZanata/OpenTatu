@@ -24,6 +24,13 @@ pub fn current_binary() -> anyhow::Result<std::path::PathBuf> {
     Ok(std::env::current_exe()?)
 }
 
+/// Forced collector request: never returned in errors, executed as shell text or trimmed.
+pub fn host_original_command() -> anyhow::Result<opentatu_core::HostCommand> {
+    let value = env_value("SSH_ORIGINAL_COMMAND").unwrap_or_default();
+    opentatu_core::HostCommand::from_request(&value)
+        .context("forced host collector accepts only exact read-only protocol requests")
+}
+
 /// Logs go to stderr: stdout is reserved for command output and the MCP stdio protocol.
 /// Colors only when stderr is a terminal, so redirected logs stay plain text.
 pub fn init_logging(filter: &str) -> anyhow::Result<()> {

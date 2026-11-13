@@ -724,3 +724,45 @@ Template:
   claims. Lab execution is serialized and limited per audit and by its remaining time.
   Without a configured/approved lab, normal static audits remain usable with explicit
   limitations. No phase-9 SSH inspection, Sentinel, production execution or audit resumption.
+
+## ADR-0035 — Explicit read-only Linux host inspection over restricted SSH
+- **Date:** 2026-11-13 · **Status:** accepted (phase-9 request; Q-035)
+- **Decision:** keep the existing layers and one executable. Core owns typed inventory;
+  scanners owns the fixed SSH client and remote collector; services owns admission and
+  transactional history; worker orchestrates one explicit invocation; CLI/dashboard expose
+  owner commands and read-only results. No new crate, dependency edge or AI prompt.
+- **Scope:** exactly OS ID/VERSION_ID, Linux kernel release and numeric listening TCP/UDP
+  ports. Socket addresses become coarse bind scopes; no process data, logs, environment,
+  arbitrary files/commands, package queries, privileged commands or remediation. A socket
+  is an observation, never proof of internet reachability or a vulnerability. Nothing
+  automatically creates/closes findings, changes ASVS coverage or feeds model context.
+- **Authorization:** one explicit owner `host inspect` invokes all three queries for one
+  registered app and explicit local profile. The start event is the owner authorization;
+  the digest binds endpoint, pinned host key, credential path, protocol and fixed limits.
+  There is no reusable grant, scheduling, watcher or MCP execution authority. Runtime
+  observations are separate numbered inspections, not commit-scoped audits (R02).
+- **SSH boundary:** literal private/VPN/loopback IP only, no DNS/proxy/jump/agent/forwarding,
+  no inherited SSH config, strict pinned Ed25519 server key, dedicated private credential
+  file, noninteractive public-key authentication. Credentials remain external private
+  files and never enter receipts/history. Each query has a 10-second connection timeout,
+  20-second total deadline and 64-KiB output cap; at most 512 minimized sockets. Limits
+  bound host resource use, not a claim of complete host-security coverage.
+- **Remote restriction:** the same executable's hidden `host collect` mode bypasses dotenv
+  and database setup, exact-matches `SSH_ORIGINAL_COMMAND`, then performs only the fixed
+  read operations, without a shell. Owner provisioning requires a dedicated unprivileged
+  account, no sudo/groups, a root-owned binary/home/key configuration, forced command,
+  `restrict`, no forwarding/PTY/user rc/environment and public-key-only authentication.
+  Client flags alone cannot enforce server account restrictions; the runbook and actual
+  disposable SSH acceptance test cover both ends. OpenTatu never provisions real hosts.
+- **History and failures:** migration 0010 stores inspection identity and command attempts;
+  start/result events share their write transactions. Identity/completed results cannot
+  change or be deleted. Every command is started in history before network access; failures
+  use fixed categories without remote output/stderr. Missing completion remains visible
+  after interruption; no implicit retry/resume. Each owner invocation is a fresh inspection.
+- **Alternatives:** unrestricted SSH command strings violate R12; client-only allowlisting
+  leaves a stolen key with a shell; sourcing os-release executes untrusted syntax; process
+  inventories/logs expose secrets; adding an audit kind blurs live state and exact code.
+- **Validation:** hermetic typed-boundary, history, orchestration and UI tests plus opt-in
+  disposable local SSH acceptance attached to Abastevo, without production access or app
+  execution. Existing phase-8 behavior and all guardrails remain. Phase 10/Sentinel and
+  audit resumption remain separate owner gates. See [HOST_INSPECTION.md](HOST_INSPECTION.md).

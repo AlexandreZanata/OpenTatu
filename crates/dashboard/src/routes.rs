@@ -123,6 +123,17 @@ mod tests {
             .await
             .unwrap();
         services
+            .start_host_inspection(
+                &"demo".parse().unwrap(),
+                opentatu_core::HostPolicy {
+                    profile: "local-host".parse().unwrap(),
+                    profile_digest: format!("sha256:{}", "a".repeat(64)).parse().unwrap(),
+                },
+                &opentatu_core::Actor::Owner,
+            )
+            .await
+            .unwrap();
+        services
             .create_audit(opentatu_services::NewAudit {
                 app: opentatu_core::Slug::new("demo").unwrap(),
                 kind: opentatu_core::AuditKind::Full,
@@ -141,6 +152,9 @@ mod tests {
             "Na fila",
             "Aplicação cadastrada",
             "Auditoria criada",
+            "Inspeções de hosts somente para leitura",
+            "Em andamento ou interrompida",
+            "Inspeção de host autorizada",
             "29/11/2026 às 14:32 (horário de Brasília)",
         ] {
             assert!(body.contains(expected), "missing {expected:?}");

@@ -80,3 +80,7 @@ markup component is needed.
 Phase 8: `src/view/lab.rs::lab_run_item` formats actual attempts using the existing
 `Item`/item-list component on the audit page; no script, CSS duplication or execution
 authority is added. Timeline labels include lab start/completion.
+
+Phase 9: `src/view/host.rs::host_inspection_item` formats minimized collection coverage
+using existing `Item`/item-list on the app page (latest five). The UI never starts SSH;
+failed/interrupted inventory is explicit and cannot imply host safety.

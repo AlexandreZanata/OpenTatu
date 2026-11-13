@@ -7,6 +7,13 @@ use opentatu_core::ScannerKind;
 /// Errors of `opentatu-scanners`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// A bounded helper's untrusted output exceeded its fixed byte cap.
+    #[error("helper output exceeded its byte limit")]
+    OutputLimit,
+
+    /// Safe host-inventory failure; never contains remote stdout, stderr or credentials.
+    #[error("host inspection failed: {0}")]
+    Host(opentatu_core::HostFailure),
     /// `config/scanners.toml` is invalid.
     #[error("invalid scanners config: {0}")]
     Config(String),

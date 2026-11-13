@@ -19,6 +19,7 @@ mod artifacts;
 mod budget;
 mod cartography;
 mod error;
+mod host;
 mod hunt;
 mod incremental;
 mod lab;
@@ -42,6 +43,7 @@ use opentatu_services::{ReverificationOutcome, Services};
 use opentatu_snapshots::Snapshots;
 
 pub use error::Error;
+pub use host::inspect_host;
 pub use usage::ServicesUsageRecorder;
 
 /// What the worker needs to run the AI roles.

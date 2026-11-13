@@ -10,6 +10,72 @@ use opentatu_core::{ScannerKind, ScannerResult, ScannerRun};
 
 use crate::{Error, ScannerSuite};
 
+/// Socket-free host transport for admission/orchestration tests, using the actual schema.
+#[derive(Debug)]
+pub struct FakeHosts {
+    app: opentatu_core::Slug,
+    policy: opentatu_core::HostPolicy,
+    results: BTreeMap<opentatu_core::HostCommand, opentatu_core::HostResult>,
+    calls: Mutex<Vec<opentatu_core::HostCommand>>,
+}
+
+impl FakeHosts {
+    /// Canned normalized results; absent commands explicitly fail rather than looking safe.
+    pub fn new(
+        app: opentatu_core::Slug,
+        policy: opentatu_core::HostPolicy,
+        results: BTreeMap<opentatu_core::HostCommand, opentatu_core::HostResult>,
+    ) -> Self {
+        Self {
+            app,
+            policy,
+            results,
+            calls: Mutex::default(),
+        }
+    }
+    /// Ordered fixed queries received so far.
+    pub fn calls(&self) -> Vec<opentatu_core::HostCommand> {
+        self.calls
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+}
+
+#[async_trait::async_trait]
+impl crate::HostSuite for FakeHosts {
+    fn policy(
+        &self,
+        app: &opentatu_core::Slug,
+        profile: &opentatu_core::Slug,
+    ) -> Option<opentatu_core::HostPolicy> {
+        (app == &self.app && profile == &self.policy.profile).then(|| self.policy.clone())
+    }
+    async fn query(
+        &self,
+        app: &opentatu_core::Slug,
+        policy: &opentatu_core::HostPolicy,
+        command: opentatu_core::HostCommand,
+    ) -> opentatu_core::HostResult {
+        use opentatu_core::{HostFailure, HostResult};
+        if app != &self.app || policy != &self.policy {
+            return HostResult::Failed {
+                failure: HostFailure::Configuration,
+            };
+        }
+        self.calls
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(command);
+        self.results
+            .get(&command)
+            .cloned()
+            .unwrap_or(HostResult::Failed {
+                failure: HostFailure::Transport,
+            })
+    }
+}
+
 /// What the fake does for one scanner.
 #[derive(Debug, Clone)]
 pub enum FakeOutcome {

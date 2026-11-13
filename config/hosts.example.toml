@@ -1,0 +1,10 @@
+# Copy to an owner-controlled *.local.toml outside application repositories.
+# Explicit --hosts-config only: this example never enables connections by itself.
+# Replace the public key with the actual independently verified server Ed25519 key.
+[profiles.abastevo-vpn]
+app = "abastevo"
+address = "100.64.0.10"
+port = 22
+user = "opentatu-inspect"
+identity_file = "/home/owner/.ssh/opentatu_abastevo_inspect_ed25519"
+host_key = "ssh-ed25519 REPLACE_WITH_INDEPENDENTLY_VERIFIED_HOST_KEY"

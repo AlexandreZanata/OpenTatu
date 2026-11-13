@@ -6,6 +6,7 @@ mod audit;
 mod benchmark;
 mod dashboard;
 mod db;
+mod host;
 mod lab;
 mod llm;
 mod mcp;
@@ -34,6 +35,7 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
         models: cli.models_config.as_path(),
     };
     match cli.command {
+        Command::Host(command) => host::run(data_dir, cli.hosts_config.as_deref(), command).await,
         Command::Lab(command) => lab::run(data_dir, configs.labs, command).await,
         Command::Serve { listen, worker } => {
             worker::serve(data_dir, configs, listen.address, &worker).await
