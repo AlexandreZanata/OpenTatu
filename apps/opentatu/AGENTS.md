@@ -47,3 +47,11 @@ Phase 7: CLI `watch --once` calls `worker::watch` and only queues eligible incre
 Worker/serve accept `--watch-minutes`; `config::watch_minutes` resolves CLI, then
 OPENTATU_WATCH_MINUTES, then 10 (0 off). The existing env-read exception is centralized
 in private `config::env_value`; command handlers do not read the environment.
+
+Phase 8: global `--lab-config` is explicit opt-in; `commands/lab.rs` implements policy
+review, queued-audit approval and the hidden strict guest entry. `audit create --approve-lab`
+creates audit/grant atomically. Normal composition wires `QemuLab` through `with_lab`.
+The guest entry bypasses dotenv entirely; no host API key is sent into the VM.
+
+`prepare_data_dir` canonicalizes owner-only directories before constructing `DataLayout`,
+so relative CLI paths keep the existing absolute scanner-mount guard intact.

@@ -21,6 +21,10 @@
   {% call ui::text_list(audit.limitations, "Nenhuma limitação registrada.") %}{% endcall %}
 {% endcall %}
 
+{% call ui::card("Laboratório dinâmico") %}
+  {% call ui::item_list(lab_runs, "Nenhum teste dinâmico executado nesta auditoria. Não significa que o escopo é seguro.") %}{% endcall %}
+{% endcall %}
+
 {% call ui::card("Mapa de segurança e cobertura OWASP ASVS") %}
   {% if let Some(map) = map %}
   <p>Mapa <a href="/maps/{{ map.map_id }}"><code>{{ map.map_id }}</code></a>: {{ map.entry_points }} entradas, {{ map.components }} componentes, {{ map.integrations }} integrações.</p>

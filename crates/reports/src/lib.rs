@@ -13,6 +13,7 @@
 
 mod audit_record;
 mod finding_record;
+mod lab;
 mod manifest;
 mod report;
 mod reverification;
@@ -29,3 +30,5 @@ pub use reverification::reverification_body;
 pub use sarif::findings_sarif;
 
 pub use report::incremental_scope_text;
+
+pub use lab::lab_summary_text;

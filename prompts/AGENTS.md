@@ -18,3 +18,7 @@ One file per prompt: `base.md` (shared, §C.0) and one per `AiRole` (`cartograph
   `suspicious_instructions`.
 - These files are runtime content: they are excluded from the vocabulary check because of
   their pt-BR output headings. This `AGENTS.md` is not.
+
+Phase 8: verifier 1.3.0 selects only approved case IDs; an actual system result returns
+through the fenced lab block. Generated test text is a suggestion, never executed code
+or proof that a test ran. Credentials/build argv remain outside model context.

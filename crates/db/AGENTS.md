@@ -61,3 +61,7 @@ last_on_branch}` support the transactional enqueue decision; `last_final` exclud
 reverifications and resolves same-second ties by insertion order.
 `tasks::decide_verification` can update task/finding/decision under the single approval
 event; its private task writer is never a standalone public mutation.
+
+Phase 8: migration `0009_lab_runs.sql` and `src/lab.rs` store ordered attempts with
+transactional start/completion events. Attempts count even while unfinished; identity and
+completed results are immutable, and deletion is refused. Owner grants remain events.

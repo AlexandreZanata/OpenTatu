@@ -20,3 +20,7 @@ licenses, ~2 GB, refreshed often).
 - Scanner images change only together with their digest and version (R17).
 - Third-party assets (ASVS, rules) keep their upstream license and a note of version and
   download date.
+
+Phase 8: `lab.example.toml` documents the strict optional `LabsConfig` schema. Owner
+recipes use private `*.local.toml` files excluded from git. Images, fixture credentials
+and raw lab artifacts must stay outside version control. See `docs/LAB.md`.

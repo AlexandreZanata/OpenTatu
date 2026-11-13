@@ -88,6 +88,12 @@ crate::text_enum! {
         /// their domain event instead (`TASK_CLAIMED`, `FIX_SUBMITTED`), so every call
         /// produces exactly one event. `app` may be empty (e.g. listing apps).
         McpToolCalled => "MCP_TOOL_CALLED",
+        /// An approved VM test began. Data: run number, hypothesis, commit, profile digest
+        /// and case ID; no credentials, commands or response bodies (ADR-0034).
+        LabTestStarted => "LAB_TEST_STARTED",
+        /// A VM attempt completed, including failure. Data: run number and minimized
+        /// execution receipt/provenance; state changes share this event (R04, R10).
+        LabTestCompleted => "LAB_TEST_COMPLETED",
     }
 }
 
@@ -264,9 +270,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn spec_b6_lists_35_event_kinds() {
-        // 32 from spec §B.6 + MCP_TOOL_CALLED (Q-007) + AGENT_REGISTERED/REVOKED (ADR-0026).
-        assert_eq!(EventKind::ALL.len(), 35);
+    fn spec_b6_lists_37_event_kinds() {
+        // 32 base + MCP_TOOL_CALLED + two agent lifecycle + two lab events (ADR-0034).
+        assert_eq!(EventKind::ALL.len(), 37);
     }
 
     #[test]

@@ -21,6 +21,7 @@ mod cartography;
 mod error;
 mod hunt;
 mod incremental;
+mod lab;
 mod merge;
 pub mod pipeline;
 mod planning;
@@ -36,7 +37,7 @@ use std::time::Duration;
 
 use opentatu_core::{AuditId, AuditKind, DataLayout};
 use opentatu_llm::Llm;
-use opentatu_scanners::ScannerSuite;
+use opentatu_scanners::{LabSuite, ScannerSuite};
 use opentatu_services::{ReverificationOutcome, Services};
 use opentatu_snapshots::Snapshots;
 
@@ -61,6 +62,7 @@ pub struct Worker {
     layout: DataLayout,
     ai: Option<AiSettings>,
     watch_minutes: u64,
+    lab: Option<Arc<dyn LabSuite>>,
 }
 
 impl Worker {
@@ -79,6 +81,7 @@ impl Worker {
             layout,
             ai: None,
             watch_minutes: 0,
+            lab: None,
         }
     }
 
@@ -93,6 +96,14 @@ impl Worker {
     #[must_use]
     pub fn with_ai(mut self, ai: AiSettings) -> Self {
         self.ai = Some(ai);
+        self
+    }
+
+    /// Enables explicitly configured offline VM profiles. Execution still needs an
+    /// owner approval for this exact audit, commit and controller/profile digest.
+    #[must_use]
+    pub fn with_lab(mut self, lab: Arc<dyn LabSuite>) -> Self {
+        self.lab = Some(lab);
         self
     }
 

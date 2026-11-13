@@ -1515,3 +1515,6 @@ async fn incremental_persistence_does_not_replan_or_replace_original_evidence() 
         0
     );
 }
+
+#[path = "support/lab.rs"]
+mod lab_tests;

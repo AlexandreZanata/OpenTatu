@@ -18,7 +18,14 @@ crate::text_enum! {
         Trivy => "trivy",
         /// OSV-Scanner — vulnerable dependencies from lockfiles (OSV database).
         Osv => "osv-scanner",
+        /// ZAP — passive HTTP inspection, only inside the approved isolated VM.
+        Zap => "zap",
     }
+}
+
+impl ScannerKind {
+    /// Offline tools that may inspect source in containers. ZAP requires the VM lab.
+    pub const STATIC: &'static [Self] = &[Self::Semgrep, Self::Gitleaks, Self::Trivy, Self::Osv];
 }
 
 /// One result of any scanner, in the common format.
@@ -67,6 +74,10 @@ mod tests {
     #[test]
     fn scanner_names_match_raw_output_files() {
         let names: Vec<_> = ScannerKind::ALL.iter().map(|s| s.as_str()).collect();
-        assert_eq!(names, ["semgrep", "gitleaks", "trivy", "osv-scanner"]);
+        assert_eq!(
+            names,
+            ["semgrep", "gitleaks", "trivy", "osv-scanner", "zap"]
+        );
+        assert_eq!(ScannerKind::STATIC.len(), 4);
     }
 }

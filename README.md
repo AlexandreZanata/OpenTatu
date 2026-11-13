@@ -28,12 +28,16 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 7 complete** — verified on a local Abastevo clone (2026-11-12).
+> Status: **roadmap phase 8 complete** — offline QEMU lab verified on a fictitious local
+> Abastevo fixture (2026-11-13), with per-audit/commit approval, actual HTTP evidence and
+> passive ZAP. Setup and supported scope: [docs/LAB.md](docs/LAB.md).
 > Incremental audits use changed-code scope,
 > configured-branch polling and layered detection of approved fixes reaching the branch.
 > The phase-6 benchmark measures how well OpenTatu finds known flaws in
 > intentionally vulnerable apps (OWASP Juice Shop), per prompt version and per model:
-> [benchmark/SCOREBOARD.md](benchmark/SCOREBOARD.md). Fix trail over MCP with OpenTatu's own
+> [benchmark/SCOREBOARD.md](benchmark/SCOREBOARD.md). The latest default-budget run found
+> 3/33 known flaws and ended PARTIAL; model quality and untested coverage remain explicit
+> limitations. Fix trail over MCP with OpenTatu's own
 > reverification (phase 5), investigation with evidence and computed severity (phase 4),
 > security map and OWASP ASVS 5.0.0 coverage (phase 3), static scanners in isolated
 > containers (phase 2), audits and history (phase 1). See [docs/ROADMAP.md](docs/ROADMAP.md).

@@ -252,6 +252,7 @@ mod tests {
             regression_test_found: None,
             regressions,
             verification: verdict.map(|verdict| Verification {
+                lab_run_number: None,
                 verdict,
                 justification: "consulta parametrizada".into(),
                 evidence: vec![],

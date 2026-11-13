@@ -82,6 +82,8 @@ pub struct ReportData {
     pub findings: Vec<FindingSummary>,
     /// Approved fixes whose integration was detected in this audit (system facts).
     pub merge_detections: Vec<String>,
+    /// System-recorded dynamic attempts, never model claims.
+    pub lab_runs: Vec<opentatu_core::LabRun>,
     /// Hypotheses.
     pub hypotheses: HypothesisCounts,
     /// Hypotheses left open.
@@ -312,6 +314,7 @@ mod tests {
                 regression: false,
             }],
             merge_detections: Vec::new(),
+            lab_runs: Vec::new(),
             hypotheses: HypothesisCounts {
                 total: 3,
                 confirmed: 1,

@@ -15,8 +15,16 @@ use clap::Parser;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    config::load_dotenv();
-    let cli = cli::Cli::parse();
+    // Detect the strict guest entry point before any dotenv read. Normal commands are
+    // parsed again after dotenv loading to preserve configured CLI defaults.
+    let mut cli = cli::Cli::parse();
+    if !matches!(
+        &cli.command,
+        cli::Command::Lab(cli::LabCommand::Guest { .. })
+    ) {
+        config::load_dotenv();
+        cli = cli::Cli::parse();
+    }
     if let Err(error) = config::init_logging(&cli.log) {
         output::error(&error);
         return ExitCode::FAILURE;

@@ -364,3 +364,22 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 - Binary: `config::watch_minutes`, `commands::worker::watch`; existing CLI/worker wiring.
 - Dashboard/memory: existing finding table, badge and working-memory renderer extended
   for approved fixes awaiting merge; no parallel UI component or CSS implementation.
+
+## Phase 8 additions and extensions
+
+- Core `LabCase`/`LabPolicy`/`LabContext`/`LabObservation`/`LabOutcome`/`LabExecution`/
+  `LabRun`; `ContentHasher` (streaming and length-framed entries); system-only
+  `Verification.lab_run_number`, `ScannerKind::STATIC` and VM-only `Zap`.
+- Database migration 0009 and `lab::{list,count,insert,complete}`; services
+  `create_lab_audit`, `approve_lab_audit`, `lab_approved`, `start_lab_run`,
+  `complete_lab_run`, `lab_runs`, shared decisive-verification proof gate.
+- Context `prepare_lab_source` / `PreparedLabSource`, reusing safe snapshot classification.
+- Scanners `LabsConfig`, `LabProfile`, `LabActor`, `LabSuite`, `LabRequest`, `QemuLab`,
+  `GuestReceipt`, `run_guest`, `testing::FakeLab`; shared process constructor, bounded lab
+  helpers, guest capability and separate identities. Static scanner adapters remain offline.
+- Worker `with_lab`, lab orchestration/limitations, two-call verifier protocol, provenance
+  checks and recorded actual ZAP results. Existing approval/merge rules remain in services.
+- Reports `lab_summary_text`, `AuditRecord::with_lab_runs`, `ReportData.lab_runs`,
+  `DataLayout::lab_runs_file`; dashboard `lab_run_item` reuses `Item`/item-list.
+- CLI `--lab-config`, `lab profile|approve`, `audit create --approve-lab`, strict hidden
+  `lab guest`; schema example/runbook in `config/lab.example.toml` / `docs/LAB.md`.

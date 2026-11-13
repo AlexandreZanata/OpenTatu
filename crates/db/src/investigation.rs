@@ -370,6 +370,7 @@ pub(crate) mod tests {
         .unwrap();
         dismissed.state = FindingState::Dismissed;
         dismissed.verification = Some(Verification {
+            lab_run_number: None,
             verdict: Verdict::Dismissed,
             justification: "x".into(),
             evidence: vec![EvidenceItem {

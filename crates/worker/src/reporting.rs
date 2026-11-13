@@ -71,6 +71,7 @@ pub(crate) async fn run(
             text.body_md
         );
     }
+    text.body_md = opentatu_reports::lab_summary_text(&data.lab_runs) + &text.body_md;
     worker.services.record_report(text).await?;
     Ok(extra)
 }
@@ -190,6 +191,7 @@ pub(crate) async fn report_data(
                 )
             })
             .collect(),
+        lab_runs: services.lab_runs(&audit.id).await?,
         hypotheses: counts,
         open_hypotheses,
         coverage: services

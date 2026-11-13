@@ -15,7 +15,7 @@ use opentatu_core::{
     Verification,
 };
 use opentatu_investigator::{
-    Block, RoleCall, SkepticOutput, VerifierOutput, map_excerpt, run_role,
+    Block, RoleAnswer, RoleCall, SkepticOutput, VerifierOutput, map_excerpt, run_role,
 };
 use opentatu_services::Reporter;
 use tokio::sync::Semaphore;
@@ -197,7 +197,6 @@ pub(crate) async fn ask_verifier(
     if !run.allow_call().await? {
         return Ok(Err("orçamento esgotado".to_owned()));
     }
-    let services = &run.worker.services;
     let entry = entry_of(map, hypothesis.content.entry_point.as_ref());
     let line = hypothesis
         .content
@@ -230,34 +229,62 @@ pub(crate) async fn ask_verifier(
     if let Some(fix) = fix {
         inputs.push((Block::Fix, fix.description.clone()));
     }
-    let variables = run.variables().await?;
-    let call = RoleCall {
-        audit_id: &run.audit.id,
-        variables: &variables,
-        inputs,
-        conversation: hypothesis.hypothesis_id.number(),
-    };
-    let answer = match run_role::<VerifierOutput>(&run.ai.llm, call).await {
+    let lab_input = crate::lab::inputs(run).await?;
+    inputs.push((Block::Lab, lab_input.to_string()));
+    let mut answer = match verifier_answer(
+        run,
+        hypothesis,
+        inputs.clone(),
+        hypothesis.hypothesis_id.number(),
+    )
+    .await?
+    {
         Ok(answer) => answer,
-        Err(error) => {
-            tracing::warn!(hypothesis = %hypothesis.hypothesis_id, %error, "verifier failed");
-            return Ok(Err(format!("verificador falhou: {error}")));
-        }
+        Err(reason) => return Ok(Err(reason)),
     };
-    let prompt = answer.prompt_versions.last().cloned().unwrap_or_default();
-    services
-        .record_suspicious_instructions(
-            &run.audit.id,
-            Reporter {
-                role: AiRole::Verifier,
-                model: &answer.model,
-                prompt_version: &prompt,
+    let mut executed = None;
+    let mut lab_problem = None;
+    if crate::lab::required(run)
+        && (answer.output.verdict == Verdict::Confirmed
+            || fix.is_some()
+            || answer.output.lab_case_id.is_some())
+    {
+        match answer.output.lab_case_id.as_deref() {
+            None => lab_problem = Some("nenhum caso dinâmico compatível foi proposto".to_owned()),
+            Some(case_id) => match crate::lab::execute(run, hypothesis, case_id).await? {
+                Err(reason) => lab_problem = Some(reason),
+                Ok(result) => {
+                    inputs.retain(|(block, _)| *block != Block::Lab);
+                    inputs.push((
+                        Block::Lab,
+                        serde_json::json!({"configuration":lab_input,"executed_result":result})
+                            .to_string(),
+                    ));
+                    executed = Some(result);
+                    if !run.allow_call().await? {
+                        lab_problem =
+                            Some("orçamento esgotado antes de avaliar o resultado dinâmico".into());
+                    } else {
+                        answer = match verifier_answer(
+                            run,
+                            hypothesis,
+                            inputs,
+                            hypothesis.hypothesis_id.number().saturating_add(1000),
+                        )
+                        .await?
+                        {
+                            Ok(answer) => answer,
+                            Err(reason) => return Ok(Err(reason)),
+                        };
+                    }
+                }
             },
-            &answer.output.common.suspicious_instructions,
-        )
-        .await?;
+        }
+    }
+    let prompt = answer.prompt_versions.last().cloned().unwrap_or_default();
     let output = answer.output;
     let mut verification = Verification {
+        lab_run_number: executed.as_ref().map(|r| r.number),
         verdict: output.verdict,
         justification: output.justification,
         evidence: output.evidence,
@@ -268,6 +295,11 @@ pub(crate) async fn ask_verifier(
         prompt_version: prompt,
         system_notes: Vec::new(),
     };
+    // A model's claimed test result is never an executed observation. Add only the
+    // system-recorded receipt, after checking static evidence separately below.
+    verification
+        .evidence
+        .retain(|e| !matches!(e.kind.as_str(), "test_result" | "lab_request_response"));
     if output.hypothesis_id.trim() != hypothesis.hypothesis_id.as_str() {
         verification.system_notes.push(format!(
             "O verificador citou \"{}\" em vez de {}; resposta associada à hipótese enviada.",
@@ -283,7 +315,93 @@ pub(crate) async fn ask_verifier(
         verification.verdict = Verdict::Inconclusive;
         verification.system_notes.push(problem);
     }
+    if crate::lab::required(run)
+        && (verification.verdict == Verdict::Confirmed || fix.is_some() || executed.is_some())
+    {
+        let expected = match verification.verdict {
+            Verdict::Confirmed => Some(opentatu_core::LabOutcome::Reproduced),
+            Verdict::Dismissed => Some(opentatu_core::LabOutcome::NotReproduced),
+            Verdict::Inconclusive => None,
+        };
+        let actual = executed
+            .as_ref()
+            .and_then(|r| r.execution.as_ref())
+            .map(|e| e.outcome);
+        let changed_case = output
+            .lab_case_id
+            .as_deref()
+            .zip(executed.as_ref())
+            .is_some_and(|(id, r)| id != r.context.case_id.as_str());
+        if expected.is_some() && (actual != expected || changed_case) {
+            lab_problem.get_or_insert_with(|| {
+                "resultado dinâmico ausente, inconclusivo ou incompatível com o veredito".into()
+            });
+        }
+    }
+    if let Some(problem) = lab_problem {
+        verification.verdict = Verdict::Inconclusive;
+        verification.missing_to_conclude = problem.clone();
+        verification
+            .system_notes
+            .push(format!("Laboratório: {problem}."));
+    }
+    if let Some(result) = executed {
+        verification.evidence.push(opentatu_core::EvidenceItem {
+            evidence_id: None,
+            kind: "lab_request_response".into(),
+            description: serde_json::to_string(&result)?,
+            steps: Vec::new(),
+        });
+    }
     Ok(Ok(verification))
+}
+
+async fn verifier_answer(
+    run: &AiRun,
+    hypothesis: &Hypothesis,
+    inputs: Vec<(Block, String)>,
+    conversation: u32,
+) -> Result<Result<RoleAnswer<VerifierOutput>, String>, Error> {
+    let variables = run.variables().await?;
+    let call = RoleCall {
+        audit_id: &run.audit.id,
+        variables: &variables,
+        inputs,
+        conversation,
+    };
+    let answer = match run_role::<VerifierOutput>(&run.ai.llm, call).await {
+        Ok(answer) => answer,
+        Err(error) => {
+            tracing::warn!(hypothesis=%hypothesis.hypothesis_id,%error,"verifier failed");
+            return Ok(Err(format!("verificador falhou: {error}")));
+        }
+    };
+    let step = if run.audit.kind == opentatu_core::AuditKind::Reverification {
+        "REVERIFY"
+    } else {
+        "VERIFY"
+    };
+    run.worker
+        .services
+        .set_audit_checkpoint(
+            &run.audit.id,
+            &format!("{step}:{}:{conversation}", hypothesis.hypothesis_id),
+        )
+        .await?;
+    let prompt = answer.prompt_versions.last().cloned().unwrap_or_default();
+    run.worker
+        .services
+        .record_suspicious_instructions(
+            &run.audit.id,
+            Reporter {
+                role: AiRole::Verifier,
+                model: &answer.model,
+                prompt_version: &prompt,
+            },
+            &answer.output.common.suspicious_instructions,
+        )
+        .await?;
+    Ok(Ok(answer))
 }
 
 async fn review_one(

@@ -18,6 +18,7 @@ mod audits;
 mod error;
 mod health;
 mod investigation;
+mod lab;
 mod maps;
 mod scanners;
 mod tasks;

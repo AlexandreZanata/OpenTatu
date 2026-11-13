@@ -31,7 +31,7 @@ pub struct FakeSuite {
 impl FakeSuite {
     /// Every scanner succeeds with no results.
     pub fn clean() -> Self {
-        let outcomes = ScannerKind::ALL
+        let outcomes = ScannerKind::STATIC
             .iter()
             .map(|kind| (*kind, FakeOutcome::Results(Vec::new())));
         Self {
@@ -68,6 +68,90 @@ impl FakeSuite {
             reported_severity: Some("HIGH".to_owned()),
             cwe: None,
         }
+    }
+}
+
+/// VM-free dynamic port using real policy/receipt contracts and recording executions.
+#[derive(Debug)]
+pub struct FakeLab {
+    app: opentatu_core::Slug,
+    policy: opentatu_core::LabPolicy,
+    outcome: opentatu_core::LabOutcome,
+    calls: Mutex<Vec<crate::LabRequest>>,
+    tamper: bool,
+}
+impl FakeLab {
+    /// Scripted dynamic outcome; no VM, sockets or real data.
+    pub fn new(
+        app: opentatu_core::Slug,
+        policy: opentatu_core::LabPolicy,
+        outcome: opentatu_core::LabOutcome,
+    ) -> Self {
+        Self {
+            app,
+            policy,
+            outcome,
+            calls: Mutex::new(Vec::new()),
+            tamper: false,
+        }
+    }
+    /// Simulates a receipt from a different source/controller.
+    #[must_use]
+    pub fn with_tampered_provenance(mut self) -> Self {
+        self.tamper = true;
+        self
+    }
+    /// Requests received so far.
+    pub fn calls(&self) -> Vec<crate::LabRequest> {
+        self.calls
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+}
+#[async_trait::async_trait]
+impl crate::LabSuite for FakeLab {
+    fn policy(&self, app: &opentatu_core::Slug) -> Option<opentatu_core::LabPolicy> {
+        (app == &self.app).then(|| self.policy.clone())
+    }
+    async fn run(&self, request: crate::LabRequest) -> Result<opentatu_core::LabExecution, Error> {
+        use opentatu_core::{LabExecution, LabObservation, LabOutcome};
+        let observation = |status, marker_found| LabObservation {
+            status,
+            marker_found,
+            bytes: 7,
+            body_digest: "synthetic-hash".into(),
+        };
+        let subject = match self.outcome {
+            LabOutcome::Reproduced => observation(200, true),
+            LabOutcome::NotReproduced => observation(403, false),
+            LabOutcome::Inconclusive => observation(500, false),
+        };
+        let source_digest = if self.tamper {
+            "wrong-source".into()
+        } else {
+            request.source_digest.clone()
+        };
+        self.calls
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(request.clone());
+        Ok(LabExecution {
+            outcome: self.outcome,
+            control: Some(observation(200, true)),
+            subject: Some(subject),
+            image_digest: self.policy.image_digest.clone(),
+            runner_digest: self.policy.runner_digest.clone(),
+            source_digest,
+            zap: Some(ScannerRun {
+                scanner: ScannerKind::Zap,
+                version: "fake-zap".into(),
+                image: self.policy.image_digest.clone(),
+                duration_ms: 1,
+                results: Vec::new(),
+            }),
+            note: String::new(),
+        })
     }
 }
 

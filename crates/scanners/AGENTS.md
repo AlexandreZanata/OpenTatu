@@ -1,4 +1,4 @@
-# opentatu-scanners — deterministic scanners in isolated containers
+# opentatu-scanners — static containers and offline dynamic lab
 
 Layer: **infrastructure** · May depend on: `opentatu-core` · Status: phase 2 ✅ (Semgrep,
 Gitleaks, Trivy fs, OSV-Scanner)
@@ -9,7 +9,7 @@ Gitleaks, Trivy fs, OSV-Scanner)
   containers, refresh their rules/databases in separate networked runs, and normalize their
   raw output to `opentatu_core::ScannerResult` (ADR-0023).
 - **Does not:** decide what is a vulnerability (the hunter triages), touch the database,
-  receive the API key or any secret (R16).
+  receive host/production API keys or real credentials (R16).
 
 ## Files
 
@@ -19,7 +19,7 @@ Gitleaks, Trivy fs, OSV-Scanner)
 | `src/isolation.rs` | `ISOLATION_FLAGS` (§E.5, single list), `ContainerRun::command_line`, `ContainerEngine`, `Network`, `Mount`, `SOURCE_TARGET` |
 | `src/config.rs` | `ScannersConfig`, `EngineConfig`, `ToolConfig` — `config/scanners.toml`, validated |
 | `src/suite.rs` | `ScannerSuite` port; `Scanners` (`run`, `update`, `ready`, `cache_dir`) |
-| `src/engine.rs` | `execute(run, timeout)` — the single process spawn (R12) |
+| `src/engine.rs` | `command`, `execute`, `lab_execute`, `guest_child` — the shared process boundary (R12) |
 | `src/adapters/mod.rs` | `Adapter` trait, `adapter(kind)`, helpers `clean_message`, `relative`, `first_cwe`, `parse_json`, `base_run` |
 | `src/adapters/{semgrep,gitleaks,trivy,osv}.rs` | one adapter per tool: analysis run, update runs, readiness, parser |
 | `src/testing.rs` | `FakeSuite`, `FakeOutcome` (feature `test-support`) |
@@ -29,8 +29,9 @@ Gitleaks, Trivy fs, OSV-Scanner)
 
 ## Local rules
 
-- The only crate allowed to start scanner processes (R12): `engine::execute` is the one call
-  site, with `#[allow(clippy::disallowed_methods)]` and a comment.
+- The only crate allowed to start scanner/lab processes (R12): `engine::command` is the
+  single construction site. Static execution, bounded host helpers and capability-gated
+  guest children use it; the one clippy exception stays there with its rule comment.
 - Never build engine arguments by hand: `ContainerRun::command_line()` only. Analysis runs
   are `Network::None`; a `Network::Default` run that mounts `SOURCE_TARGET` is refused.
 - Images pinned by digest in `config/scanners.toml`; the version there is reported in
@@ -49,3 +50,13 @@ Gitleaks, Trivy fs, OSV-Scanner)
 Parser tests over `tests/fixtures/`, command-line invariants in `isolation.rs`, config
 validation over the committed `config/scanners.toml`. Real containers:
 `cargo test -p opentatu-scanners --test containers -- --ignored --nocapture`.
+
+Phase 8 (ADR-0034): `lab_config.rs` validates explicit owner profiles and redacts fixture
+values; `lab.rs` implements `LabSuite` / `QemuLab`, fixed NIC-less QEMU argv, pinned image
+and controller, bounded serial receipts. `lab_guest.rs` owns the host-refusing guest
+capability, private source/build workspace, separate uid/gid and bounded GET controls.
+`lab_zap.rs` owns the passive requestor/wait/report plan and minimized parser. The shared
+`engine::command` is the sole process-construction site; guest application commands require
+the offline guest capability. `testing::FakeLab` reuses the same policy/receipt port.
+Static containers iterate `ScannerKind::STATIC`; ZAP cannot use their adapters. See
+[../../docs/LAB.md](../../docs/LAB.md) for the actual VM acceptance and image requirements.

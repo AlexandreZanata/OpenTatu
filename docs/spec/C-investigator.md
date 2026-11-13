@@ -73,3 +73,14 @@ exact location (file, lines, symbol) in the analyzed commit; the source → sink
 every step cited, or a demonstration that the expected control is absent; mitigations
 elsewhere checked and recorded. When the dynamic lab exists, also a reproducible test run by
 OpenTatu with its result recorded. Without this, the verdict is "inconclusive" (R05).
+
+## Phase 8 verifier execution protocol (ADR-0034)
+
+The optional `lab_case_id` selects an owner-defined read-only HTTP case matching the
+hypothesis file/CWE. After explicit audit/commit/profile approval, OpenTatu executes it
+in an offline VM and returns the receipt in a fenced lab block for a second verifier
+call. Confirmation/refutation still requires cited source; a model-claimed test is never
+execution evidence. Lab-configured decisive verification requires its matching completed
+receipt. Missing/unsupported/failed tests stay inconclusive, with untested coverage.
+Cross-identity cases require a successful authorized control. Passive ZAP alerts remain
+scanner input, not confirmation. Generated regression tests remain suggestions (R12).

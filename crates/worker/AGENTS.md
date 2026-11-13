@@ -31,7 +31,8 @@ phase 2 ✅ (scanners step); phase 3 ✅ (cartographer, map, coverage); phase 4 
 
 ## Local rules
 
-- Steps are idempotent and resumable from the last checkpoint.
+- Record completed-step/model checkpoints and preserve attempt history. Full audit
+  resumption is deferred to Q-032; interrupted lab attempts are not silently retried.
 - When a step is implemented, remove its sentence from `PENDING_STEPS`; an audit becomes
   COMPLETED only when every step of its kind ran (R13, R14).
 - Paths only from `DataLayout`; file contents only from `memory`/`reports`.
@@ -51,3 +52,14 @@ Empty diffs reuse the previous map in a new version without AI. An incremental r
 no new hypotheses/findings is deterministic; persistent findings do not repeat later roles.
 When no new map can be produced, scope reports still list the last known map's entries as
 unexamined (R14); missing AI never implies empty unexamined scope.
+
+Phase 8: `src/lab.rs` orchestrates approved case selection, budget/cap admission, safe
+source copy, VM deadline, provenance checks, failure recording and coverage limitations.
+The verifier uses two fenced calls around actual execution and discards model-claimed
+test evidence. `with_lab` injects the port. Artifacts include `lab_runs.json` and a
+system-owned lab report section. `tests/support/lab.rs` covers orchestration/fix gates;
+`tests/lab_qemu.rs` is opt-in actual Abastevo acceptance (see `docs/LAB.md`).
+
+Actual role-call usage also supplies embedded prompt-version provenance when a proposal
+succeeds but the dynamic follow-up fails. This assumes the existing single-process audit
+lifetime; cross-binary resumption remains Q-032.

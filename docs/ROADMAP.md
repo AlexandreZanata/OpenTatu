@@ -26,7 +26,7 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
 | 5 — Fix trail and MCP | ✅ | Planner, `MANIFEST.json`, MCP server, reverification, regression detection, regression tests | A fixing agent takes a task over MCP, fixes, submits, and OpenTatu approves or rejects on its own (verified 2026-11-12) |
 | 6 — Benchmark | ✅ | Run against intentionally vulnerable apps (e.g. OWASP Juice Shop, WebGoat), isolated only, compared with known flaws | A scoreboard exists (found, missed, false positives) per prompt version and per model |
 | 7 — Incremental audit | ✅ | Diff between commits, trigger by configured-branch polling (no webhook); a finding whose approved fix reaches the app's branch becomes CLOSED (Q-030, ADR-0032) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed (verified 2026-11-12 on a local Abastevo clone; fix approval, never-merged, squash and normal merge verified) |
-| 8 — Dynamic lab | ⬜ (on request) | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab |
+| 8 — Dynamic lab | ✅ | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab (verified 2026-11-13 on a fictitious Abastevo fixture) |
 | 9 — Host inspection (read-only) | ⬜ (on request) | Restricted SSH user, closed allowlist of commands, every command recorded | — |
 | 10 — Monitoring and defense | ⬜ (on request) | Integration with established sensors (e.g. Wazuh, Falco, osquery, CrowdSec), detection rules from the map, reversible response playbooks with owner approval | — |
 
@@ -285,3 +285,65 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   this workflow was US$0.34687874, counting the shared baseline/reverification only once.
   No production application was run and no Abastevo commit was pushed. Q-032 remains open;
   phase 8 was not started.
+
+
+## Phase 8: what exists
+
+- ADR-0034/Q-033/Q-034: disposable local offline QEMU/TCG, one OpenTatu executable also
+  acting as the trusted guest controller. Owner approval binds one queued audit, exact
+  commit and complete profile/controller digest. Models select an existing case ID; they
+  cannot provide programs, URLs, headers or executable test code. Supported evidence is
+  cross-identity read access (CWE-284/639/862), with exact file/handler/CWE matching.
+- Core lab policy/context/receipts and positive-control outcome rules; migration 0009
+  stores ordered, decided-once attempts with immutable identity/no-delete triggers.
+  Services owns atomic grants, caps including interrupted attempts, Clock timestamps,
+  computed outcomes and an independent persistence proof gate for verification/fixes.
+- Context reuses safe snapshot text selection and produces a private bounded copy with a
+  length-framed source digest. Scanners owns fixed NIC-less QEMU argv, pinned image and
+  controller, read-only input, disposable root, no monitor/share, cleared environments,
+  separate unprivileged app/ZAP identities and bounded lifetime/output/HTTP responses.
+  A successful authorized control is mandatory; redirects, failures and unknown cases
+  remain inconclusive. Raw bodies/credentials never enter history or model context.
+- Verifier 1.3.0 selects a case, receives actual minimized execution through fenced input,
+  then reviews it against cited source. Model test claims are discarded; only the system
+  receipt is evidence. Actual-call prompt provenance survives a failed follow-up. Passive
+  ZAP sends only the two approved GETs, waits and reports; alerts never establish a finding.
+  The launcher's explicit heap argument enforces 512 MiB. Static containers stay unchanged.
+- CLI `--lab-config`, `lab profile|approve`, `audit create --approve-lab`, strict hidden
+  `lab guest`; dashboard/report/audit JSON and `lab_runs.json` show real attempts and
+  limitations. Relative CLI data directories are canonicalized before scanner mount
+  validation. Fix approval still means FIX_APPROVED, with closure only after merge (R06).
+- Actual acceptance (2026-11-13): local Abastevo clone based on `6a19bcc`; an explicitly
+  planted fictitious handler, no production services/data and no app push. Vulnerable
+  local commit `82a6b51`, audit `AUD-ABASTEVO-20261113-0838`: 8m38s, authorized 200 and
+  other identity 200 with the synthetic fixture, REPRODUCED; a finding was recorded only
+  with its completed receipt and cited source. Fixed local commit `8f3687a`, audit
+  `AUD-ABASTEVO-20261113-0850`: 9m00s, authorized 200 and other identity 403 without the
+  fixture, NOT_REPRODUCED. Both built/ran the actual API and ZAP 2.17.0 inside separate
+  NIC-less VMs; ZAP completed in 72.5/70.4 seconds with zero passive alerts. The prepared
+  image's digest was unchanged after both runs. These known-case tests are not AI discovery
+  of an existing production flaw; the two-call AI protocol/fix state gates use hermetic fakes.
+- Earlier debug-controller checks reproduced the flaw, but the fixed run hit its 20-minute
+  TCG deadline without approval. Temporary validation storage was then lost across a session
+  environment change, interrupting a benchmark. Final checks use persistent ignored local
+  storage, a release controller and an offline prewarmed public-dependency cache; failures
+  remain limitations, never successful proof. Images/configuration/raw logs/app source are
+  outside version control. See [LAB.md](LAB.md) for setup, resource caps and exact commands.
+- Required prompt benchmark retained as
+  [AUD-BENCH-JUICE-SHOP-1-20261113-0815](../benchmark/results/AUD-BENCH-JUICE-SHOP-1-20261113-0815.json):
+  29m48s, 46 recorded calls, 2,766,560 input + 432,544 output tokens, recorded US$0.39999848.
+  The unchanged FULL budget stopped new calls at 3M tokens; already in-flight calls
+  completed. PARTIAL: 61 hypotheses, 32 confirmed, 9 inconclusive, 20 not verified;
+  no skeptic/planner/reporter calls after exhaustion, plus one provider failure. Found
+  3/33 known flaws (9%), four only as hypotheses, 26 missed. The 29 findings outside the
+  coding-challenge list are unreviewed candidates, not established false positives.
+- Benchmark recall is lower than the earlier default-budget run (9/33, 27%). This is an
+  observed quality limitation, not an improvement claim: cartographer/hunter 2.2.0 also
+  differ from that baseline's 2.1.0, and this run does not isolate the verifier's effect.
+  No budget was increased, answer files exposed or evidence guard weakened to improve the
+  score. The earlier interrupted run is not counted as a completed benchmark or included
+  in the retained run's cost. Further quality tuning is separate work for the owner to scope.
+- `cargo xtask check` passes: 298 tests, three opt-in infrastructure tests ignored by
+  default; the two QEMU acceptance tests above passed individually, and all four actual
+  static scanners ran in the benchmark. No production app was executed and no Abastevo
+  commit was pushed. Q-032 remains open; phases 9/10 and Sentinel were not started.

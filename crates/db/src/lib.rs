@@ -28,6 +28,7 @@ pub mod audits;
 pub mod events;
 pub mod health;
 pub mod investigation;
+pub mod lab;
 pub mod llm_usage;
 pub mod maps;
 pub mod scanner_results;

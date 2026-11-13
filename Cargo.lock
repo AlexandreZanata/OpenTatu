@@ -1341,6 +1341,7 @@ dependencies = [
  "opentatu-snapshots",
  "opentatu-worker",
  "serde_json",
+ "tempfile",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -1470,7 +1471,9 @@ name = "opentatu-scanners"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "getrandom 0.4.3",
  "opentatu-core",
+ "reqwest",
  "serde",
  "serde_json",
  "tempfile",

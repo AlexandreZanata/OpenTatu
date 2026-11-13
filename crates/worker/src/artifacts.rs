@@ -26,6 +26,12 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
     let layout = &worker.layout;
     let services = &worker.services;
     let app = services.app(&audit.app).await?;
+    let lab_runs = services.lab_runs(&audit.id).await?;
+    write_atomic(
+        &layout.lab_runs_file(&audit.id),
+        &(serde_json::to_string_pretty(&lab_runs)? + "\n"),
+    )
+    .await?;
 
     let profile = serde_json::to_string_pretty(&app)? + "\n";
     write_atomic(&layout.app_profile_file(app.slug()), &profile).await?;
@@ -62,7 +68,16 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
     if !calls.is_empty() {
         write_atomic(&layout.llm_usage_file(&audit.id), &lines).await?;
     }
-    let mut prompt_versions = BTreeMap::new();
+    // A completed proposal can have usage but no final verification event when the
+    // follow-up fails. Audits are not resumed across binaries (Q-032): the embedded
+    // catalog is the exact version used by these recorded calls in this process.
+    let mut version_tags = Vec::new();
+    let used_roles: BTreeSet<_> = calls.iter().filter_map(|call| call.usage.role).collect();
+    for role in used_roles {
+        if let Ok((_, tags)) = opentatu_investigator::system_template(role) {
+            version_tags.extend(tags);
+        }
+    }
     for event in services.audit_events(&audit.id).await? {
         let listed = event.content.data["prompt_versions"].as_array().cloned();
         let tags: Vec<String> = match listed {
@@ -72,10 +87,12 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
                 .collect(),
             None => event.content.prompt_version.into_iter().collect(),
         };
-        for tag in tags {
-            if let Some((name, version)) = tag.split_once('@') {
-                prompt_versions.insert(name.to_owned(), version.to_owned());
-            }
+        version_tags.extend(tags);
+    }
+    let mut prompt_versions = BTreeMap::new();
+    for tag in version_tags {
+        if let Some((name, version)) = tag.split_once('@') {
+            prompt_versions.insert(name.to_owned(), version.to_owned());
         }
     }
 
@@ -178,7 +195,7 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
     let data = reporting::report_data(worker, audit, &audit.limitations).await?;
     let body = match report {
         Some(report) => report.body_md,
-        None => fallback_body(&data),
+        None => opentatu_reports::lab_summary_text(&data.lab_runs) + &fallback_body(&data),
     };
     let header = ReportHeader {
         audit_id: audit.id.clone(),
@@ -221,6 +238,7 @@ pub(crate) async fn write_all(worker: &Worker, audit: &Audit) -> Result<(), Erro
             .collect(),
     });
     let record = AuditRecord::from_audit(audit)
+        .with_lab_runs(lab_runs)
         .with_scanners(scanner_versions)
         .with_ai(models, prompt_versions)
         .with_usage(usage)

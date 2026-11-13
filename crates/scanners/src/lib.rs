@@ -18,6 +18,10 @@ mod config;
 mod engine;
 mod error;
 mod isolation;
+mod lab;
+mod lab_config;
+mod lab_guest;
+mod lab_zap;
 mod suite;
 #[cfg(feature = "test-support")]
 pub mod testing;
@@ -27,4 +31,7 @@ pub use error::Error;
 pub use isolation::{
     ContainerEngine, ContainerRun, ISOLATION_FLAGS, Mount, Network, SOURCE_TARGET,
 };
+pub use lab::{GuestReceipt, LabRequest, LabSuite, QemuLab};
+pub use lab_config::{LabActor, LabProfile, LabsConfig};
+pub use lab_guest::run_guest;
 pub use suite::{ScannerSuite, Scanners};

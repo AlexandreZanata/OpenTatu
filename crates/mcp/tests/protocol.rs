@@ -90,6 +90,7 @@ async fn planned() -> Services {
         .unwrap()
         .unwrap();
     let verification = Verification {
+        lab_run_number: None,
         verdict: Verdict::Confirmed,
         justification: "x".into(),
         evidence: vec![EvidenceItem {

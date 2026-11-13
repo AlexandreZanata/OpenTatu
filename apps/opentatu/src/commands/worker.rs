@@ -19,6 +19,8 @@ use crate::output;
 /// Configuration files the worker reads.
 #[derive(Debug, Clone, Copy)]
 pub struct Configs<'a> {
+    /// Explicit owner VM profiles, absent by default.
+    pub labs: Option<&'a Path>,
     /// `config/scanners.toml`.
     pub scanners: &'a Path,
     /// `config/models.toml`.
@@ -116,12 +118,18 @@ pub async fn build(
     let layout = super::layout(data_dir)?;
     let services = super::services(data_dir).await?;
     let scanners = super::scanners::build(data_dir, configs.scanners)?;
-    let worker = Worker::new(
+    let mut worker = Worker::new(
         services.clone(),
         Snapshots::new(layout.clone()),
         Arc::new(scanners),
         layout,
     );
+    if let Some(path) = configs.labs {
+        worker = worker.with_lab(Arc::new(opentatu_scanners::QemuLab::load(
+            path,
+            crate::config::current_binary()?,
+        )?));
+    }
     match ai(configs.models, overrides, &services) {
         Ok(ai) => Ok(worker.with_ai(ai)),
         Err(error) if ai_required => Err(error),

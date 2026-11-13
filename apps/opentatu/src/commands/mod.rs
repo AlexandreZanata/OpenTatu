@@ -6,6 +6,7 @@ mod audit;
 mod benchmark;
 mod dashboard;
 mod db;
+mod lab;
 mod llm;
 mod mcp;
 mod scanners;
@@ -28,10 +29,12 @@ use crate::cli::{
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
     let data_dir = cli.data_dir.as_path();
     let configs = worker::Configs {
+        labs: cli.lab_config.as_deref(),
         scanners: cli.scanners_config.as_path(),
         models: cli.models_config.as_path(),
     };
     match cli.command {
+        Command::Lab(command) => lab::run(data_dir, configs.labs, command).await,
         Command::Serve { listen, worker } => {
             worker::serve(data_dir, configs, listen.address, &worker).await
         }
@@ -45,10 +48,11 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
         Command::App(AppCommand::Add(args)) => app::add(data_dir, args).await,
         Command::App(AppCommand::List) => app::list(data_dir).await,
         Command::Audit(AuditCommand::Create {
+            approve_lab,
             app,
             kind,
             revision,
-        }) => audit::create(data_dir, &app, kind, revision).await,
+        }) => audit::create(data_dir, &app, kind, revision, approve_lab, configs.labs).await,
         Command::Audit(AuditCommand::List { app, limit }) => {
             audit::list(data_dir, app.as_deref(), limit).await
         }

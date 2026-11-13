@@ -1,0 +1,41 @@
+# Copy to an owner-controlled, git-ignored *.local.toml file and review every field.
+# This example is disabled until explicitly supplied with --lab-config and approved.
+[profiles.demo]
+fictitious_data = true
+image = "/absolute/path/to/standalone-lab.qcow2"
+image_digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+source_paths = ["backend"]
+workdir = "backend"
+build = ["/usr/local/go/bin/go", "build", "-o", "/work/application/server", "./cmd/api"]
+run = ["/work/application/server"]
+port = 8080
+readiness_path = "/health/live"
+memory_mb = 3072
+cpus = 2
+timeout_seconds = 1200
+max_tests_per_audit = 2
+zap_path = "/opt/ZAP_2.17.0/zap.sh"
+zap_version = "2.17.0"
+
+[profiles.demo.fixture_env]
+GOMODCACHE = "/opt/opentatu-gomod"
+CGO_ENABLED = "0"
+GOMAXPROCS = "1"
+TMPDIR = "/work/application"
+GOTMPDIR = "/work/application"
+HOME = "/work/application"
+
+[profiles.demo.actors.owner-b.headers]
+X-Lab-Actor = "owner-b"
+[profiles.demo.actors.stranger-a.headers]
+X-Lab-Actor = "stranger-a"
+
+[[profiles.demo.cases]]
+id = "account-b"
+path = "/v1/lab/accounts/owner-b"
+file = "backend/cmd/api/phase8_lab.go"
+symbol = "phase8Account"
+cwes = ["CWE-639", "CWE-862", "CWE-284"]
+control_actor = "owner-b"
+subject_actor = "stranger-a"
+marker = "LAB_ONLY_ACCOUNT_B_726"

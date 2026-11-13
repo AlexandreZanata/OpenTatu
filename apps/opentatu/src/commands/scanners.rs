@@ -36,7 +36,7 @@ pub async fn update(
 pub fn status(data_dir: &Path, config_path: &Path) -> anyhow::Result<()> {
     let scanners = build(data_dir, config_path)?;
     let enabled = scanners.enabled();
-    for kind in ScannerKind::ALL.iter().copied() {
+    for kind in ScannerKind::STATIC.iter().copied() {
         let Some(tool) = scanners.config().tool(kind) else {
             continue;
         };

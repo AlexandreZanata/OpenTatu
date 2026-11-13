@@ -87,7 +87,7 @@ crates/services/    use cases shared by dashboard, MCP, CLI and worker
 crates/dashboard/   Axum + Askama UI; components in templates/components/ui.html
 crates/llm/         generate(role, messages, schema); config/models.toml; FakeClient
 crates/investigator/ prompts, strict rendering, fencing of untrusted content
-crates/scanners/    isolated containers (single isolation flag list), normalized results
+crates/scanners/    isolated static containers + offline QEMU lab, normalized results
 crates/snapshots/   git mirror per app, exact-commit checkout (the only git caller)
 crates/memory/      MEMORY.md, history, audit comparison, dedup (pure)
 crates/reports/     audit.json, report.md, SARIF, MANIFEST.json (pure)

@@ -48,3 +48,7 @@ have unit tests. Role execution tests use `opentatu_llm::FakeClient` (`run::test
 
 Phase 7: cartographer/hunter prompts 2.2.0 describe incremental scope using existing
 previous-map/diff blocks; output schemas and the fenced role execution path are reused.
+
+Phase 8: verifier prompt 1.3.0 and `VerifierOutput.lab_case_id` support selection of an
+owner-defined case and a fenced executed-result follow-up. Availability comes from actual
+approval/configuration; a descriptive app URL never grants network access.

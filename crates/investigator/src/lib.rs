@@ -35,7 +35,7 @@ pub use cartographer::{CartographerInputs, CartographerOutput, asvs_listing};
 pub use error::Error;
 pub use fence::{Block, fence};
 pub use outputs::{CommonFields, SuspiciousInstruction};
-pub use prompts::Prompt;
+pub use prompts::{Prompt, system_template};
 pub use render::render;
 pub use roles::{
     HunterOutput, PlannerOutput, PlannerTask, ReporterOutput, SkepticOutput, VerifierOutput,

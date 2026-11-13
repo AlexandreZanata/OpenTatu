@@ -58,3 +58,8 @@ Incremental coverage cannot mark an unexamined shared ASVS requirement VERIFIED.
 `actionable_findings` excludes persistent old findings from incremental role work;
 `original_hypothesis` keeps reverification tied to the evidence-confirmed original claim
 rather than a newer unverified re-detection.
+
+Phase 8: `src/lab.rs` owns `create_lab_audit`, `approve_lab_audit`, `lab_approved`,
+`start_lab_run`, `complete_lab_run`, `lab_runs` and the persistence proof gate. Grants bind
+one queued audit/commit/profile, case source/symbol/CWE and cap. Completion recomputes outcomes;
+decisive lab verification and fix/semantic reverification require matching stored proof.

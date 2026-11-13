@@ -32,3 +32,7 @@ Layer: **interface** · May depend on: `opentatu-core`, `opentatu-services` · S
 
 Phase 7: tool/server instructions explain FIX_APPROVED versus CLOSED. MCP submission
 still only queues reverification; no tool gains merge-closure authority.
+
+Phase 8: fixing agents still submit exact commits through the existing tools. Dynamic
+execution requires the owner's separate queued-audit CLI approval; submission does not
+authorize a VM run. Model/agent test claims cannot replace executed system receipts.

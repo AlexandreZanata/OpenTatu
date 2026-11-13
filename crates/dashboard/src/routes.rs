@@ -398,6 +398,7 @@ mod tests {
             .unwrap()
             .unwrap();
         let verification = Verification {
+            lab_run_number: None,
             verdict: Verdict::Confirmed,
             justification: "x".into(),
             evidence: vec![EvidenceItem {

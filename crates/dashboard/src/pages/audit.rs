@@ -30,6 +30,7 @@ struct AuditPage {
     hypotheses: Vec<HypothesisRow>,
     tasks: Vec<TaskRow>,
     reverification: Vec<Item>,
+    lab_runs: Vec<Item>,
     has_report: bool,
     timeline: Vec<TimelineEntry>,
 }
@@ -85,6 +86,12 @@ pub async fn page(
             .await?
             .iter()
             .map(reverification_item)
+            .collect(),
+        lab_runs: services
+            .lab_runs(&id)
+            .await?
+            .iter()
+            .map(crate::view::lab_run_item)
             .collect(),
         has_report: services.report_of_audit(&id).await?.is_some(),
         timeline: events.iter().map(timeline_entry).collect(),

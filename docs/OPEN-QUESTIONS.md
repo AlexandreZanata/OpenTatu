@@ -316,3 +316,14 @@ authorize implementation, deployment or a production action.
   A new audit is distinct from resuming the stopped run. The owner must choose trigger,
   cumulative budget, retry semantics and handling of changed code/provider configuration
   before resumption is implemented.
+
+## Q-033 — Initial dynamic-lab virtualization target
+- **Status:** answered (2026-11-12) · **Blocks:** nothing
+- **Answer:** a disposable local QEMU VM, using TCG when KVM is unavailable (owner).
+  Application code runs only in that VM, with fictitious data and no network interface.
+
+## Q-034 — Dynamic-test approval granularity
+- **Status:** answered (2026-11-12) · **Blocks:** nothing
+- **Answer:** owner approval per audit and exact commit, inside a restricted set of
+  non-destructive HTTP probes (owner). The approval binds the complete owner-controlled
+  lab-profile digest; changing the profile or commit requires a fresh approval.

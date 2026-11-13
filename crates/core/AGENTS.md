@@ -70,3 +70,9 @@ Phase 7: `src/change.rs` owns `FileChange`, `FixIdentity` and `IncrementalScope`
 `src/map_incremental.rs` owns `MapContent::preserve_unchanged`. `FIX_APPROVED` separates
 reverification approval from CLOSED (ADR-0032). Verification JSON has optional persisted
 patch identity; old records deserialize without rewriting history.
+
+Phase 8: `src/lab.rs` defines `LabCase`, `LabPolicy`, `LabContext`, `LabObservation`,
+`LabOutcome`, `LabExecution` and dated `LabRun`. Positive controls decide the dynamic
+outcome. `ContentHasher` provides streaming/length-framed source hashes; existing finding
+fingerprints keep their frozen algorithm. `Verification.lab_run_number` is system-owned
+and serde-defaulted; `ScannerKind::STATIC` excludes the VM-only ZAP variant.

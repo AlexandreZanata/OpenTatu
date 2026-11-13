@@ -305,6 +305,19 @@ impl Services {
         reverification.verification = outcome.verification;
         reverification.regressions = outcome.regressions;
         reverification.regression_test_found = outcome.regression_test_found;
+        if let Some(verification) = &mut reverification.verification {
+            let current = opentatu_db::audits::get(&mut tx, audit)
+                .await?
+                .ok_or_else(|| Error::UnknownAudit(audit.clone()))?;
+            crate::lab::enforce_proof(
+                &mut tx,
+                &current,
+                None,
+                Some(&reverification.finding_id),
+                verification,
+            )
+            .await?;
+        }
         let (result, mut reasons) = reverification.decide();
         if result == ReverificationResult::Passed && reverification.fix_identity.is_none() {
             return Err(Error::Conflict(
@@ -414,7 +427,7 @@ impl Services {
         finding_id: &FindingId,
         approval: &AuditId,
         method: &str,
-        verification: Option<Verification>,
+        mut verification: Option<Verification>,
     ) -> Result<(), Error> {
         let mut tx = self.db.begin().await?;
         let audit = opentatu_db::audits::get(&mut tx, audit_id)
@@ -435,6 +448,9 @@ impl Services {
                 "merge closure requires a passed reverification and a configured-branch audit"
                     .into(),
             ));
+        }
+        if let Some(proof) = &mut verification {
+            crate::lab::enforce_proof(&mut tx, &audit, None, Some(finding_id), proof).await?;
         }
         if !matches!(
             method,

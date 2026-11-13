@@ -48,6 +48,7 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `tasks` | task_id, finding_id, app, audit_id, number, state, priority, claimed_by, branch, fix_commit, created_at, content (JSON) — never deleted | 5 ✅ |
 | `verifications` | audit_id (the REVERIFICATION audit), task_id, result, created_at, decided_at, content (JSON, including approved fix base/branch head, per-commit and whole-diff patch IDs in phase 7) — decided once | 5–7 ✅ |
 | `agents` | name, token_hash (never the token, R16), registered_at, revoked_at — never deleted (ADR-0030) | 5 ✅ |
+| `lab_runs` | audit_id, number, hypothesis_id, completed_at, content (JSON) — immutable identity, decided once, never deleted | 8 ✅ |
 | `decisions` | id, kind, target, justification, expires_at, occurred_at | 4 |
 | `scanner_results` | id, audit_id, scanner, result_id, rule_id, message, file, start_line, end_line, reported_severity, cwe — append-only | 2 ✅ |
 
@@ -111,3 +112,13 @@ Phase 7 adds indexes on `audits(app, branch, created_at)` and `audits(app, statu
 (migration 0008), not a second queue. The polling enqueue decision uses one write transaction.
 Approved patch identity extends verification JSON with a backward-compatible optional field;
 past decided rows and append-only history are not rewritten.
+
+## Phase 8 runtime and persistence (ADR-0034)
+
+The four static tools retain their disposable offline containers. ZAP runs only inside
+the separate offline QEMU lab with the exact approved GET requestor/passive/report plan.
+The one OpenTatu binary also serves as the trusted guest controller. `lab_runs` (migration
+0009) stores audit_id/number/hypothesis_id/completed_at/content, with no-delete, immutable
+identity and decided-once triggers. Start/result events share their write transactions.
+Owner approvals are existing append-only OWNER_DECISION events; no separate grant service
+or execution authority is exposed over MCP. See [../LAB.md](../LAB.md).

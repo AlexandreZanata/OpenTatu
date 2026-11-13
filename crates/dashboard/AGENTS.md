@@ -76,3 +76,7 @@ for `view.rs` mappings and `config.rs`.
 Phase 7: `finding_state_badge` maps FIX_APPROVED to the owner label; the app page lists
 approved fixes awaiting merge separately, reusing `ui::findings_table`. No new CSS or
 markup component is needed.
+
+Phase 8: `src/view/lab.rs::lab_run_item` formats actual attempts using the existing
+`Item`/item-list component on the audit page; no script, CSS duplication or execution
+authority is added. Timeline labels include lab start/completion.

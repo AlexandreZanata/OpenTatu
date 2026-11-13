@@ -10,6 +10,9 @@ use opentatu_core::{AiRole, AuditKind, ScannerKind, TaskState};
 #[derive(Debug, Parser)]
 #[command(name = "opentatu", version)]
 pub struct Cli {
+    /// Explicit owner lab profiles; omitted means no VM execution.
+    #[arg(long, global = true)]
+    pub lab_config: Option<PathBuf>,
     /// Data directory: SQLite database and per-app artifacts (spec §B.4).
     #[arg(long, global = true, env = "OPENTATU_DATA_DIR", default_value = "data")]
     pub data_dir: PathBuf,
@@ -43,7 +46,34 @@ pub struct Cli {
 
 /// Top-level commands.
 #[derive(Debug, Subcommand)]
+pub enum LabCommand {
+    /// Show the non-secret policy and digest before approval.
+    Profile {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+    },
+    /// Approve the lab profile for an audit that is still queued.
+    Approve {
+        /// Exact audit id, including a queued fix reverification.
+        #[arg(long)]
+        audit: String,
+    },
+    /// Trusted controller entry point; refuses execution outside the offline guest.
+    #[command(hide = true)]
+    Guest {
+        /// Private host-created manifest, inside the VM only.
+        #[arg(long)]
+        manifest: PathBuf,
+    },
+}
+
+/// Top-level commands.
+#[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Review or authorize offline QEMU laboratory execution.
+    #[command(subcommand)]
+    Lab(LabCommand),
     /// Run the dashboard and the audit worker in one process (default local mode).
     Serve {
         /// Listening options.
@@ -122,7 +152,7 @@ pub struct AddAppArgs {
     /// Sensitive data handled by the app, comma separated.
     #[arg(long, value_delimiter = ',')]
     pub sensitive_data: Vec<String>,
-    /// Isolated lab URL for dynamic tests (never production, R10).
+    /// Legacy descriptive lab URL. Execution requires --lab-config and audit approval.
     #[arg(long)]
     pub lab_url: Option<String>,
 }
@@ -231,6 +261,9 @@ fn parse_role_model(text: &str) -> Result<(AiRole, String), String> {
 pub enum AuditCommand {
     /// Queue an audit of the exact commit of a branch or revision (R02).
     Create {
+        /// Approve the configured restricted lab envelope for this exact new audit/commit.
+        #[arg(long)]
+        approve_lab: bool,
         /// App slug.
         #[arg(long)]
         app: String,
@@ -290,7 +323,11 @@ pub enum ScannersCommand {
 
 fn parse_scanner(text: &str) -> Result<ScannerKind, String> {
     text.parse()
-        .map_err(|_| format!("unknown scanner {text:?} (semgrep, gitleaks, trivy, osv-scanner)"))
+        .ok()
+        .filter(|kind| ScannerKind::STATIC.contains(kind))
+        .ok_or_else(|| {
+            format!("unknown static scanner {text:?} (semgrep, gitleaks, trivy, osv-scanner)")
+        })
 }
 
 /// `opentatu llm ...`
@@ -333,5 +370,32 @@ mod tests {
     #[test]
     fn cli_definition_is_valid() {
         Cli::command().debug_assert();
+    }
+    #[test]
+    fn r10_lab_config_and_explicit_audit_approval_parse() {
+        let cli = Cli::try_parse_from([
+            "opentatu",
+            "--lab-config",
+            "/tmp/owner.local.toml",
+            "audit",
+            "create",
+            "--app",
+            "demo",
+            "--approve-lab",
+        ])
+        .unwrap();
+        assert_eq!(
+            cli.lab_config.unwrap(),
+            PathBuf::from("/tmp/owner.local.toml")
+        );
+        assert!(matches!(
+            cli.command,
+            Command::Audit(AuditCommand::Create {
+                approve_lab: true,
+                ..
+            })
+        ));
+        assert!(parse_scanner("zap").is_err(), "ZAP is VM-only");
+        assert!(parse_scanner("semgrep").is_ok());
     }
 }

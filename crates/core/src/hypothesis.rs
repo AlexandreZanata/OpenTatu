@@ -190,6 +190,9 @@ pub struct Verification {
     pub prompt_version: String,
     /// What the system changed (pt-BR), e.g. a confirmation without evidence.
     pub system_notes: Vec<String>,
+    /// System-recorded VM attempt in this audit; never accepted from model output.
+    #[serde(default)]
+    pub lab_run_number: Option<u32>,
 }
 
 impl Verification {
@@ -338,6 +341,7 @@ mod tests {
             what_happens: "x".into(),
         };
         let mut verification = Verification {
+            lab_run_number: None,
             verdict: Verdict::Confirmed,
             justification: "x".into(),
             evidence: vec![EvidenceItem {

@@ -50,16 +50,8 @@ impl RunContext<'_> {
             ),
             ("remaining_budget", self.remaining_budget.to_owned()),
             ("memory", fence(Block::Memory, self.memory)),
-            (
-                "lab_available",
-                if profile.lab_url.is_some() {
-                    "yes"
-                } else {
-                    "no"
-                }
-                .to_owned(),
-            ),
-            ("lab_url", profile.lab_url.clone().unwrap_or_else(none)),
+            ("lab_available", "no".to_owned()),
+            ("lab_url", none()),
         ])
     }
 }

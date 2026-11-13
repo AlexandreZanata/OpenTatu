@@ -243,3 +243,19 @@ handlers, includes new entries, and falls back to changed source files. Unchange
 records are retained and unexamined coverage remains NOT_TESTED. Scope is explicit in
 `audit.json` and the system-owned report section. INCREMENTAL has its configured budget.
 See ADR-0033; PAUSED resumption remains deferred to Q-032.
+
+## Phase 8 dynamic evidence
+
+The existing worker calls the verifier with a non-secret approved case catalog, admits its
+case ID through services, copies bounded snapshot text through context, then calls the
+scanners `LabSuite` port. `QemuLab` verifies pinned image/controller, launches one offline
+VM and validates its minimized receipt. The same executable controls the guest; application
+and ZAP run as separate unprivileged identities. No arbitrary generated code is executed.
+Services recomputes the outcome and stores start/completion with events. The verifier
+receives the actual result through fenced input; persistence independently requires that
+row for a decisive dynamic verdict. Existing static source checks and R06 still apply.
+
+No new crate or internal dependency edge is introduced. Database projection `lab_runs`
+and system report/UI sections preserve provenance and failures. Lab resource/time limits
+are bounded by the audit budget. Static analysis remains available with declared missing
+dynamic coverage. See ADR-0034 and [LAB.md](LAB.md).

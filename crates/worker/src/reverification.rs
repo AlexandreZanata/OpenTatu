@@ -94,7 +94,8 @@ pub(crate) async fn run(
     services
         .record_report(ReportText {
             audit_id: audit.id.clone(),
-            body_md: reverification_body(&decided, &task),
+            body_md: opentatu_reports::lab_summary_text(&services.lab_runs(&audit.id).await?)
+                + &reverification_body(&decided, &task),
             memory_summary: String::new(),
             pending_investigations: Vec::new(),
             model: "system".to_owned(),

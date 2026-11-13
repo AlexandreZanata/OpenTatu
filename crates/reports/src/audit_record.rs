@@ -53,6 +53,8 @@ pub struct AuditRecord {
     pub coverage: Option<CoverageSummary>,
     /// Explicit changed/examined/out-of-scope paths for an incremental audit.
     pub incremental_scope: Option<opentatu_core::IncrementalScope>,
+    /// Actual VM attempts; empty means none were executed.
+    pub lab_runs: Vec<opentatu_core::LabRun>,
     /// What this audit did not cover.
     pub limitations: Vec<String>,
 }
@@ -103,8 +105,16 @@ impl AuditRecord {
             results: None,
             coverage: None,
             incremental_scope: None,
+            lab_runs: Vec::new(),
             limitations: audit.limitations.clone(),
         }
+    }
+
+    /// Attaches the system-recorded VM receipts, including failures.
+    #[must_use]
+    pub fn with_lab_runs(mut self, runs: Vec<opentatu_core::LabRun>) -> Self {
+        self.lab_runs = runs;
+        self
     }
 
     /// Sets the version of every scanner that ran (`None` when none ran, R14).

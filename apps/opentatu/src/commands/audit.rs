@@ -15,6 +15,8 @@ pub async fn create(
     app: &str,
     kind: AuditKind,
     revision: Option<String>,
+    approve_lab: bool,
+    lab_config: Option<&Path>,
 ) -> anyhow::Result<()> {
     let slug = Slug::new(app)?;
     let layout = super::layout(data_dir)?;
@@ -26,15 +28,19 @@ pub async fn create(
         .await?;
     let revision = revision.unwrap_or_else(|| app.profile.branch.clone());
     let commit = snapshots.resolve(&slug, &revision).await?;
-    let audit = services
-        .create_audit(NewAudit {
-            app: slug,
-            kind,
-            commit,
-            branch: Some(revision),
-            requested_by: Actor::Owner,
-        })
-        .await?;
+    let input = NewAudit {
+        app: slug,
+        kind,
+        commit,
+        branch: Some(revision),
+        requested_by: Actor::Owner,
+    };
+    let audit = if approve_lab {
+        let policy = super::lab::policy(lab_config, &input.app)?;
+        services.create_lab_audit(input, &policy).await?
+    } else {
+        services.create_audit(input).await?
+    };
     output::line(&format!(
         "queued {} ({}, commit {}) at {}",
         audit.id,

@@ -17,3 +17,8 @@
 .vscode/
 *.swp
 .DS_Store
+
+# Owner-controlled lab recipes, VM images and credentials
+*.local.toml
+*.qcow2
+*.iso

@@ -122,6 +122,8 @@ pub fn event_label(kind: EventKind) -> &'static str {
         K::AgentRegistered => "Agente de correção cadastrado",
         K::AgentRevoked => "Agente de correção revogado",
         K::McpToolCalled => "Ferramenta MCP consultada",
+        K::LabTestStarted => "Teste no laboratório iniciado",
+        K::LabTestCompleted => "Teste no laboratório concluído",
     }
 }
 
@@ -383,3 +385,6 @@ mod tests {
         assert_eq!(labels.len(), EventKind::ALL.len());
     }
 }
+
+mod lab;
+pub use lab::lab_run_item;

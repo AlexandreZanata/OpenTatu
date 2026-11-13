@@ -38,8 +38,8 @@ opentatu_core::text_enum! {
     }
 }
 
-/// Owner-facing (pt-BR) limitations of every FULL audit while parts of spec §C.7 do not
-/// exist. The dynamic lab is phase 8 (on request); it removes this sentence.
+/// Owner-facing (pt-BR) baseline when dynamic execution is not configured. Kept as the
+/// existing public constant for integrations; configured lab coverage is computed per run.
 pub const PENDING_STEPS: &[&str] = &["Testes dinâmicos não executados (sem laboratório)."];
 
 /// Runs every implemented step for a `RUNNING` audit and returns the finished audit.
@@ -70,7 +70,7 @@ pub async fn run(worker: &Worker, audit: Audit) -> Result<Audit, Error> {
             limitations.extend(run.budget.limitation());
         }
     }
-    limitations.extend(PENDING_STEPS.iter().map(|s| (*s).to_owned()));
+    limitations.extend(crate::lab::limitations(worker, &audit).await?);
     limitations.extend(reporting::run(worker, ai.as_ref(), &audit, &limitations).await?);
     checkpoint(worker, &audit, Step::Report).await?;
     finish(worker, &audit, &limitations).await
@@ -81,6 +81,7 @@ async fn reverify(worker: &Worker, audit: &Audit, source: &Path) -> Result<Audit
     let ai = AiRun::start(worker, audit, source).await?;
     let mut limitations = reverification::run(worker, ai.as_ref(), audit).await?;
     limitations.extend(ai.as_ref().and_then(|run| run.budget.limitation()));
+    limitations.extend(crate::lab::limitations(worker, audit).await?);
     checkpoint(worker, audit, Step::Reverify).await?;
     finish(worker, audit, &limitations).await
 }
@@ -135,7 +136,7 @@ async fn scanners(worker: &Worker, audit: &Audit, source: &Path) -> Result<Vec<S
     let output = worker.layout.scanner_output_dir(&audit.id);
     let enabled = worker.scanners.enabled();
     let mut limitations = Vec::new();
-    for kind in ScannerKind::ALL.iter().copied() {
+    for kind in ScannerKind::STATIC.iter().copied() {
         if !enabled.contains(&kind) {
             limitations.push(format!(
                 "Scanner {kind} desativado em config/scanners.toml: seus resultados não fazem parte desta auditoria."

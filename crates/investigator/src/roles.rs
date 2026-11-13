@@ -44,6 +44,9 @@ pub struct VerifierOutput {
     /// Must repeat the id of `<hypothesis>`.
     #[serde(default, deserialize_with = "opentatu_core::lenient::text")]
     pub hypothesis_id: String,
+    /// ID of an owner-defined GET case. No arbitrary executable test is accepted.
+    #[serde(default)]
+    pub lab_case_id: Option<String>,
     /// Verdict.
     #[serde(deserialize_with = "opentatu_core::lenient::any_case")]
     pub verdict: Verdict,

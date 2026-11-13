@@ -75,10 +75,13 @@ impl ScannersConfig {
     /// Problems in the configuration (empty = valid).
     pub fn validate(&self) -> Vec<String> {
         let mut problems = Vec::new();
+        if self.scanners.contains_key(&ScannerKind::Zap) {
+            problems.push("ZAP requires an offline VM lab profile, not a static container".into());
+        }
         if self.engine.timeout_minutes == 0 {
             problems.push("engine.timeout_minutes must be greater than 0".to_owned());
         }
-        for kind in ScannerKind::ALL {
+        for kind in ScannerKind::STATIC {
             let Some(tool) = self.scanners.get(kind) else {
                 problems.push(format!("scanners.{kind} is missing"));
                 continue;
@@ -127,10 +130,23 @@ mod tests {
     const COMMITTED: &str = include_str!("../../../config/scanners.toml");
 
     #[test]
+    fn r10_zap_cannot_be_configured_as_a_static_container() {
+        let mut config = ScannersConfig::from_toml(COMMITTED).unwrap();
+        let tool = config.scanners[&ScannerKind::Semgrep].clone();
+        config.scanners.insert(ScannerKind::Zap, tool);
+        assert!(
+            config
+                .validate()
+                .iter()
+                .any(|p| p.contains("ZAP requires an offline VM"))
+        );
+    }
+
+    #[test]
     fn committed_config_is_valid_and_complete() {
         let config = ScannersConfig::from_toml(COMMITTED).unwrap();
         assert!(config.validate().is_empty(), "{:?}", config.validate());
-        assert_eq!(config.scanners.len(), ScannerKind::ALL.len());
+        assert_eq!(config.scanners.len(), ScannerKind::STATIC.len());
     }
 
     #[test]

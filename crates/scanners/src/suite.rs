@@ -56,7 +56,7 @@ impl Scanners {
     /// Refreshes the rules/databases of `kind` (network access, never the source).
     pub async fn update(&self, kind: ScannerKind) -> Result<(), Error> {
         let tool = self.config.tool(kind).ok_or(Error::Disabled(kind))?;
-        let adapter = adapter(kind);
+        let adapter = adapter(kind)?;
         let cache = self.cache_dir(kind);
         create_dir(&cache)?;
         let seed = self
@@ -103,7 +103,7 @@ impl Scanners {
 #[async_trait::async_trait]
 impl ScannerSuite for Scanners {
     fn enabled(&self) -> Vec<ScannerKind> {
-        ScannerKind::ALL
+        ScannerKind::STATIC
             .iter()
             .copied()
             .filter(|kind| self.config.tool(*kind).is_some_and(|tool| tool.enabled))
@@ -111,7 +111,7 @@ impl ScannerSuite for Scanners {
     }
 
     fn ready(&self, kind: ScannerKind) -> bool {
-        adapter(kind).ready(&self.cache_dir(kind))
+        adapter(kind).is_ok_and(|adapter| adapter.ready(&self.cache_dir(kind)))
     }
 
     async fn run(
@@ -128,7 +128,7 @@ impl ScannerSuite for Scanners {
         if !self.ready(kind) {
             return Err(Error::NotReady(kind));
         }
-        let adapter = adapter(kind);
+        let adapter = adapter(kind)?;
         create_dir(output_dir)?;
         let output_file = output_dir.join(adapter.output_file());
         remove_file(&output_file)?;
@@ -227,7 +227,7 @@ mod tests {
     async fn without_offline_data_scanners_are_not_ready() {
         let root = tempfile::tempdir().unwrap();
         let suite = scanners(root.path());
-        assert_eq!(suite.enabled(), ScannerKind::ALL);
+        assert_eq!(suite.enabled(), ScannerKind::STATIC);
         assert!(
             suite.ready(ScannerKind::Gitleaks),
             "gitleaks ships its rules"

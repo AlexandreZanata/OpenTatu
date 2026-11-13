@@ -177,6 +177,10 @@ impl Services {
             .await?
             .ok_or_else(|| Error::UnknownHypothesis(id.clone()))?;
         let audit_id = hypothesis.audit_id.clone();
+        let audit = opentatu_db::audits::get(&mut tx, &audit_id)
+            .await?
+            .ok_or_else(|| Error::UnknownAudit(audit_id.clone()))?;
+        crate::lab::enforce_proof(&mut tx, &audit, Some(id), None, &mut verification).await?;
         let next = state_after(hypothesis.state, verification.verdict.state())?;
         let mut number = opentatu_db::investigation::evidence_count(&mut tx, &audit_id).await?;
         for item in &mut verification.evidence {
@@ -202,9 +206,6 @@ impl Services {
         if next == FindingState::Confirmed {
             let app = audit_id.slug().clone();
             let number = opentatu_db::investigation::next_finding_number(&mut tx, &app).await?;
-            let audit = opentatu_db::audits::get(&mut tx, &audit_id)
-                .await?
-                .ok_or_else(|| Error::UnknownAudit(audit_id.clone()))?;
             let detection = Detection {
                 audit_id: audit_id.clone(),
                 at: now,
@@ -553,6 +554,7 @@ pub(crate) mod tests {
 
     pub(crate) fn verification(verdict: Verdict) -> Verification {
         Verification {
+            lab_run_number: None,
             verdict,
             justification: "x".into(),
             evidence: vec![EvidenceItem {

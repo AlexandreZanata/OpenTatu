@@ -117,6 +117,20 @@ impl BudgetGuard {
         })
     }
 
+    /// Remaining audit lifetime also bounds VM execution, including its wait for a slot.
+    pub(crate) fn remaining_seconds(&self, worker: &Worker, audit: &Audit, cap: u64) -> u64 {
+        self.limits.map_or(cap, |limits| {
+            let used = worker
+                .services
+                .now()
+                .seconds_since(&audit.started_at.unwrap_or(audit.created_at));
+            u64::from(limits.max_minutes)
+                .saturating_mul(60)
+                .saturating_sub(u64::try_from(used).unwrap_or(0))
+                .min(cap)
+        })
+    }
+
     fn reason(&self) -> Option<String> {
         self.exhausted
             .lock()

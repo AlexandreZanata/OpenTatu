@@ -68,13 +68,14 @@ pub(crate) trait Adapter: Sync {
 }
 
 /// The adapter of `kind`.
-pub(crate) fn adapter(kind: ScannerKind) -> &'static dyn Adapter {
-    match kind {
+pub(crate) fn adapter(kind: ScannerKind) -> Result<&'static dyn Adapter, Error> {
+    Ok(match kind {
         ScannerKind::Semgrep => &semgrep::Semgrep,
         ScannerKind::Gitleaks => &gitleaks::Gitleaks,
         ScannerKind::Trivy => &trivy::Trivy,
         ScannerKind::Osv => &osv::Osv,
-    }
+        ScannerKind::Zap => return Err(Error::Disabled(kind)),
+    })
 }
 
 /// Collapses whitespace and truncates to [`MAX_MESSAGE_CHARS`].
@@ -153,10 +154,10 @@ mod tests {
 
     #[test]
     fn every_scanner_has_an_adapter() {
-        for kind in ScannerKind::ALL {
-            assert_eq!(adapter(*kind).kind(), *kind);
+        for kind in ScannerKind::STATIC {
+            assert_eq!(adapter(*kind).unwrap().kind(), *kind);
             assert_eq!(
-                adapter(*kind).output_file(),
+                adapter(*kind).unwrap().output_file(),
                 format!("{}.json", kind.as_str())
             );
         }

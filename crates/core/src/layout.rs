@@ -81,6 +81,11 @@ impl DataLayout {
         self.audit_dir(audit).join("audit.json")
     }
 
+    /// `lab_runs.json`: minimized VM receipts and failures.
+    pub fn lab_runs_file(&self, audit: &AuditId) -> PathBuf {
+        self.audit_dir(audit).join("lab_runs.json")
+    }
+
     /// `report.md` (pt-BR report, spec §B.4).
     pub fn report_file(&self, audit: &AuditId) -> PathBuf {
         self.audit_dir(audit).join("report.md")

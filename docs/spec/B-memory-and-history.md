@@ -58,6 +58,7 @@ data/apps/abastevo/
 └── audits/
     └── AUD-ABASTEVO-20261129-1432/
         ├── audit.json               audit record
+        ├── lab_runs.json            actual dynamic attempts, minimized receipts (phase 8)
         ├── report.md                readable report (pt-BR)
         ├── coverage.json            ASVS x entry points matrix
         ├── hypotheses.json
@@ -148,7 +149,7 @@ Event kinds (`opentatu_core::EventKind`):
 
 - App: `APP_REGISTERED`, `APP_UPDATED`
 - Audit run: `AUDIT_CREATED`, `AUDIT_STARTED`, `SNAPSHOT_CAPTURED`, `SCANNER_RAN`,
-  `SCANNER_FAILED`, `MAP_UPDATED`
+  `SCANNER_FAILED`, `MAP_UPDATED`, `LAB_TEST_STARTED`, `LAB_TEST_COMPLETED`
 - Investigation: `HYPOTHESIS_CREATED`, `HYPOTHESIS_VERIFIED`, `FINDING_CONFIRMED`,
   `FINDING_UPHELD`, `FINDING_DOWNGRADED`, `FINDING_DISMISSED`, `FALSE_POSITIVE_RECORDED`
 - Fix trail: `TASK_CREATED`, `TASK_CLAIMED`, `FIX_SUBMITTED`, `REVERIFICATION_PASSED`,
@@ -266,3 +267,11 @@ FIX_APPROVED, task DONE and persisted fix patch identity. It does not close the 
 `FINDING_CLOSED` records the approved reverification, approved commit, audited branch commit
 and detection method (`ancestry`, `patch_id_rebase`, `patch_id_squash`, or
 `semantic_reverification` with its evidence). Existing event kinds are reused (ADR-0032/0033).
+
+## Phase 8 lab evidence (ADR-0034)
+
+`lab_runs.json` and `audit.json.lab_runs` include dated attempts, exact audit/hypothesis/
+commit/case and minimized result/provenance. `LAB_TEST_STARTED` counts interrupted attempts
+against the approved cap; `LAB_TEST_COMPLETED` decides each once. Events are append-only.
+Owner grants are `OWNER_DECISION` with action `approve_lab` and exact commit/profile/cap/
+case metadata. No raw response, fixture credentials or application environment is stored.

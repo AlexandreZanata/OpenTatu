@@ -65,11 +65,33 @@ impl Fingerprint {
 /// `sha256:<64 lowercase hex>` of `bytes` — the one hash text format of the system
 /// (fingerprints, agent token hashes).
 pub(crate) fn sha256_text(bytes: &[u8]) -> String {
-    let digest = Sha256::digest(bytes);
-    let mut text = String::with_capacity(PREFIX.len() + 64);
-    text.push_str(PREFIX);
-    push_hex(&mut text, &digest);
-    text
+    let mut hasher = ContentHasher::default();
+    hasher.update(bytes);
+    hasher.finish()
+}
+
+/// Streaming content hashing, sharing the system's `sha256:<hex>` format. No IO.
+#[derive(Debug, Default)]
+pub struct ContentHasher(Sha256);
+
+impl ContentHasher {
+    /// Adds an unambiguous length-framed path/content entry for snapshot manifests.
+    pub fn update_entry(&mut self, name: &str, bytes: &[u8]) {
+        self.update(&u64::try_from(name.len()).unwrap_or(u64::MAX).to_be_bytes());
+        self.update(name.as_bytes());
+        self.update(&u64::try_from(bytes.len()).unwrap_or(u64::MAX).to_be_bytes());
+        self.update(bytes);
+    }
+    /// Adds a chunk without buffering a whole image or response.
+    pub fn update(&mut self, bytes: &[u8]) {
+        self.0.update(bytes);
+    }
+    /// Finishes the digest in the same format as fingerprints and token hashes.
+    pub fn finish(self) -> String {
+        let mut text = String::from(PREFIX);
+        push_hex(&mut text, &self.0.finalize());
+        text
+    }
 }
 
 /// Appends `bytes` as lowercase hex.

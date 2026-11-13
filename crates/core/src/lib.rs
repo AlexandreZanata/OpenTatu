@@ -23,6 +23,7 @@ pub mod finding_state;
 pub mod fingerprint;
 pub mod hypothesis;
 pub mod ids;
+pub mod lab;
 pub mod layout;
 pub mod lenient;
 pub mod map;
@@ -47,7 +48,7 @@ pub use error::Error;
 pub use event::{Actor, Event, EventKind, NewEvent};
 pub use finding::{Comparison, Detection, Finding, ReportText, SkepticReview};
 pub use finding_state::FindingState;
-pub use fingerprint::{Fingerprint, FingerprintInput};
+pub use fingerprint::{ContentHasher, Fingerprint, FingerprintInput};
 pub use hypothesis::{
     CodeLocation, Confidence, EvidenceItem, EvidenceStep, HuntRound, Hypothesis, HypothesisContent,
     RegressionTest, ScannerTriage, TriageDecision, Verdict, Verification,
@@ -55,6 +56,7 @@ pub use hypothesis::{
 pub use ids::{
     AuditId, CommitHash, EventId, EvidenceId, FindingId, HypothesisId, MapId, Slug, TaskId,
 };
+pub use lab::{LabCase, LabContext, LabExecution, LabObservation, LabOutcome, LabPolicy, LabRun};
 pub use layout::DataLayout;
 pub use map::{
     Authentication, AuthenticationRequirement, Authorization, Component, CriticalDependency,

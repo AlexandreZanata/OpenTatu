@@ -32,3 +32,7 @@ Phase 7: `ReportData`/`AuditRecord` include optional `IncrementalScope`;
 `incremental_scope_text` is the deterministic scope section even with an AI reporter.
 `ReportData.merge_detections` records system-observed closure methods. A passing
 reverification report says awaiting merge, not closed.
+
+Phase 8: `src/lab.rs` provides `lab_summary_text`; `AuditRecord::with_lab_runs` and
+`ReportData.lab_runs` carry actual receipts. Report text distinguishes reproduced, denied
+and untested attempts and lists image/source/controller/profile provenance.

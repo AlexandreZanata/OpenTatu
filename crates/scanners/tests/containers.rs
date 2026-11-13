@@ -103,6 +103,7 @@ async fn every_scanner_finds_something_in_a_vulnerable_repository() {
             ScannerKind::Semgrep => "src/orders.js",
             ScannerKind::Gitleaks => "src/config.js",
             ScannerKind::Trivy | ScannerKind::Osv => "package-lock.json",
+            ScannerKind::Zap => "lab-only",
         };
         assert!(
             run.results

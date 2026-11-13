@@ -19,6 +19,11 @@ pub fn load_dotenv() {
     let _ = dotenvy::dotenv();
 }
 
+/// Current trusted controller path, kept in the binary's configuration boundary.
+pub fn current_binary() -> anyhow::Result<std::path::PathBuf> {
+    Ok(std::env::current_exe()?)
+}
+
 /// Logs go to stderr: stdout is reserved for command output and the MCP stdio protocol.
 /// Colors only when stderr is a terminal, so redirected logs stay plain text.
 pub fn init_logging(filter: &str) -> anyhow::Result<()> {
@@ -80,7 +85,9 @@ pub fn prepare_data_dir(data_dir: &Path) -> anyhow::Result<DataLayout> {
     std::fs::create_dir_all(data_dir)
         .with_context(|| format!("could not create data directory {}", data_dir.display()))?;
     restrict_permissions(data_dir)?;
-    Ok(DataLayout::new(data_dir))
+    let absolute = std::fs::canonicalize(data_dir)
+        .with_context(|| format!("could not resolve data directory {}", data_dir.display()))?;
+    Ok(DataLayout::new(absolute))
 }
 
 #[cfg(unix)]
@@ -115,4 +122,24 @@ pub fn watch_minutes(cli: Option<u64>) -> anyhow::Result<u64> {
 #[allow(clippy::disallowed_methods)]
 fn env_value(name: &str) -> Result<String, std::env::VarError> {
     std::env::var(name)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn r10_relative_data_directory_keeps_absolute_scanner_mount_paths() {
+        let directory = tempfile::Builder::new()
+            .prefix(".opentatu-layout-test-")
+            .tempdir_in(".")
+            .unwrap();
+        let layout = prepare_data_dir(directory.path()).unwrap();
+        assert!(layout.root().is_absolute());
+        assert_eq!(layout.root(), directory.path().canonicalize().unwrap());
+        assert!(
+            layout
+                .scanner_cache_dir(opentatu_core::ScannerKind::Semgrep)
+                .is_absolute()
+        );
+    }
 }

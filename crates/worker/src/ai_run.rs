@@ -69,7 +69,7 @@ impl AiRun {
     pub(crate) async fn variables(&self) -> Result<BTreeMap<&'static str, String>, Error> {
         let memory = artifacts::memory_text(&self.worker, &self.app).await?;
         let budget = self.budget.summary(&self.worker, &self.audit).await?;
-        Ok(RunContext {
+        let mut variables = RunContext {
             owner: &self.ai.owner,
             app: &self.app,
             audit: &self.audit,
@@ -77,7 +77,23 @@ impl AiRun {
             remaining_budget: &budget,
             memory: &memory,
         }
-        .variables())
+        .variables();
+        if let Some(policy) = crate::lab::policy(self) {
+            let approved = self
+                .worker
+                .services
+                .lab_approved(&self.audit.id, &policy.profile_digest)
+                .await?;
+            variables.insert("lab_available", if approved { "yes" } else { "no" }.into());
+            variables.insert(
+                "lab_url",
+                format!(
+                    "http://127.0.0.1:{} (inside the offline VM only)",
+                    policy.port
+                ),
+            );
+        }
+        Ok(variables)
     }
 
     /// Fingerprint of a finding at `location` (§B.8): the code at the cited lines of the

@@ -105,3 +105,26 @@ acceptance; never build/run its intentionally vulnerable handler or push those c
 PAUSED resumption is deliberately outside phase 7 (Q-032).
 Empty-diff audits exercise zero AI calls; reports without AI must retain known unexamined
 entry points, even when no new map is available (R14).
+
+## Phase 8 verification
+
+Core tests require a successful positive control. Database tests check rollback, ordered
+attempts and decided-once/no-delete history. Services tests exercise owner-only grants,
+audit/commit/profile scoping, wrong case/cap, interrupted-attempt accounting, computed
+outcomes and the independent proof gate. Scanners tests cover strict config/redaction,
+NIC-less argv, refusal to run the guest controller on the host and minimized ZAP parsing.
+Context tests prove secrets/symlinks are excluded and source digests are deterministic.
+
+`testing::FakeLab` complements `FakeSuite`/`FakeClient`. Worker tests cover no approval,
+unapproved case, tampered source, actual-receipt replacement of model claims, fenced second
+review, and fresh approval/negative-control proof before fix approval (never closure).
+The opt-in `lab_qemu` tests build and run the actual local Abastevo copy and ZAP inside a
+separate VM, with fictitious fixtures only; see [LAB.md](LAB.md). This phase's runtime
+exception to the earlier static-only workflow applies only inside that approved offline
+VM. They do not measure AI discovery quality; the benchmark still serves that purpose.
+
+Final phase-8 actual acceptance (2026-11-13) uses the release controller and persistent
+ignored storage; the planted Abastevo disclosure reproduces with 200/200, then the fixed
+commit gives 200/403. Both require passive ZAP completion. The prompt-regression benchmark
+ended PARTIAL at the existing FULL budget and matched 3/33 known flaws; this lower recall
+is documented as a quality limitation in ROADMAP, not treated as a passing accuracy gate.

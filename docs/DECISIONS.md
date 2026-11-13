@@ -691,3 +691,36 @@ Template:
   missing baseline is logged and skipped. Full audits remain available manually. Scanner
   runtime is unchanged; model context/work is reduced. Existing Clock, database transaction,
   prompt fencing, role execution, memory and scanner guardrails remain authoritative.
+
+## ADR-0034 — Disposable offline QEMU lab and approved HTTP cases
+- **Date:** 2026-11-12 · **Status:** accepted (phase-8 request; Q-033/Q-034)
+- **Decision:** keep one executable and the existing layers. Core owns lab receipts;
+  scanners owns QEMU, trusted guest execution, bounded HTTP and passive ZAP; context owns
+  the secret/symlink-excluding source copy; services owns approval and transactional run
+  history; worker owns the verifier round trip. No new crate or internal dependency edge.
+- **Boundary:** an owner-prepared, SHA-256-pinned cloud image contains runtime/build tools
+  and ZAP. Preparation may use the network with no application code or credentials present.
+  Each audit execution gets a disposable disk overlay, a read-only input disk, no NIC,
+  no host-directory sharing, no monitor, cleared process environment and resource/time caps.
+  The same OpenTatu executable is the trusted guest controller. Application build/run and
+  ZAP use separate unprivileged guest identities; application output cannot forge receipts.
+- **Approval:** the owner approves an exact audit/commit/profile digest. No MCP agent or
+  model can grant approval. The profile, outside the analyzed repository, owns source
+  prefixes, offline build/run argv, fictitious fixture identities, markers and GET cases.
+  The model selects a case ID; it cannot supply commands, arbitrary URLs, headers or test
+  code. Cross-identity probes need a successful authorized control before reproducing a
+  disclosure (supported read-access classes: CWE-284/639/862). Redirects/proxies are disabled and responses are bounded; raw bodies and
+  credentials do not enter history or model context.
+- **Evidence:** append start/completion events with each run's state. Bind receipts to the
+  audit, hypothesis, commit, profile, image and executed case. A model claim of dynamic
+  success is ignored. For a lab-configured app, decisive verification needs the matching
+  executed result as well as static source evidence; missing approval, unsupported cases,
+  failures, mismatches and resource exhaustion stay inconclusive and explicitly untested.
+  Return the system result to the verifier through fenced input; keep R06 merge semantics.
+- **ZAP:** passive inspection of the same approved GET paths only; no spider, active scan
+  or arbitrary target. Normalize alerts using the existing scanner-result format, preserve
+  version/image provenance, and never treat alerts alone as confirmed findings.
+- **Limits:** profile resource settings are bounded engineering defaults, not capacity
+  claims. Lab execution is serialized and limited per audit and by its remaining time.
+  Without a configured/approved lab, normal static audits remain usable with explicit
+  limitations. No phase-9 SSH inspection, Sentinel, production execution or audit resumption.

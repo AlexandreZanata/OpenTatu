@@ -78,3 +78,21 @@ finding, and never marks unmerged code as a regression. Only configured-branch a
 close an approved finding; the semantic fallback requires code absence and a refutation
 with lines of the audited commit. Closure records the actual branch commit, including
 rewritten history, for subsequent R09 checks. No fixing-agent tool gains closure authority.
+
+## Dynamic lab (phase 8)
+
+ADR-0034/Q-033/Q-034 require owner approval per audit/commit/profile, a prepared pinned
+offline QEMU VM, fictitious data and restricted GET cases. Model/MCP output cannot grant
+execution, choose a target or provide commands. No NIC, host share, monitor or forwarded
+port exists; input is read-only and root disks are disposable. The same controller binary
+checks guest identity before any input/process, with no dotenv/API key in the guest.
+Application build/run and ZAP use separate unprivileged identities, no capabilities and
+cleared environments. Fixed deadlines/output/response/resource caps bound execution.
+
+The authorized control must work before disclosure/denial is meaningful. No raw bodies,
+authorization headers or environment enter history/models; receipts are correlated to
+the exact attempt/source/image/controller and outcomes recomputed. A persisted matching
+receipt plus static evidence is required; model test claims and ZAP alerts cannot replace
+proof. Missing consent, unavailable/unsupported tests, failures and mismatches remain
+inconclusive/untested. Source exclusions and ZAP failures are limitations. Review
+[LAB.md](LAB.md) for preparation, credentials, digest changes and the supported envelope.

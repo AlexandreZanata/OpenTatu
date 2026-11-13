@@ -39,3 +39,7 @@ budget; `affected_entry_points` reuses `entry_point_code` depth-2 selection.
 
 Temporary directories built in each test; ranking, budget, excerpts, secrets and symlinks
 are covered. `cargo test -p opentatu-context`.
+
+Phase 8: `src/lab.rs` exposes `prepare_lab_source` / `PreparedLabSource`: private,
+bounded text copy from approved prefixes, reusing `SnapshotFiles` exclusions, with a
+length-framed path/content digest and explicit omissions. It never executes app code.
