@@ -1,8 +1,10 @@
 # OpenTatu Sentinel expansion master plan
 
-Planning baseline: 2026-11-12. Status: proposed implementation plan. This change creates
-documentation only; it does not implement Sentinel, advance an Audit phase, install an
-adapter, authorize application changes, or touch production.
+Planning baseline: 2026-11-12. Status update (2026-11-13): original Audit phases 0–10 are
+delivered; the owner requested continuation and approved the narrow [S0.1 contract](S0_1_TELEMETRY_CONTRACT.md)
+in Q-038. Pure telemetry validation is implemented; the remainder is still proposed.
+Historical observations below describe the dated planning baseline, not current HEAD.
+Planning never authorizes installation, application changes or production access.
 
 OpenTatu will retain its code-audit foundation and add continuous read-only monitoring,
 deterministic incident detection and Android alerts first. Bounded AI investigation,
@@ -52,6 +54,14 @@ decisions and their phase gates are in [open questions](../OPEN-QUESTIONS.md).
 ## Inspected implementation and gaps
 
 ### OpenTatu
+
+Historical inspection below: 2026-11-12. Current kickoff baseline is
+`9824bccb7ea2a7b552acadd0de06a2921a2ad96e`: original phases 0–10 are delivered, fixing MCP
+is operational, and restricted SSH plus explicit CrowdSec monitoring/temporary response
+are implemented. Their scopes and evidence live in [ROADMAP.md](../ROADMAP.md),
+[COMPONENTS.md](../COMPONENTS.md) and ADR-0030–0036. Reuse them; they do not provide
+universal authenticated Sentinel ingestion, notifications or incident state. No new
+Abastevo source or production inspection is claimed by this kickoff update.
 
 GitHub's latest returned commit and local HEAD were
 [`e45e12292c25087939152e0e2968cc8a8cab7b76`](https://github.com/AlexandreZanata/OpenTatu/commit/e45e12292c25087939152e0e2968cc8a8cab7b76),

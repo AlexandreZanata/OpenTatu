@@ -175,3 +175,15 @@ history; only this opt-in native expiry test waits real time. Actual OpenResty b
 acceptance separately verifies HTTP 200→403→200, protected access and foreign-decision
 preservation. No application code is executed, no production resources are accessed and
 no model budget is spent. Fixture versions, setup and limits: [MONITORING.md](MONITORING.md).
+
+## Sentinel S0.1 verification
+
+`cargo test -p opentatu-core telemetry` executes eight pure synthetic tests: minimal and
+optional envelopes, Clock-only receipt despite spoofed source time, unsupported versions,
+missing/unknown/duplicate/null/type errors, exact byte/reference/label boundaries,
+privacy/metadata/control-field rejection, safe diagnostics and schema drift. The JSON
+Schema fixture is generated through test-only workspace schemars from the single Rust
+producer declaration; never edit its facts independently. There is no endpoint, database,
+collector, authenticated source, runtime model call or production effect in this slice.
+Run `cargo xtask check` for the complete existing suite; synthetic loopback HTTP fixtures
+retain their existing socket-permission requirement. [Contract](sentinel/S0_1_TELEMETRY_CONTRACT.md).

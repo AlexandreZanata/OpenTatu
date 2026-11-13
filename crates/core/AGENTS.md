@@ -86,3 +86,12 @@ poll coverage and safe failures; `src/response.rs` owns exact temporary-response
 receipt states and finite target/protected CIDR capabilities. `Timestamp::add_seconds`
 computes deadlines; `utc_iso` formats the same Clock instant for native protocol expiry.
 No network, sensor-generated dates or AI execution authority enters core (ADR-0036).
+
+Sentinel S0.1 (ADR-0037/Q-038): `src/telemetry.rs` defines bounded `TelemetryInput` and
+private-construction `TelemetryEvent`. One private producer declaration feeds serde and
+test-only schema generation; public parsing errors/debug never echo input. Validation
+assigns receipt through injected Clock. Structure does not prove source authentication,
+registration, persistence or incident truth. Reuse these types for later admission,
+not CrowdSec-specific `SensorAlert`. Eight tests are in `telemetry_tests.rs`, fixture in
+`tests/fixtures/telemetry-minimal.json`, generated schema in
+`docs/sentinel/telemetry-v1.schema.json`. Existing workspace schemars is dev-only.

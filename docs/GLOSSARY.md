@@ -91,3 +91,8 @@ Finding (`MonitorDetection`). **Response plan** is one immutable exact owner-rev
 temporary action with event-backed receipt state (`ResponseSpec`, `ResponsePlan`).
 **Sensor decision** is the observed owned native CrowdSec ban receipt (`SensorDecision`),
 distinct from an owner Decision. ACTIVE describes LAPI state, not packet enforcement.
+
+Sentinel S0.1 vocabulary: **Telemetry input** is the bounded untrusted producer envelope
+(`TelemetryInput`); **Telemetry event** is structurally validated data with Clock-assigned
+receipt (`TelemetryEvent`). Neither is a permanent ledger Event, authenticated source
+claim, durable ingestion acknowledgment or Audit Finding. Source time stays untrusted.

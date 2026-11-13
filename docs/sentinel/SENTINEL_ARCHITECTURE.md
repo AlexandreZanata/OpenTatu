@@ -1,12 +1,21 @@
 # Sentinel architecture proposal
 
-Status: proposed expansion design, based on the inspected OpenTatu working tree on 2026-11-12. Planning does not implement a new phase, change `architecture.toml`, create crates, permit production actions or authorize deployment. Complete and accept the initial Audit phases before implementing this expansion. Optional initial phases remain subject to [the existing phase gates](../ROADMAP.md).
+Status: proposed expansion design, originally based on the 2026-11-12 working tree.
+Kickoff update (2026-11-13): original phases 0–10 are delivered; Q-017/Q-038 authorize
+the narrow S0.1 pure foundation. Its implementation adds no crate, production dependency
+or architecture edge. Proposed layouts below remain gated by the existing workflow.
 
 The owner selected a separate small Sentinel VPS connected to protected applications through a VPN. The first useful release is read-only monitoring with Android alerts through an existing notification transport; the custom Kotlin Multiplatform client follows later. These decisions define the delivery order below. The exact provider, device pairing, resource envelope and retention durations still need phase-specific decisions.
 
 ## Existing foundations and boundaries
 
-The [existing architecture](../ARCHITECTURE.md), [component catalog](../COMPONENTS.md), [business rules](../spec/A-business-rules.md), [security model](../SECURITY.md) and [ADRs](../DECISIONS.md) remain authoritative. The baseline HEAD is phase 3; inspected uncommitted work implements parts of phase 4, which the roadmap still marks in progress. The phase-5 MCP crate and CLI command are stubs. Do not describe documented MCP tools as an operational capability.
+The [existing architecture](../ARCHITECTURE.md), [component catalog](../COMPONENTS.md),
+[business rules](../spec/A-business-rules.md), [security model](../SECURITY.md) and
+[ADRs](../DECISIONS.md) remain authoritative. The historical planning inspection was
+phase 3 plus uncommitted phase 4. Current kickoff HEAD is
+`9824bccb7ea2a7b552acadd0de06a2921a2ad96e`, with original phases 0–10 delivered and fixing
+MCP operational. Factory and Investigation MCP profiles remain unimplemented. CrowdSec's
+scoped observations/responses are not a universal authenticated Sentinel ingest protocol.
 
 Keep a modular monolith: one Rust executable, SQLite WAL, Tokio tasks, embedded prompts/templates/migrations and a server-rendered administrative dashboard. Additional invocations of the same executable may provide distinct MCP profiles. Kotlin Multiplatform is a separate native client. No Kubernetes, broker, Redis, Elasticsearch or PostgreSQL is required for Sentinel; the protected application's PostgreSQL is not Sentinel's datastore.
 

@@ -1,7 +1,9 @@
 # OpenTatu adapter protocol proposal
 
-Status: proposed contract for Sentinel S0. No ingestion endpoint or adapter described here
-exists yet. Canonical scope and requirement IDs: [master plan](SENTINEL_MASTER_PLAN.md).
+Status: S0.1 implements the owner-approved [minimal contract](S0_1_TELEMETRY_CONTRACT.md)
+under Q-038/ADR-0037. The broader event/manifest/ingestion contract below remains proposed.
+No universal ingestion endpoint or adapter described here exists yet; phase-10 CrowdSec
+uses its separate native port. Canonical scope and requirement IDs: [master plan](SENTINEL_MASTER_PLAN.md).
 Implementation order: [roadmap](SENTINEL_IMPLEMENTATION_ROADMAP.md).
 
 ## Responsibility and trust
@@ -19,7 +21,10 @@ producer-issued values, distinct from the immutable history's existing `EventId`
 
 ## Version 1 event shape
 
-The following is a synthetic example, not an implemented schema or real application data.
+The following is a synthetic full-proposal example, not real application data. Its
+`route_template` and nonempty `metadata` are deliberately not accepted by the narrower
+S0.1 subset. The implemented structural schema is [generated from Rust](telemetry-v1.schema.json);
+the [S0.1 contract](S0_1_TELEMETRY_CONTRACT.md) records its complete validation boundary.
 The wire type is proposed as `TelemetryInput`; the validated stored type is
 `TelemetryEvent`, both owned by `opentatu-core`.
 
@@ -94,7 +99,9 @@ optional field requires an explicitly negotiated minor version. Producers declar
 ranges in manifests; collectors advertise accepted versions. Unsupported major versions
 fail without retry storms; migration supports a documented overlap window.
 
-Proposed engineering limits, subject to S0 approval and benchmark revision: 16 KiB per
+Q-038 approved 16-KiB event, 128-byte ASCII reference and 64-byte machine-label limits
+for pure S0.1 validation only. The remaining batch/queue/operational bounds below are
+still proposals, not Q-020 answers. The original engineering hypotheses were: 16 KiB per
 event; 100 events and 512 KiB per batch (whichever comes first); 128-character opaque IDs;
 64-character source/type/category; 256-character route template; at most 16 metadata keys,
 64-character keys and 256-character string values; no nested metadata containers. Bound

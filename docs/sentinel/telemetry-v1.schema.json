@@ -1,0 +1,123 @@
+{
+  "$defs": {
+    "EmptyMetadata": {
+      "additionalProperties": false,
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "adapter_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "type": "string",
+      "x-opentatu-reject-literal-ip": true
+    },
+    "application_id": {
+      "type": "string",
+      "x-opentatu-validator": "opentatu_core::Slug::new"
+    },
+    "category": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9._-]*$",
+      "type": "string"
+    },
+    "correlation_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "type": "string",
+      "x-opentatu-reject-literal-ip": true
+    },
+    "event_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "type": "string",
+      "x-opentatu-reject-literal-ip": true
+    },
+    "event_type": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9._-]*$",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/EmptyMetadata"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "privacy_classification": {
+      "enum": [
+        "PUBLIC",
+        "INTERNAL"
+      ],
+      "type": "string"
+    },
+    "request_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "type": "string",
+      "x-opentatu-reject-literal-ip": true
+    },
+    "schema_version": {
+      "const": "1.0",
+      "type": "string"
+    },
+    "source": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9._-]*$",
+      "type": "string"
+    },
+    "source_sequence": {
+      "format": "uint64",
+      "maximum": 18446744073709551615,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_severity": {
+      "enum": [
+        "INFO",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "type": "string"
+    },
+    "source_stream": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "type": "string",
+      "x-opentatu-reject-literal-ip": true
+    },
+    "status_code": {
+      "format": "uint16",
+      "maximum": 599,
+      "minimum": 100,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "application_id",
+    "adapter_id",
+    "source",
+    "source_stream",
+    "event_type",
+    "category",
+    "privacy_classification"
+  ],
+  "title": "TelemetryInput",
+  "type": "object",
+  "x-opentatu-max-json-bytes": 16384
+}

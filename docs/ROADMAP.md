@@ -15,6 +15,11 @@ not advance the phase statuses below or authorize optional phases 8–10. The ow
 a separate VPN-accessed Sentinel VPS and a read-only monitoring/Android-alert MVP, with
 the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
 
+Sentinel update (2026-11-13): after original phase 10, the owner requested continuation
+and approved Q-038's [S0.1 contract](sentinel/S0_1_TELEMETRY_CONTRACT.md). S0 is 🟡:
+pure telemetry validation is delivered; `PENDING(phase-S0): S0.2–S0.4 contracts and decisions`.
+S1 and later phases remain separately gated. Current status does not authorize deployment.
+
 | Phase | Status | Scope | Done when |
 |---|---|---|---|
 | Base | ✅ | Workspace, layered crates, domain core, database foundation (events append-only), dashboard skeleton, prompts, guardrails (`cargo xtask check`), documentation | `cargo xtask check` passes; `opentatu db migrate` and `opentatu dashboard` work |

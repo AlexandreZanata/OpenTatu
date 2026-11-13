@@ -37,6 +37,7 @@ pub mod secrets;
 pub mod severity;
 pub mod suspicious;
 pub mod task;
+pub mod telemetry;
 pub mod time;
 pub mod usage;
 
@@ -86,6 +87,10 @@ pub use severity::{Severity, SeverityAdjustments};
 pub use suspicious::SuspiciousInstruction;
 pub use task::{
     FixSubmission, Rejection, Reverification, ReverificationResult, Task, TaskContent, TaskState,
+};
+pub use telemetry::{
+    MAX_TELEMETRY_BYTES, MAX_TELEMETRY_LABEL_BYTES, MAX_TELEMETRY_REFERENCE_BYTES,
+    TELEMETRY_SCHEMA_VERSION, TelemetryEvent, TelemetryInput,
 };
 pub use time::{Clock, FixedClock, SystemClock, Timestamp, duration_label};
 pub use usage::{LlmUsage, RecordedLlmUsage, UsageTotals};

@@ -149,13 +149,18 @@ authorize implementation, deployment or a production action.
   transport; deliver the custom Kotlin Multiplatform application later (owner).
 
 ## Q-017 — Expansion entry gate and original phase 10 mapping
-- **Status:** open · **Blocks:** Sentinel S0 kickoff
+- **Status:** answered (2026-11-13) · **Blocks:** nothing
 - **Context:** “initial phases” does not identify an exact completion gate; original phases
   8–10 require explicit requests. Planning S phases must not silently advance them.
 - **Options:** accept Audit phases 0–7 first and approve Sentinel S0 separately (recommended);
   or explicitly select a different gate and the relationship to optional phase 10.
-- **Working interpretation:** the plan uses 0–7 as a conservative prerequisite; no expansion
+- **Previous planning interpretation:** the plan uses 0–7 as a conservative prerequisite; no expansion
   implementation or original optional phase is started.
+- **Answer:** after original phases 0–10 were delivered and phase 10 was pushed at
+  `9824bccb7ea2a7b552acadd0de06a2921a2ad96e`, the owner requested continuation. Proceed
+  with the separately numbered Sentinel foundation, beginning with the roadmap's narrow
+  S0.1 step. This continuation does not answer its pending minimum-contract choice
+  (Q-038), enable any later S phase, or authorize deployment/production changes.
 
 ## Q-018 — Retention classes and exact durations
 - **Status:** open · **Blocks:** Sentinel S1 retention and activation
@@ -368,3 +373,19 @@ authorize implementation, deployment or a production action.
 - **Answer:** implement the proposed restricted temporary single-IP ban, exact single-use
   approval, protected management/VPN access, expiry and rollback; validate only in a
   disposable local environment (owner). See ADR-0036.
+
+## Q-038 — First executable Sentinel telemetry contract
+- **Status:** answered (2026-11-13) · **Blocks:** nothing in S0.1
+- **Context:** the owner requested continuation after phase 10. The roadmap requires an
+  approved minimum schema; the adapter protocol still labels numerical bounds and full
+  optional-field support as proposals. Current phase-10 CrowdSec observations are not a
+  universal authenticated Sentinel event protocol.
+- **Proposal:** the concrete [S0.1 contract review](sentinel/S0_1_TELEMETRY_CONTRACT.md):
+  exact version 1.0, the existing nine required envelope fields, a small set of typed
+  optional observations, Clock-only receipt time, 16-KiB event/128-byte reference/64-byte
+  label bounds, strict fields and minimized privacy. No free-form metadata, raw identity,
+  route/evidence references or sensitive-data grant. Generate schema from the Rust type.
+- **Answer:** the owner approved the proposed minimum contract and its exact limits.
+  Implement S0.1 only, following the linked contract and preserving every later gate.
+  The 16-KiB/128-byte/64-byte bounds govern pure validation; they do not resolve Q-020's
+  operational workload/capacity, retention, authentication, IO layout or source permissions.

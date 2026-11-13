@@ -1,18 +1,19 @@
 # Sentinel implementation roadmap
 
-Status: proposed execution plan. All S-phase features and tasks below are **planned**.
-This document does not authorize implementation, installation, remote exposure, production
-changes, or starting an original roadmap phase. The owner reviews and approves one phase
-at a time under [the existing workflow](../WORKFLOW.md).
+Status (2026-11-13): S0 is in progress; its first narrow task S0.1 is implemented under
+Q-017/Q-038 and ADR-0037. S0.2–S11 remain planned. The owner reviews one phase at a time
+under [the existing workflow](../WORKFLOW.md). An implementation request never implies
+installation, remote exposure or production changes.
 
 ## Entry gate and sequencing
 
 The original [roadmap](../ROADMAP.md) remains the source of truth for Audit phases 0–10.
-Finish and obtain owner acceptance for original phases 0–7 before Sentinel implementation.
-This does not declare the currently documented phase 4 accepted or phases 5–7 implemented.
-Original phases 8, 9 and 10 remain explicitly requested options. Sentinel planning refines
-the monitoring/defense vision of original phase 10; it does not silently mark that phase
-requested or complete, or make dynamic testing/host inspection prerequisites.
+Original phases 0–10 are now delivered, including explicitly requested phases 8–10;
+phase 10 is published at `9824bccb7ea2a7b552acadd0de06a2921a2ad96e`. The owner's subsequent
+continuation resolves the expansion entry gate Q-017. This updates the earlier phase-3/4
+planning baseline without making optional phases universal Sentinel prerequisites.
+Q-038 approves the [minimal S0.1 contract](S0_1_TELEMETRY_CONTRACT.md); later phase-specific
+decisions and deployment gates remain open.
 
 The owner has selected a separate small Sentinel VPS accessed through a VPN, an immutable
 minimized incident ledger with expiring raw telemetry/evidence subject to an ADR, and a
@@ -93,6 +94,11 @@ Requirements: SREQ-001–008, 015–024, 034, 074, 086, 091–092, 095–098.
 **Dependencies:** original phases 0–7 accepted; master plan reviewed; minimum event schema
 and the S0.1 scope approved. Owner answers required for later work can remain open without
 blocking pure S0.1. A question cannot be silently answered by a default in code.
+
+S0.1 evidence (2026-11-13): approved contract and bounds in Q-038, pure types in
+`crates/core/src/telemetry.rs`, eight nonzero tests and a generated schema fixture.
+`TelemetryEvent` construction is validated and Clock-stamped; it is not an authenticated
+or durable ingest receipt. S0.2–S0.4 remain `PENDING(phase-S0)`; this is not full S0 acceptance.
 
 **Components and files:** reuse core identifiers/time/errors/masking; proposed
 `crates/core/src/telemetry.rs`, `adapter.rs`, `incident.rs`; core `lib.rs`; linked contracts

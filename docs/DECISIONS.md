@@ -824,3 +824,37 @@ Template:
   200→403→200, protected control, foreign-decision preservation and native expiry. Abastevo
   supplies an exact local snapshot and real route; its map/traffic fixtures are explicitly
   synthetic and its code is not executed. See [MONITORING.md](MONITORING.md).
+
+## ADR-0037 — Approved pure Sentinel telemetry boundary
+- **Date:** 2026-11-13 · **Status:** accepted (continuation request; Q-017/Q-038)
+- **Decision:** implement S0.1 only before IO. Reuse Slug, Timestamp, Clock and source
+  Severity; add TelemetryInput/TelemetryEvent with the owner-approved
+  [minimum contract](sentinel/S0_1_TELEMETRY_CONTRACT.md). No new crate, runtime dependency,
+  architecture edge, migration, ingest endpoint, collector, model call or deployment.
+- **Scope:** nine required fields from the proposal, exact 1.0, optional source time/
+  severity/sequence/correlation/request/status observations. Limits: 16-KiB raw UTF-8 JSON,
+  128-byte ASCII references, 64-byte machine labels. These pure bounds do not settle
+  Q-020's operational workload, batch/queue rates or capacity. Unknown/duplicate/null
+  fields, unsupported versions/types, raw address fields, nonempty metadata and SENSITIVE
+  classification fail. Route/evidence/subject references await registered schemas/grants.
+  No privacy label authorizes collection or hidden secrets.
+- **Construction:** bounded parsing uses static errors/redacted Debug. One private
+  producer declaration owns wire fields. Successful validation alone creates an event
+  with injected Clock receipt; public wrappers omit Deserialize and have private fields.
+  Source time may be skewed and never becomes receipt time. A later source-time policy
+  decides skew/lateness; no default is guessed.
+- **Schema:** existing workspace schemars is dev-only. Generate/test the schema snapshot
+  from the Rust declaration; no independent handwritten schema. Rust remains authoritative
+  for Slug semantics, literal-IP exclusion, raw byte/duplicate limits and canonical
+  integer encoding. Empty metadata normalizes to absence. Minor extensions require
+  explicit negotiation, not permissive unknown-field acceptance.
+- **Trust:** structure proves neither authenticated origin nor durable acceptance.
+  S0.2 scope/capability invariants and S1 authentication, registration, permission, dedup
+  and receipts remain required. CrowdSec's scoped action IP payload is not substituted
+  for Sentinel's minimized envelope. Telemetry cannot create administrative authority,
+  classify compromise or close an Audit finding.
+- **Validation/rollback:** eight synthetic nonzero tests cover fixture round-trips,
+  Clock-only receipt, bounds/version/privacy/field rejection and generated schema drift.
+  Complete workspace checks remain mandatory. Revert unpersisted core/schema/docs to
+  roll back. R04 and proposed ADR-0027 retention stay unchanged; S0.2–S0.4 and all later
+  phase gates remain pending.

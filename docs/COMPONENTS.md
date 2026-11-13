@@ -435,3 +435,20 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
   `Item`/item-list and existing timeline labels; no UI/MCP execution authority.
 - Setup and supported envelope: [MONITORING.md](MONITORING.md),
   [monitor.example.toml](../config/monitor.example.toml), ADR-0036.
+
+## Sentinel S0.1 additions
+
+- Core `TelemetryInput::{from_json,validate,application_id,event_id,adapter_id,source_stream,
+  observed_at}` and `TelemetryEvent::{from_json,input,received_at}` in `telemetry.rs`.
+  Reuse Slug, Timestamp, Severity and Clock/FixedClock; source time/severity are untrusted.
+  Private construction prevents bypassing validation/receipt assignment. No authentication,
+  registry, persistence or incident classification yet.
+- Core `TELEMETRY_SCHEMA_VERSION`, `MAX_TELEMETRY_BYTES`,
+  `MAX_TELEMETRY_REFERENCE_BYTES`, `MAX_TELEMETRY_LABEL_BYTES`, static `InvalidTelemetry`
+  diagnostics and redacted Debug. The private producer-field declaration is the sole
+  serialization/schema shape, not a second public telemetry model.
+- `telemetry_tests.rs`, synthetic `tests/fixtures/telemetry-minimal.json`, generated
+  [schema](sentinel/telemetry-v1.schema.json) through test-only workspace schemars.
+  Contract: [S0.1](sentinel/S0_1_TELEMETRY_CONTRACT.md), ADR-0037. CrowdSec SensorAlert
+  remains phase-10-specific: its approved action IPs are unsuitable for this minimized
+  universal envelope.

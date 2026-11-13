@@ -6,6 +6,9 @@ use crate::finding_state::FindingState;
 /// Validation errors of the domain (`opentatu-core`).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
+    /// Rejected untrusted telemetry; the diagnostic never embeds producer data.
+    #[error("invalid telemetry: {0}")]
+    InvalidTelemetry(&'static str),
     /// Invalid monitoring policy, rule or action; diagnostic never includes sensor data.
     #[error("invalid monitoring policy or action: {0}")]
     InvalidMonitoring(&'static str),

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "event_id": "synthetic-source-42",
+  "application_id": "demo",
+  "adapter_id": "adapter-demo-lab",
+  "source": "api",
+  "source_stream": "registered-stream-epoch-1",
+  "event_type": "authentication.rejected",
+  "category": "authentication",
+  "privacy_classification": "INTERNAL"
+}
