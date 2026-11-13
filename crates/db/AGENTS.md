@@ -69,3 +69,9 @@ completed results are immutable, and deletion is refused. Owner grants remain ev
 Phase 9: migration `0010_host_inspections.sql` and `src/host.rs` store numbered live
 `host_inspections` and `host_commands`. Every start/result shares its event transaction;
 identity and completed results are immutable and never deleted. No second audit queue.
+
+Phase 10: migration `0011_monitoring.sql`, `src/monitor.rs` and `src/response.rs` persist
+immutable rule activations/detections, decided-once polls and revision-guarded responses.
+Specs/start/deadline/owned ID never change after assignment. All writes share their event
+transaction, pending queries cover all nonterminal rows rather than recent history only.
+Repository tests are in `monitor_tests.rs`/`response_tests.rs`, using existing fixtures.

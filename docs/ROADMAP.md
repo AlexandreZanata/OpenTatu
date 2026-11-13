@@ -28,7 +28,7 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
 | 7 — Incremental audit | ✅ | Diff between commits, trigger by configured-branch polling (no webhook); a finding whose approved fix reaches the app's branch becomes CLOSED (Q-030, ADR-0032) | A push with a new flaw produces an INCREMENTAL audit that finds only what changed (verified 2026-11-12 on a local Abastevo clone; fix approval, never-merged, squash and normal merge verified) |
 | 8 — Dynamic lab | ✅ | Separate VM running a copy of the app with fictitious data; verifier tests; ZAP against the lab | An access-control finding is confirmed by an automated test executed in the lab (verified 2026-11-13 on a fictitious Abastevo fixture) |
 | 9 — Host inspection (read-only) | ✅ | Restricted SSH user, closed OS/kernel/listener queries, every attempt recorded | Explicit registered-app inspection collects all three queries; wrong host key, shell/write/subsystem/forwarding requests and revoked client key fail closed in disposable local SSH (verified 2026-11-13) |
-| 10 — Monitoring and defense | ⬜ (on request) | Integration with established sensors (e.g. Wazuh, Falco, osquery, CrowdSec), detection rules from the map, reversible response playbooks with owner approval | — |
+| 10 — Monitoring and defense | ✅ | CrowdSec Local API, exact map-bound correlations, bounded continuous polling, owner-approved temporary single-IP response | Disposable HTTP 200→403→200 for owned rollback/native expiry, protected access preserved and foreign decision untouched; exact approval/recovery/history verified (2026-11-13) |
 
 ## Base: what exists
 
@@ -401,3 +401,31 @@ the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-
   provider calls/budget changes; the previously documented benchmark limitation remains.
   See [HOST_INSPECTION.md](HOST_INSPECTION.md) for setup, rotation and repeatable checks.
   Q-032 remains open; phase 10 and Sentinel were not started.
+
+## Phase 10: what exists
+
+- Q-036/Q-037 answered, ADR-0036 accepted: CrowdSec Local API v1, explicit dedicated
+  app-scoped private profiles, owner-private native credentials and fixed bounded HTTP.
+- Deterministic rules from the exact map/commit plus selected scenario bindings; exact
+  owner activation, one-shot/explicit continuous polling, minimized operational detections,
+  dedup/cursors and honest one-hour/100-alert coverage limits. No model/prompt changes.
+- Concrete simulation/proposal, fresh exact single-use owner digest/justification,
+  finite allowlisted single-IP bans up to 300 seconds, protected management/VPN access,
+  native allowlist/conflict checks, no create retry, owned-ID rollback/discovery/recovery.
+  Native expiry works independently of OpenTatu. API receipts never assert packet effect.
+- Migration 0011 with immutable/decided-once records and CAS response projections;
+  transactional append-only history. CLI and read-only app cards reuse existing components.
+  No Finding/ASVS changes, MCP execution, external notifications or production provisioning.
+- Actual local acceptance (2026-11-13): official CrowdSec 1.8.2 and OpenResty bouncer 1.2.3,
+  loopback-only LAPI, dedicated internal network, synthetic credentials/alerts, exact local
+  Abastevo snapshot and synthetic map of its real health route. App code was not executed,
+  no model discovery claim or push to Abastevo. HTTP target 200→403→200 for rollback and
+  independent five-second expiry; protected control stayed 200; foreign same-IP decision
+  survived owned rollback. No controller loop was needed for native expiry.
+  Native allowlist refusal created no alert/decision. `cargo xtask check` passed with
+  337 tests and six opt-in tests ignored; the native phase-10 acceptance also passed
+  separately. Runtime fixture resources were removed after recording private evidence.
+- Setup, fixed limits, credentials/epoch rotation and uncertainty recovery:
+  [MONITORING.md](MONITORING.md), [monitor.example.toml](../config/monitor.example.toml).
+  Original phases 0–10 are delivered; Q-032 and Sentinel's separately gated expansion
+  remain deferred. Stop here for owner review; do not start S0–S11 automatically.

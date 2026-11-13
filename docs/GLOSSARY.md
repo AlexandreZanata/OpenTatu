@@ -83,3 +83,11 @@ Phase-9 vocabulary: **Host inspection** is one explicit owner invocation collect
 minimized Linux inventory (`HostInspection`); **Host command** is one of the three fixed
 read-only queries (`HostCommand`); **Host profile** is owner-controlled SSH configuration
 (`HostProfile`). Inventory is separate from an Audit and never establishes a Finding.
+
+Phase-10 vocabulary: **Monitor rule** is an owner-activated map/scenario/literal-HTTP
+correlation (`MonitorRule`); **Monitor poll** is one bounded dated collection window
+(`MonitorPoll`); **Monitor detection** is a minimized operational suspicion, never an Audit
+Finding (`MonitorDetection`). **Response plan** is one immutable exact owner-reviewable
+temporary action with event-backed receipt state (`ResponseSpec`, `ResponsePlan`).
+**Sensor decision** is the observed owned native CrowdSec ban receipt (`SensorDecision`),
+distinct from an owner Decision. ACTIVE describes LAPI state, not packet enforcement.

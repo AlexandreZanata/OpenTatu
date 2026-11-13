@@ -69,3 +69,10 @@ Phase 9: `src/host.rs::inspect_host` orchestrates one explicit owner inspection 
 result is independently validated. No audit queue, AI calls, watcher or scheduled host
 collection is added. `tests/host_inspection.rs` covers hermetic admission/history/failures
 and opt-in actual loopback SSH acceptance for the Abastevo fixture.
+
+Phase 10: `src/monitor.rs` exports `monitor_once`, `apply_response`, `reconcile_response`
+and `reconcile_responses`. Durable admission precedes every external operation. Create
+is never retried after uncertainty; cleanup resumes only an owned ID. Native finite TTL
+has no dependency on this process. `tests/monitoring.rs` reuses `FakeMonitor` and includes
+opt-in actual Abastevo-snapshot/LAPI expiry acceptance; its explicit synthetic map is in
+`tests/fixtures/monitor-map.json`. Monitoring never enters the audit queue or calls AI.

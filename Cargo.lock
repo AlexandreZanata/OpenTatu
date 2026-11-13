@@ -1471,6 +1471,7 @@ name = "opentatu-scanners"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "axum",
  "getrandom 0.4.3",
  "opentatu-core",
  "reqwest",
@@ -1512,6 +1513,7 @@ dependencies = [
  "async-trait",
  "opentatu-context",
  "opentatu-core",
+ "opentatu-db",
  "opentatu-investigator",
  "opentatu-llm",
  "opentatu-memory",
@@ -1764,6 +1766,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tokio-rustls",

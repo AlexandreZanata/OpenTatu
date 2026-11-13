@@ -274,3 +274,21 @@ events. Inventory has no source commit or audit kind and does not affect finding
 or ASVS coverage. CLI history and the app page read this minimized projection. Existing
 lab/static/model paths are unchanged; no new crate or internal dependency edge. See
 ADR-0035 and [HOST_INSPECTION.md](HOST_INSPECTION.md).
+
+## Phase 10 monitoring and exact reversible response
+
+The explicit CLI wires `CrowdSec` over the existing `MonitorSuite` port. Core compiles
+owner-selected scenario/literal-HTTP bindings from the exact current map; services admits
+owner activation and persists a poll start before the worker reads LAPI. The adapter
+discards raw telemetry; services independently matches minimized events, records immutable
+operational detections and completes the poll/cursor transactionally. No sensor input
+enters model prompts, Audit findings or ASVS decisions.
+
+Services creates immutable exact response proposals and atomically consumes a fresh
+single-use owner digest/justification before APPLYING. The worker calls the fixed API
+adapter once; receipt/discovery/owned-ID rollback update revision-guarded projections with
+events. Native finite TTL survives controller loss; uncertainty never triggers a create
+retry. Continuous `monitor run` is explicit and only reconciles already approved responses.
+Dashboard/CLI history reuse services; no new MCP tools, crates or architecture edges.
+Migration 0011 and the private bounded HTTP boundary are described in ADR-0036 and
+[MONITORING.md](MONITORING.md). Established sensor/bouncer deployment stays owner-managed.

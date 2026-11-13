@@ -24,6 +24,8 @@ when each document matters.
 - [LAB.md](LAB.md): offline dynamic evidence and QEMU setup.
 - [HOST_INSPECTION.md](HOST_INSPECTION.md): explicit restricted SSH inventory, provisioning,
   rotation and disposable acceptance.
+- [MONITORING.md](MONITORING.md): dedicated CrowdSec correlation, exact response approval,
+  temporary IP bans, native expiry, owned rollback and disposable acceptance.
 
 ## Keeping documentation trustworthy
 

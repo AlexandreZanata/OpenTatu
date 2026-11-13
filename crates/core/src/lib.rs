@@ -29,6 +29,8 @@ pub mod layout;
 pub mod lenient;
 pub mod map;
 mod map_incremental;
+pub mod monitor;
+pub mod response;
 pub mod role;
 pub mod scanner;
 pub mod secrets;
@@ -67,6 +69,15 @@ pub use map::{
     Authentication, AuthenticationRequirement, Authorization, Component, CriticalDependency,
     EntryPoint, FileIndex, Infrastructure, Integration, MapContent, SecurityConfiguration,
     SecurityMap, SensitiveData, TrustBoundary,
+};
+pub use monitor::{
+    MAX_SENSOR_ALERTS, MONITOR_WINDOW_SECONDS, MonitorBinding, MonitorDetection, MonitorFailure,
+    MonitorPolicy, MonitorPoll, MonitorRule, MonitorRules, SensorAlert, SensorRequest, http_method,
+    normalize_ip, safe_http_path, safe_scenario,
+};
+pub use response::{
+    MAX_RESPONSE_SECONDS, NetworkRange, RESPONSE_APPROVAL_SECONDS, RESPONSE_ORIGIN, ResponseApply,
+    ResponsePlan, ResponsePolicy, ResponseSpec, ResponseState, SensorDecision,
 };
 pub use role::AiRole;
 pub use scanner::{ScannerKind, ScannerResult, ScannerRun};

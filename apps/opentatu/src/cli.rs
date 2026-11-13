@@ -10,6 +10,9 @@ use opentatu_core::{AiRole, AuditKind, ScannerKind, TaskState};
 #[derive(Debug, Parser)]
 #[command(name = "opentatu", version)]
 pub struct Cli {
+    /// Explicit dedicated CrowdSec profiles; no automatic monitoring or defensive writes.
+    #[arg(long, global = true)]
+    pub monitor_config: Option<PathBuf>,
     /// Explicit owner SSH profiles; omitted means no host connection is available.
     #[arg(long, global = true)]
     pub hosts_config: Option<PathBuf>,
@@ -74,6 +77,12 @@ pub enum LabCommand {
 /// Top-level commands.
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Map-bound CrowdSec monitoring; activation and continuous collection are explicit.
+    #[command(subcommand)]
+    Monitor(MonitorCommand),
+    /// Review and approve exact temporary single-IP response plans.
+    #[command(subcommand)]
+    Response(ResponseCommand),
     /// Explicit read-only Linux host inventory, without scheduling or remediation.
     #[command(subcommand)]
     Host(HostCommand),
@@ -126,6 +135,114 @@ pub enum Command {
     /// Database commands.
     #[command(subcommand)]
     Db(DbCommand),
+}
+
+/// Explicit registered app/profile selector shared by monitoring and plan commands.
+#[derive(Debug, Args)]
+pub struct MonitorProfileArgs {
+    /// Registered app slug.
+    #[arg(long)]
+    pub app: String,
+    /// Explicit owner profile.
+    #[arg(long)]
+    pub profile: String,
+}
+/// Monitoring commands never create a new defensive decision.
+#[derive(Debug, Subcommand)]
+pub enum MonitorCommand {
+    /// Generate a reviewable deterministic rule proposal from the current map.
+    Rules(MonitorProfileArgs),
+    /// Activate the exact reviewed map/profile/rules digest.
+    Activate {
+        /// Target app/profile.
+        #[command(flatten)]
+        target: MonitorProfileArgs,
+        /// Exact digest returned by rules.
+        #[arg(long)]
+        digest: String,
+    },
+    /// Collect one bounded recent sensor window.
+    Poll(MonitorProfileArgs),
+    /// Continuously poll and reconcile only already approved finite responses.
+    Run {
+        /// Target app/profile.
+        #[command(flatten)]
+        target: MonitorProfileArgs,
+        /// Delay between cycles (10–3600 seconds).
+        #[arg(long, default_value_t = 30)]
+        interval_seconds: u64,
+    },
+    /// Read collection history without contacting the sensor.
+    History {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+        /// Most recent records, capped at 50.
+        #[arg(long, default_value_t = 20)]
+        limit: u32,
+    },
+    /// Read minimized operational suspicions, separate from Audit findings.
+    Detections {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+        /// Most recent records, capped at 50.
+        #[arg(long, default_value_t = 20)]
+        limit: u32,
+    },
+}
+/// One app-local response plan selector.
+#[derive(Debug, Args)]
+pub struct ResponseArgs {
+    /// Registered app slug.
+    #[arg(long)]
+    pub app: String,
+    /// App-local plan number.
+    #[arg(long)]
+    pub plan: u32,
+}
+/// No automatic approval, arbitrary command, permanent ban or bulk deletion exists.
+#[derive(Debug, Subcommand)]
+pub enum ResponseCommand {
+    /// Simulate/propose one exact temporary ban from an existing matched detection.
+    Plan {
+        /// Target app/profile.
+        #[command(flatten)]
+        target: MonitorProfileArgs,
+        /// Operational detection number, not an Audit finding ID.
+        #[arg(long)]
+        detection: u32,
+        /// Native finite lifetime, 1–300 seconds.
+        #[arg(long, default_value_t = 300)]
+        ttl_seconds: u32,
+    },
+    /// Consume exact single-use owner approval and submit one finite decision.
+    Apply {
+        /// App/plan to approve.
+        #[command(flatten)]
+        target: ResponseArgs,
+        /// Exact reviewed plan digest.
+        #[arg(long)]
+        digest: String,
+        /// Owner justification, stored in immutable history.
+        #[arg(long)]
+        reason: String,
+    },
+    /// Observe owned decision state and reconcile native expiry; never retry create.
+    Reconcile(ResponseArgs),
+    /// Remove only this plan's proven owned decision ID and verify absence.
+    Rollback(ResponseArgs),
+    /// Show one plan and digest without sensor access.
+    Show(ResponseArgs),
+    /// Read plan history without sensor access.
+    History {
+        /// Registered app slug.
+        #[arg(long)]
+        app: String,
+        /// Most recent plans, capped at 50.
+        #[arg(long, default_value_t = 20)]
+        limit: u32,
+    },
 }
 
 /// `opentatu host ...` — owner-only inspection and minimized history.

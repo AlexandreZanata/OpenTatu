@@ -119,3 +119,30 @@ ports are coarse inventory rather than reachability/vulnerability proof. Partial
 unavailable collection never means safe. Production configuration/testing/installation
 is not performed by implementation validation. Provisioning, rotation, revocation and
 actual local SSH acceptance are in [HOST_INSPECTION.md](HOST_INSPECTION.md).
+
+## CrowdSec boundary and temporary defense (phase 10)
+
+Q-036/Q-037 and ADR-0036 authorize dedicated app-scoped LAPI correlation and one exact
+owner-approved single-IP ban, never autonomous defense. Literal private endpoints,
+verified HTTPS except loopback HTTP, no proxies/redirects/retries, bounded responses and
+fixed operation paths contain network authority. Native machine and bouncer credentials
+are dedicated external owner-private files; they are not provider credentials. Native
+JWT permissions are broader than OpenTatu's capabilities: isolation, credential rotation,
+trusted proxy/source-IP attribution and app-only bouncer scope require owner provisioning.
+
+Finite exact targets, mandatory management/VPN/recovery exclusions and independent hard
+private-address protections apply before writing, as do native allowlists/existing-decision
+checks. Owner approval binds the full concrete spec and expires after 120 seconds; state
+and approval commit before one POST. Native TTL is 1–300 seconds independent of controller
+survival. API ACTIVE is not proof of packet enforcement. Rollback can delete only a
+freshly verified owned ID, preserving foreign same-IP decisions. No range, shell, permanent
+ban, bulk delete, standing grant, model or MCP action authority exists.
+
+Ambiguous/interrupted creates remain auditable and are never retried. Missing receipts
+without a proven ID remain UNKNOWN; owned cleanup can resume safely. Shrinking target
+capabilities allows safe cleanup on the original trusted endpoint; changing its epoch
+fails closed. Sensor/model timestamps cannot forge history or extend approval deadlines.
+Keep minimized history permanently under R04, including necessary action IPs; raw logs,
+headers, bodies, query values and sensor dates never enter persisted results. No production
+tests/installations, raw evidence archive or Sentinel expansion is included. Provisioning,
+rotation, propagation limits and actual disposable acceptance: [MONITORING.md](MONITORING.md).

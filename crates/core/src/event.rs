@@ -102,6 +102,20 @@ crate::text_enum! {
         HostCommandCompleted => "HOST_COMMAND_COMPLETED",
         /// All queries attempted: inspection number and computed collection coverage.
         HostInspectionCompleted => "HOST_INSPECTION_COMPLETED",
+        /// Owner activated exact rules digest/map/profile; no sensor deployment occurs.
+        MonitorRulesActivated => "MONITOR_RULES_ACTIVATED",
+        /// Before sensor I/O: poll number, active rules digest and numeric cursor.
+        MonitorPollStarted => "MONITOR_POLL_STARTED",
+        /// Window counts/cursor or safe failure; interrupted polls remain undecided.
+        MonitorPollCompleted => "MONITOR_POLL_COMPLETED",
+        /// Minimized exact rule match, operational suspicion only, not a Finding.
+        MonitorDetectionRecorded => "MONITOR_DETECTION_RECORDED",
+        /// Immutable reviewable action spec/digest; no execution authority yet.
+        ResponsePlanned => "RESPONSE_PLANNED",
+        /// Approved create/owned cleanup started before I/O; plan number/revision/state.
+        ResponseStarted => "RESPONSE_STARTED",
+        /// Verified control-plane outcome or explicit uncertainty; no raw diagnostics.
+        ResponseChanged => "RESPONSE_CHANGED",
     }
 }
 
@@ -278,9 +292,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn spec_b6_lists_41_event_kinds() {
+    fn spec_b6_lists_48_event_kinds() {
         // Base, MCP/agents, lab and four read-only host inspection events (ADR-0035).
-        assert_eq!(EventKind::ALL.len(), 41);
+        assert_eq!(EventKind::ALL.len(), 48);
     }
 
     #[test]

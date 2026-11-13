@@ -45,4 +45,13 @@
 {% call ui::card("Inspeções de hosts somente para leitura") %}
   {% call ui::item_list(host_inspections, "Nenhuma inspeção de host. A execução exige uma chamada explícita do proprietário pela CLI.") %}{% endcall %}
 {% endcall %}
+{% call ui::card("Monitoramento CrowdSec · últimas coletas") %}
+  {% call ui::item_list(monitor_polls, "Nenhuma coleta. Ative as regras e execute monitor poll ou monitor run pela CLI.") %}{% endcall %}
+{% endcall %}
+{% call ui::card("Suspeitas operacionais") %}
+  {% call ui::item_list(monitor_detections, "Nenhuma correlação registrada. Ausência de alertas não comprova segurança.") %}{% endcall %}
+{% endcall %}
+{% call ui::card("Respostas temporárias · decisões na API") %}
+  {% call ui::item_list(responses, "Nenhum plano. A execução exige aprovação única do plano exato pela CLI.") %}{% endcall %}
+{% endcall %}
 {% endblock %}

@@ -48,9 +48,27 @@ impl Timestamp {
         self.0.as_second()
     }
 
+    /// Adds a bounded interval without reading a clock (approval/response deadlines).
+    pub fn add_seconds(&self, seconds: u32) -> Result<Self, Error> {
+        let seconds = self
+            .unix_seconds()
+            .checked_add(i64::from(seconds))
+            .ok_or_else(|| Error::InvalidTimestamp("deadline overflow".into()))?;
+        Self::from_unix_seconds(seconds)
+    }
+
     /// ISO 8601 with offset in the default zone, e.g. `2026-11-29T14:32:00-03:00`.
     pub fn iso(&self) -> String {
         self.zoned().strftime("%Y-%m-%dT%H:%M:%S%:z").to_string()
+    }
+
+    /// The same instant in UTC, for native protocols whose expiry requires UTC input.
+    /// Stored history and owner-facing dates continue to use the default zone.
+    pub fn utc_iso(&self) -> String {
+        self.0
+            .to_zoned(TimeZone::UTC)
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
+            .to_string()
     }
 
     /// Owner-facing pt-BR display, e.g. `29/11/2026 às 14:32 (horário de Brasília)`.
@@ -233,6 +251,8 @@ mod tests {
     fn utc_input_is_shown_in_default_zone() {
         let ts: Timestamp = "2026-11-29T17:32:00Z".parse().unwrap();
         assert_eq!(ts.iso(), EXAMPLE);
+        assert_eq!(ts.utc_iso(), "2026-11-29T17:32:00Z");
+        assert_eq!(ts.utc_iso().parse::<Timestamp>().unwrap(), ts);
     }
 
     #[test]

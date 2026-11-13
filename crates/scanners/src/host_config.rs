@@ -160,24 +160,8 @@ impl HostProfile {
     }
 
     /// Checks file type/permissions without ever reading, serializing or logging the key.
-    #[cfg(target_os = "linux")]
     pub(crate) fn check_identity(&self) -> bool {
-        use std::os::unix::fs::MetadataExt as _;
-        let Ok(owner) = std::fs::metadata("/proc/self") else {
-            return false;
-        };
-        std::fs::symlink_metadata(&self.identity_file).is_ok_and(|m| {
-            m.is_file()
-                && m.uid() == owner.uid()
-                && m.mode() & 0o077 == 0
-                && m.len() <= 16 * 1024
-                && m.len() > 0
-        })
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    pub(crate) fn check_identity(&self) -> bool {
-        false
+        crate::private_file::is_private_file(&self.identity_file, 16 * 1024)
     }
 }
 

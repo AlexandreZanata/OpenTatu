@@ -20,5 +20,6 @@
 
 # Owner-controlled lab recipes, VM images and credentials
 *.local.toml
+*.local.json
 *.qcow2
 *.iso

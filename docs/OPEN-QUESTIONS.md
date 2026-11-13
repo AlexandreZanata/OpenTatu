@@ -341,3 +341,30 @@ authorize implementation, deployment or a production action.
 - **Answer:** the owner accepted the proposed minimum scope, explicit invocation and
   disposable local SSH acceptance. Existing security controls and phase-10/Sentinel gates
   remain unchanged. See ADR-0035.
+
+## Q-036 — Initial phase-10 sensor integration
+- **Status:** answered (2026-11-13) · **Blocks:** nothing
+- **Context:** the roadmap names example sensors but selects none. Original phase 10 is
+  explicitly requested; it does not authorize the separate Sentinel S0–S11 program.
+- **Proposal:** CrowdSec Local API first, using existing sensor alerts and existing
+  remediation components. Generate typed, owner-activated correlation rules bound to the
+  registered app's exact security map and explicit scenario/entry-point bindings. Keep
+  permanent minimized operational history under R04, discard raw logs/bodies, and never
+  treat an alert as proof of compromise or an Audit finding. No AI prompt/model change.
+- **Answer:** CrowdSec alerts and responses through its Local API, with explicitly
+  activated map-bound correlation rules (owner). No production installation or external
+  notifications are authorized; the separate Sentinel gates remain unchanged.
+
+## Q-037 — First reversible phase-10 response
+- **Status:** answered (2026-11-13) · **Blocks:** nothing
+- **Context:** response needs a concrete action, target scope, approval, lifetime and
+  rollback. Sentinel Q-025 remains a separate gate for broader capabilities.
+- **Proposal:** one temporary single-IP CrowdSec ban, maximum five minutes, only within an
+  explicit owner allowlist for a dedicated app-scoped Local API. Protect management/VPN
+  access and private/loopback targets. Require an exact, single-use owner-approved plan
+  bound to app/profile/rules/map/incident/target/TTL, with independent expiry and rollback.
+  No automatic execution, host firewall/shell, irreversible action or global deletion.
+  Validate with a disposable local CrowdSec fixture and synthetic data, never production.
+- **Answer:** implement the proposed restricted temporary single-IP ban, exact single-use
+  approval, protected management/VPN access, expiry and rollback; validate only in a
+  disposable local environment (owner). See ADR-0036.

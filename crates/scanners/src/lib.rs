@@ -15,6 +15,9 @@
 
 mod adapters;
 mod config;
+mod crowdsec;
+mod crowdsec_config;
+mod crowdsec_http;
 mod engine;
 mod error;
 mod host;
@@ -25,11 +28,14 @@ mod lab;
 mod lab_config;
 mod lab_guest;
 mod lab_zap;
+mod private_file;
 mod suite;
 #[cfg(feature = "test-support")]
 pub mod testing;
 
 pub use config::{EngineConfig, ScannersConfig, ToolConfig};
+pub use crowdsec::{CrowdSec, MonitorSuite};
+pub use crowdsec_config::{CrowdSecProfile, MonitorConfig};
 pub use error::Error;
 pub use host::{HOST_OUTPUT_BYTES, HOST_TIMEOUT_SECONDS, HostSuite, SshHosts};
 pub use host_collect::collect_host;

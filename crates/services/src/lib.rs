@@ -21,6 +21,8 @@ mod host;
 mod investigation;
 mod lab;
 mod maps;
+mod monitor;
+mod response;
 mod scanners;
 mod tasks;
 mod timeline;
@@ -57,5 +59,12 @@ impl Services {
     /// dashboard, MCP and worker crates.
     pub async fn in_memory(clock: Arc<dyn Clock>) -> Result<Self, Error> {
         Ok(Self::new(Database::in_memory().await?, clock))
+    }
+}
+
+// Infrastructure deadlines receive the same injected Clock as transactional services.
+impl Clock for Services {
+    fn now(&self) -> opentatu_core::Timestamp {
+        Services::now(self)
     }
 }

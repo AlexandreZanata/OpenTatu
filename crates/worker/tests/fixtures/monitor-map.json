@@ -1,0 +1,11 @@
+{
+  "components": [],
+  "entry_points": [{"id":"EP-001","method":"POST","path":"/login","file":"src/routes.rs","line":1,"symbol":"login","authentication":"no","allowed_roles":[],"inputs":["body"],"authorization_check":"Fictício.","sensitive_data":[],"applicable_asvs":[]}],
+  "trust_boundaries": [], "sensitive_data": [],
+  "authentication": {"mechanism":"Fictício.","storage":"Fictício.","expiry":"Fictício.","renewal":"Fictício.","logout":"Fictício.","files":[]},
+  "authorization": {"mechanism":"Fictício.","checked_at":[],"entry_points_without_check":[]},
+  "integrations": [],
+  "configuration": {"cors":"Fictício.","cookies":"Fictício.","headers":"Fictício.","debug_mode":"Fictício.","error_handling":"Fictício."},
+  "infrastructure": {"base_image":"Fictício.","container_user":"Fictício.","ports":[],"environment_variables":[]},
+  "critical_dependencies": [], "app_asvs": [], "changes_since_previous_map": [], "open_questions": []
+}

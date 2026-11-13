@@ -265,3 +265,7 @@ impl ScannerSuite for FakeSuite {
         }
     }
 }
+
+#[path = "testing_monitor.rs"]
+mod monitor;
+pub use monitor::FakeMonitor;

@@ -80,3 +80,9 @@ and serde-defaulted; `ScannerKind::STATIC` excludes the VM-only ZAP variant.
 Phase 9: `src/host.rs` owns the closed query set, bounded typed OS/kernel/socket inventory,
 non-secret policy identity, safe failure categories, dated inspections and command attempts.
 Collection coverage is independent of vulnerability findings and source-code audits.
+
+Phase 10: `src/monitor.rs` owns map-bound rules, minimized sensor observations, detections,
+poll coverage and safe failures; `src/response.rs` owns exact temporary-response specs,
+receipt states and finite target/protected CIDR capabilities. `Timestamp::add_seconds`
+computes deadlines; `utc_iso` formats the same Clock instant for native protocol expiry.
+No network, sensor-generated dates or AI execution authority enters core (ADR-0036).

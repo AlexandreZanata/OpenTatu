@@ -10,6 +10,8 @@ mod host;
 mod lab;
 mod llm;
 mod mcp;
+mod monitor;
+mod response;
 mod scanners;
 mod task;
 mod worker;
@@ -35,6 +37,12 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
         models: cli.models_config.as_path(),
     };
     match cli.command {
+        Command::Monitor(command) => {
+            monitor::run(data_dir, cli.monitor_config.as_deref(), command).await
+        }
+        Command::Response(command) => {
+            response::run(data_dir, cli.monitor_config.as_deref(), command).await
+        }
         Command::Host(command) => host::run(data_dir, cli.hosts_config.as_deref(), command).await,
         Command::Lab(command) => lab::run(data_dir, configs.labs, command).await,
         Command::Serve { listen, worker } => {

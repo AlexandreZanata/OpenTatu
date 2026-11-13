@@ -148,3 +148,30 @@ requests and forwarding. The fixture is associated with Abastevo but never runs 
 all keys/data are synthetic and ignored locally. Existing real-provider HTTP fixture tests
 need permission to bind loopback when the execution sandbox restricts local sockets. No
 production host or scanner/model budget is used by phase-9 validation.
+
+## Phase 10 verification
+
+Core/service tests protect exact map activation, literal method/path/scenario correlation,
+simulated-alert refusal, canonical/protected IPs, hard TTL/fresh approval, single-use claims,
+overlap caps, deduplication, failed/interrupted cursor preservation and honest coverage.
+DB tests exercise every new repository operation, rollback, immutability/no-delete and
+revision CAS. Scanner tests validate the committed config example, private credential
+permissions/schema, minimized alert parsing, duration/native allowlist contracts,
+User-Agent, sensitive headers, refused cross-origin login redirects and bounded bodies.
+Malformed simulated flags, negative durations and allowlist responses fail explicitly
+rather than being mistaken for absence, expiry or permission to write.
+
+Worker tests reuse `testing::FakeMonitor` with `FixedClock`: monitoring makes no writes,
+approval/replay, owned rollback, interrupted-cleanup recovery, controller-independent
+expiry and uncertain-create discovery/absence without retries. Dashboard HTTP tests
+preserve interrupted/gapped collection and unknown response state without implying a
+Finding, safety or packet enforcement. These synthetic loopback transport tests use the
+same local-socket permission exception as the existing provider HTTP fixtures.
+
+The ignored native test in `crates/worker/tests/monitoring.rs` uses a real local CrowdSec
+fixture and an exact Abastevo snapshot with an explicitly synthetic map of its real
+health route. It verifies native five-second expiry, exact approval/replay and minimized
+history; only this opt-in native expiry test waits real time. Actual OpenResty bouncer
+acceptance separately verifies HTTP 200→403→200, protected access and foreign-decision
+preservation. No application code is executed, no production resources are accessed and
+no model budget is spent. Fixture versions, setup and limits: [MONITORING.md](MONITORING.md).

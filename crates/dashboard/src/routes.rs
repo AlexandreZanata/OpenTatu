@@ -514,6 +514,125 @@ mod tests {
     }"#;
 
     #[tokio::test]
+    async fn r14_monitoring_page_preserves_uncertainty_and_separates_detections_from_findings() {
+        use opentatu_core::{
+            Actor, MonitorBinding, MonitorPolicy, ResponseApply, ResponsePolicy, SensorAlert,
+            SensorRequest,
+        };
+        let s = services().await;
+        let app: opentatu_core::Slug = "demo".parse().unwrap();
+        s.register_app(opentatu_core::NewApp {
+            slug: app.clone(),
+            name: "Demo".into(),
+            repo_url: "/srv/demo".into(),
+            branch: "main".into(),
+            stack: vec![],
+            sensitive_data: vec![],
+            lab_url: None,
+        })
+        .await
+        .unwrap();
+        let a = s
+            .create_audit(opentatu_services::NewAudit {
+                app: app.clone(),
+                kind: opentatu_core::AuditKind::Full,
+                commit: "a".repeat(40).parse().unwrap(),
+                branch: None,
+                requested_by: Actor::Owner,
+            })
+            .await
+            .unwrap();
+        let mut content: opentatu_core::MapContent = serde_json::from_str(MAP_CONTENT).unwrap();
+        content.entry_points[0].method = "GET".into();
+        content.entry_points[0].path = "/health".into();
+        s.record_map(
+            &a,
+            opentatu_services::NewMap {
+                content,
+                model: "fixture".into(),
+                prompt_versions: vec![],
+                gaps: vec![],
+                not_analyzed: vec![],
+                system_notes: vec![],
+            },
+        )
+        .await
+        .unwrap();
+        let p = MonitorPolicy {
+            profile: "local-sensor".parse().unwrap(),
+            instance: "fixture-epoch".parse().unwrap(),
+            profile_digest: format!("sha256:{}", "a".repeat(64)).parse().unwrap(),
+            endpoint_digest: format!("sha256:{}", "b".repeat(64)).parse().unwrap(),
+            bindings: vec![MonitorBinding {
+                entry_point: "EP-001".into(),
+                scenario: "fixture/http-bf".into(),
+            }],
+            response: ResponsePolicy {
+                allowed_ips: vec!["198.51.100.9".parse().unwrap()],
+                protected_networks: vec!["100.64.0.0/10".parse().unwrap()],
+            },
+        };
+        let rules = s.monitor_rules(&app, p.clone()).await.unwrap();
+        s.activate_monitor_rules(&app, p.clone(), &rules.digest().unwrap(), &Actor::Owner)
+            .await
+            .unwrap();
+        let poll = s.start_monitor_poll(&app, &p).await.unwrap();
+        let (_, _, body) = get_from(router_over(s.clone()), "/apps/demo", "127.0.0.1:7878").await;
+        assert!(body.contains("Em andamento ou interrompida"));
+        s.complete_monitor_poll(
+            &app,
+            poll.number,
+            Ok(vec![SensorAlert {
+                id: 1,
+                scenario: "fixture/http-bf".into(),
+                source: "198.51.100.9".parse().unwrap(),
+                simulated: false,
+                requests: vec![SensorRequest {
+                    method: "GET".into(),
+                    path: "/health".into(),
+                }],
+            }]),
+        )
+        .await
+        .unwrap();
+        let plan = s
+            .plan_response(&app, &p, 1, 30, &Actor::Owner)
+            .await
+            .unwrap();
+        let attempt = s
+            .claim_response(
+                &app,
+                plan.spec.number,
+                &p,
+                &plan.spec.digest().unwrap(),
+                "fixture",
+                &Actor::Owner,
+            )
+            .await
+            .unwrap();
+        s.record_response_apply(
+            &attempt,
+            ResponseApply::Uncertain(opentatu_core::MonitorFailure::Transport),
+        )
+        .await
+        .unwrap();
+        let (status, _, body) =
+            get_from(router_over(s.clone()), "/apps/demo", "127.0.0.1:7878").await;
+        assert_eq!(status, StatusCode::OK);
+        for expected in [
+            "Janela consultada",
+            "sem cobertura garantida",
+            "Suspeita operacional; não comprova comprometimento.",
+            "Resultado incerto; requer reconciliação",
+            "a aplicação do bloqueio depende do componente de remediação.",
+        ] {
+            assert!(body.contains(expected), "missing {expected:?}");
+        }
+        assert!(!body.contains("<script>"));
+        assert!(s.findings_of_app(&app).await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
     async fn health_returns_json() {
         let (status, _, body) = get("/health", "localhost:7878").await;
         assert_eq!(status, StatusCode::OK);

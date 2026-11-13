@@ -76,6 +76,7 @@ cargo run -p opentatu -- app add --slug demo --name Demo --repo /path/to/repo
 cargo run -p opentatu -- audit create --app demo   # then: worker --once (or keep serve running)
 cargo run -p opentatu -- benchmark run juice-shop  # phase 6 (after `benchmark prepare`)
 cargo run -p opentatu -- --hosts-config /path/hosts.local.toml host inspect --app demo --profile demo-vpn
+cargo run -p opentatu -- --monitor-config /path/monitor.local.toml monitor rules --app demo --profile demo-sensor
 ```
 
 ## Repository map
@@ -88,7 +89,7 @@ crates/services/    use cases shared by dashboard, MCP, CLI and worker
 crates/dashboard/   Axum + Askama UI; components in templates/components/ui.html
 crates/llm/         generate(role, messages, schema); config/models.toml; FakeClient
 crates/investigator/ prompts, strict rendering, fencing of untrusted content
-crates/scanners/    static containers, offline QEMU lab + restricted SSH inventory
+crates/scanners/    static containers, offline QEMU lab, restricted SSH + CrowdSec API
 crates/snapshots/   git mirror per app, exact-commit checkout (the only git caller)
 crates/memory/      MEMORY.md, history, audit comparison, dedup (pure)
 crates/reports/     audit.json, report.md, SARIF, MANIFEST.json (pure)

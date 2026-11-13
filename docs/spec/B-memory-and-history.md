@@ -163,6 +163,11 @@ Event kinds (`opentatu_core::EventKind`):
   number, non-secret policy digest, fixed query and minimized result/failure; no credentials,
   endpoint address or raw diagnostics.
 - Owner: `OWNER_DECISION`
+- Monitoring (ADR-0036): `MONITOR_RULES_ACTIVATED`, `MONITOR_POLL_STARTED`,
+  `MONITOR_POLL_COMPLETED`, `MONITOR_DETECTION_RECORDED`, `RESPONSE_PLANNED`,
+  `RESPONSE_STARTED`, `RESPONSE_CHANGED`. Minimized app-local operational history,
+  separate from findings; exact approvals use `OWNER_DECISION`. Raw logs, credentials,
+  bodies, headers and query values are discarded. See [../MONITORING.md](../MONITORING.md).
 - MCP read-only calls (Q-007): `MCP_TOOL_CALLED` — state-changing tools record their domain
   event instead, so every MCP call produces exactly one event (a refused call is also
   recorded as `MCP_TOOL_CALLED`, with the error)

@@ -49,6 +49,9 @@ Created incrementally by migrations in `crates/db/migrations/` as each phase nee
 | `verifications` | audit_id (the REVERIFICATION audit), task_id, result, created_at, decided_at, content (JSON, including approved fix base/branch head, per-commit and whole-diff patch IDs in phase 7) — decided once | 5–7 ✅ |
 | `agents` | name, token_hash (never the token, R16), registered_at, revoked_at — never deleted (ADR-0030) | 5 ✅ |
 | `lab_runs` | audit_id, number, hypothesis_id, completed_at, content (JSON) — immutable identity, decided once, never deleted | 8 ✅ |
+| `host_inspections`, `host_commands` | app-local ordered inspections/queries with immutable identity, decided-once content/results, never deleted | 9 ✅ |
+| `monitor_rules`, `monitor_polls`, `monitor_detections` | app/profile/map-bound activations, decided-once collection windows/cursors, immutable normalized suspicions; never deleted | 10 ✅ |
+| `response_plans` | app, number, state, revision, target, content; immutable exact spec/start/deadline/owned ID, event-backed projection, never deleted | 10 ✅ |
 | `decisions` | id, kind, target, justification, expires_at, occurred_at | 4 |
 | `scanner_results` | id, audit_id, scanner, result_id, rule_id, message, file, start_line, end_line, reported_severity, cwe — append-only | 2 ✅ |
 
@@ -131,3 +134,15 @@ release and minimized listening TCP/UDP ports. `host_inspections` and `host_comm
 start/completion events. These records are live inventory, separate from commit-scoped
 audits and findings. No scheduling, model/MCP shell, privileged operation, monitoring or
 response is authorized. Provisioning/rotation/security limits: [../HOST_INSPECTION.md](../HOST_INSPECTION.md).
+
+## Phase 10 sensor and reversible response (ADR-0036, Q-036/Q-037)
+
+CrowdSec Local API supplies existing alerts to explicitly owner-activated correlations
+generated from the exact map and fixed method/path/scenario bindings. Immutable minimized
+operational detections are separate from Audit findings. Explicit continuous polling is
+bounded and declares gaps/failures. A reviewed exact single-use proposal permits only a
+temporary allowlisted single-IP native ban (maximum 300 seconds), with protected access,
+independent expiry and fresh owned-ID-only rollback. Migration 0011 keeps event-backed
+rules, polls, detections and response projections; raw telemetry/credentials are discarded.
+No AI/MCP execution capability or autonomous new response is added. Native provisioning
+and full protocol/recovery limits: [../MONITORING.md](../MONITORING.md).

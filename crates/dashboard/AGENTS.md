@@ -84,3 +84,9 @@ authority is added. Timeline labels include lab start/completion.
 Phase 9: `src/view/host.rs::host_inspection_item` formats minimized collection coverage
 using existing `Item`/item-list on the app page (latest five). The UI never starts SSH;
 failed/interrupted inventory is explicit and cannot imply host safety.
+
+Phase 10: `src/view/monitor.rs` maps poll/detection/response records to existing `Item`
+cards on the app page; no new markup/CSS/execution authority. Recent history shows window
+gaps, interrupted collection and response uncertainty. ACTIVE is explicitly API-observed,
+not proof of packet enforcement; operational detections never imply compromise or Findings.
+`routes.rs` exercises interrupted collection, correlated suspicion and ambiguous response.

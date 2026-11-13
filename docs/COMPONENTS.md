@@ -402,3 +402,36 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
   `config/hosts.example.toml` and `docs/HOST_INSPECTION.md`.
 - Dashboard `host_inspection_item` reuses Item/item-list on the app page; four new event
   labels reuse the timeline. No new CSS, UI execution authority or MCP host tools.
+
+## Phase 10 additions and extensions
+
+- Core `MonitorBinding`, `MonitorPolicy`, `MonitorRule`, `MonitorRules::{generate,digest}`,
+  `SensorAlert::{is_valid,matches}`, `SensorRequest`, `MonitorFailure`, `MonitorDetection`,
+  `MonitorPoll`; `safe_scenario`, `safe_http_path`, `http_method`, `normalize_ip`.
+- Core `NetworkRange::{contains,as_str}`, `ResponsePolicy::{validate,allows}`,
+  `ResponseSpec::{validate,digest,marker}`, `ResponsePlan`, `ResponseState::pending`,
+  `SensorDecision`, `ResponseApply`; fixed `MAX_RESPONSE_SECONDS`,
+  `RESPONSE_APPROVAL_SECONDS`, `RESPONSE_ORIGIN`, `MONITOR_WINDOW_SECONDS`,
+  `MAX_SENSOR_ALERTS`. Existing `Timestamp` adds `add_seconds` and `utc_iso`.
+- DB migration 0011; `monitor::{current_rules,activate,next_poll,last_poll,poll,insert_poll,
+  complete_poll,polls,next_detection,insert_detection,detection,detections}`;
+  `response::{next_number,insert,get,list,pending,update}`. Every write reuses event
+  transactions; no separate queue or telemetry database.
+- Services `monitor_rules`, `activate_monitor_rules`, `start_monitor_poll`,
+  `complete_monitor_poll`, `monitor_polls`, `monitor_detections`; `plan_response`,
+  `claim_response`, `record_response_apply`, `claim_response_cleanup`,
+  `record_response_check`, `response_plan`, `response_plans`, `pending_responses`.
+  `Services` delegates its existing clock through `Clock`.
+- Scanners `MonitorConfig`, `CrowdSecProfile`, `MonitorSuite`, `CrowdSec`;
+  private `crowdsec_http::Api` owns all fixed native HTTP operations. Shared
+  `private_file::is_private_file` also serves SSH config. `testing::FakeMonitor` uses the
+  same port and injected Clock for independent expiry and ambiguous-create tests.
+- Worker `monitor_once`, `apply_response`, `reconcile_response`, `reconcile_responses`;
+  no AI/audit-queue coupling. Test fixtures reuse service app/maps and the existing
+  snapshot component; `tests/monitoring.rs` includes opt-in native acceptance.
+- CLI explicit `--monitor-config`, `monitor rules|activate|poll|run|history|detections`,
+  `response plan|show|apply|reconcile|rollback|history`; shared `output::json`.
+  Dashboard `monitor_poll_item`, `monitor_detection_item`, `response_item` reuse
+  `Item`/item-list and existing timeline labels; no UI/MCP execution authority.
+- Setup and supported envelope: [MONITORING.md](MONITORING.md),
+  [monitor.example.toml](../config/monitor.example.toml), ADR-0036.

@@ -28,6 +28,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
+opentatu-db = { workspace = true }
 opentatu-scanners = { workspace = true, features = ["test-support"] }
 opentatu-snapshots = { workspace = true, features = ["test-support"] }
 tempfile = { workspace = true }

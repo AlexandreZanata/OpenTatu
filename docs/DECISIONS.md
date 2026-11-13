@@ -766,3 +766,61 @@ Template:
   disposable local SSH acceptance attached to Abastevo, without production access or app
   execution. Existing phase-8 behavior and all guardrails remain. Phase 10/Sentinel and
   audit resumption remain separate owner gates. See [HOST_INSPECTION.md](HOST_INSPECTION.md).
+
+## ADR-0036 — CrowdSec correlation and exact temporary IP response
+- **Date:** 2026-11-13 · **Status:** accepted (explicit phase-10 request; Q-036/Q-037)
+- **Decision:** integrate CrowdSec Local API v1 using the existing layers and binary.
+  Core owns typed rules/operations; scanners owns bounded HTTP; services owns authorization,
+  state and transactional events; worker orchestrates; CLI exposes explicit owner commands;
+  dashboard displays minimized observations. No new crate, architecture edge or AI role.
+- **Rules:** compile 1–8 owner-selected scenario/entry-point bindings from the exact current
+  map/commit into literal HTTP method/path predicates. Review and activate the exact digest.
+  Changed map/profile requires new activation. This is local correlation of existing sensor
+  alerts, not deployment of arbitrary CrowdSec expressions, parsers or native profiles.
+  Simulated or unmatched alerts never authorize response; detections are operational
+  suspicions, never Audit findings, proof of compromise, ASVS results or fix closure.
+- **Coverage:** poll a one-hour window, at most 100 new alerts, with 5-second/1-MiB HTTP
+  bounds and a 30-second collection deadline. The native API has no offset pagination.
+  Saturated/failed/interrupted polls never advance the cursor; first collection and gaps
+  exceeding the window are explicit. Numeric identities bind an owner-managed LAPI database
+  epoch; reset/restore requires rotating `instance`. No complete delivery/coverage claim.
+- **Boundary:** explicit dedicated app-scoped LAPI attestation, literal private endpoint,
+  verified HTTPS except loopback HTTP, no proxy/redirect/retry, product User-Agent. Dedicated
+  machine password and bouncer key come from a bounded owner-private JSON file; provider
+  keys never enter this adapter. Native credentials are powerful: server/network separation
+  and bouncer scope are provisioning responsibilities, not restrictions enforced by JWT.
+- **Response:** only one canonical IP explicitly allowlisted (maximum 32 targets), with
+  mandatory protected management/VPN CIDRs and independent hard private/loopback/CGNAT/
+  link-local/multicast exclusions. Empty allowlist enables monitoring only. Native allowlists
+  and existing decisions are checked before writing. No bypass, range, host shell or bulk
+  deletion. The concrete immutable proposal binds app/profile/map/rules/detection/IP/TTL;
+  approval requires its exact digest, a justification and consumption within 120 seconds.
+  `OWNER_DECISION` and APPLYING commit before network access; replay/overlapping pending
+  target/cap overflow fails. The owner authorized native TTL 1–300 seconds and owned cleanup.
+- **Native protocol:** use CrowdSec's manual `cscli` decision origin, unique
+  `opentatu/<full-spec-sha256>` marker, `Ip`/`ban` and UTC Clock timestamps (as in cscli).
+  Disposable LAPI 1.8.2 acceptance exposed immediately expired offset-form timestamps;
+  `Timestamp::utc_iso` preserves the instant while history stays in Brasília time. Verify
+  ID/target/marker/origin/finite remaining duration before ACTIVE. API receipt is separate
+  from bouncer enforcement and propagation. TTL expires without OpenTatu running.
+- **Recovery:** never retry an ambiguous create. Persist UNKNOWN and discover by exact
+  marker/target/origin; absence without a verified ID remains UNKNOWN for operator review.
+  Fresh ownership checks allow deleting only one proven ID. Interrupted owned cleanup can
+  resume idempotently; capability shrinkage cannot prevent cleanup on the same trusted
+  endpoint/epoch. Changed endpoint/epoch fails closed. Native expiry and explicit rollback
+  are observed before terminal state; third-party decisions are preserved.
+- **History:** migration 0011 adds immutable rule activations/detections, decided-once polls
+  and revision-guarded response projections with immutable specs/start/deadline/owned ID.
+  Every mutation shares its event transaction. Keep minimized history permanently (R04),
+  including necessary normalized IPs and capability snapshots; discard raw logs, headers,
+  bodies, query values, geodata and sensor dates. No raw telemetry archive is introduced;
+  Sentinel's separately proposed retention amendment and expansion gates are unchanged.
+- **Alternatives:** autonomous bans/standing approvals enlarge the authorized capability;
+  general sensor URLs/expressions expose execution authority; IP-wide deletion destroys
+  others' decisions; automatic create retries duplicate effects; model-generated rules and
+  incident verdicts blur untrusted data and authority. All are excluded from this release.
+- **Validation:** deterministic service/repository/worker tests, synthetic HTTP transport
+  guards, dashboard coverage/uncertainty, plus disposable actual CrowdSec/OpenResty HTTP
+  200→403→200, protected control, foreign-decision preservation and native expiry. Abastevo
+  supplies an exact local snapshot and real route; its map/traffic fixtures are explicitly
+  synthetic and its code is not executed. See [MONITORING.md](MONITORING.md).

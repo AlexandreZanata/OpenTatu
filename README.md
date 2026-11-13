@@ -28,9 +28,12 @@ Model Context Protocol (MCP). One Rust binary, one SQLite file, private by desig
 Keywords: application security (AppSec), DevSecOps, SAST, security code review, OWASP ASVS,
 vulnerability management, LLM security agent, MCP server, Rust, SQLite, local-first.
 
-> Status: **roadmap phase 9 complete** — explicit read-only Linux host inventory over
-> restricted SSH, verified with a disposable local Abastevo-associated fixture (2026-11-13).
-> Setup, supported queries and rotation: [docs/HOST_INSPECTION.md](docs/HOST_INSPECTION.md).
+> Status: **roadmap phase 10 complete** — CrowdSec monitoring with owner-activated map
+> correlations and exact, single-use approval of temporary IP bans (maximum 300 seconds).
+> Actual disposable HTTP blocking, protected access, owned rollback and native expiry
+> verified on 2026-11-13. Setup and limits: [docs/MONITORING.md](docs/MONITORING.md).
+> Read-only Linux host inventory remains available through restricted SSH:
+> [docs/HOST_INSPECTION.md](docs/HOST_INSPECTION.md).
 > The phase-8 offline QEMU lab keeps per-audit/commit approval, actual HTTP evidence and
 > passive ZAP: [docs/LAB.md](docs/LAB.md).
 > Incremental audits use changed-code scope,

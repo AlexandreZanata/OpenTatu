@@ -68,3 +68,10 @@ Phase 9: `src/host.rs` admits explicit owner-only inspections for registered app
 policy identity and exactly-once ordered queries, revalidates bounded observations and
 computes collection coverage. `host_inspection`/`host_inspections` expose minimized history.
 It does not grant host execution to model or MCP callers.
+
+Phase 10: `src/monitor.rs` proposes/activates exact rules, admits durable polls, revalidates
+correlation and preserves failed cursors/coverage. `src/response.rs` owns concrete plans,
+fresh single-use owner approval, receipts, protected capabilities and owned cleanup.
+`Services` implements `Clock` by delegating its existing injected clock. Independent
+`monitor_tests.rs`/`response_tests.rs` reuse registered-app/map/clock fixtures. No network,
+model/MCP authority or mutation of Audit findings/ASVS is introduced (ADR-0036).

@@ -32,6 +32,8 @@ pub mod investigation;
 pub mod lab;
 pub mod llm_usage;
 pub mod maps;
+pub mod monitor;
+pub mod response;
 pub mod scanner_results;
 pub mod snapshots;
 pub mod tasks;

@@ -70,3 +70,13 @@ environments and capped output/deadlines. `testing::FakeHosts` reuses the same p
 general SSH command API or raw diagnostics are exposed. The only real credential consumed
 by SSH is its dedicated owner-private identity file; the provider API key is never passed.
 The opt-in local fixture lives in `tests/host-fixture/`; see `docs/HOST_INSPECTION.md`.
+
+Phase 10 (ADR-0036): `crowdsec_config.rs` validates dedicated app-scoped profiles and
+external private JSON credentials. Shared `private_file.rs` is also reused by host SSH
+config. `crowdsec_http.rs` owns bounded/no-proxy/no-redirect/no-retry LAPI transport;
+`crowdsec.rs` implements `MonitorSuite`/`CrowdSec` with minimized native alerts and only
+exact finite single-IP create/owned-ID delete. Credentials are `Secret`; raw API data
+never crosses the port. Native manual expiry uses UTC Clock instants and `cscli` origin.
+`testing_monitor.rs` provides `testing::FakeMonitor` over the same port. Synthetic local
+HTTP guard tests are in `crowdsec_http_tests.rs`; no production access is part of tests.
+The sensor/bouncer is owner-provisioned, never started or installed by this adapter.

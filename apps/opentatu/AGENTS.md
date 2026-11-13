@@ -61,3 +61,10 @@ and hidden forced `host collect`. `config::host_original_command` is the sole SS
 environment reader and accepts only exact protocol requests. Collector startup bypasses
 dotenv and never opens the database or loads controller credentials. No connection occurs
 without an explicit `host inspect` invocation.
+
+Phase 10: explicit `--monitor-config`; `commands/monitor.rs` wires `CrowdSec` and implements
+`monitor rules|activate|poll|run|history|detections`. `commands/response.rs` implements
+`response plan|show|apply|reconcile|rollback|history`. Continuous monitoring is explicitly
+started, never implicit in serve/worker; it reconciles only existing approved responses.
+`output::json` is the shared serialization/printing path. Configuration/runbook:
+`config/monitor.example.toml` and `docs/MONITORING.md`. No model or MCP response authority.

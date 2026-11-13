@@ -128,6 +128,13 @@ pub fn event_label(kind: EventKind) -> &'static str {
         K::HostCommandStarted => "Consulta de host iniciada",
         K::HostCommandCompleted => "Consulta de host concluída",
         K::HostInspectionCompleted => "Inspeção de host encerrada",
+        K::MonitorRulesActivated => "Regras de monitoramento ativadas",
+        K::MonitorPollStarted => "Coleta do sensor iniciada",
+        K::MonitorPollCompleted => "Coleta do sensor encerrada",
+        K::MonitorDetectionRecorded => "Suspeita operacional correlacionada",
+        K::ResponsePlanned => "Plano de resposta proposto",
+        K::ResponseStarted => "Operação de resposta iniciada",
+        K::ResponseChanged => "Estado da decisão de resposta atualizado",
     }
 }
 
@@ -394,3 +401,5 @@ mod lab;
 pub use lab::lab_run_item;
 mod host;
 pub use host::host_inspection_item;
+mod monitor;
+pub use monitor::{monitor_detection_item, monitor_poll_item, response_item};

@@ -11,7 +11,8 @@ use crate::render::render;
 use crate::routes::DashboardState;
 use crate::view::{
     AuditRow, FindingRow, Item, Layout, MapSummary, TaskRow, TimelineEntry, audit_row, finding_row,
-    host_inspection_item, map_summary, task_row, timeline_entry,
+    host_inspection_item, map_summary, monitor_detection_item, monitor_poll_item, response_item,
+    task_row, timeline_entry,
 };
 
 /// Audits listed on the page.
@@ -32,6 +33,9 @@ struct AppPage {
     audits: Vec<AuditRow>,
     timeline: Vec<TimelineEntry>,
     host_inspections: Vec<Item>,
+    monitor_polls: Vec<Item>,
+    monitor_detections: Vec<Item>,
+    responses: Vec<Item>,
 }
 
 /// Handler of `GET /apps/{slug}`.
@@ -45,6 +49,24 @@ pub async fn page(
     let findings = services.findings_of_app(&slug).await?;
     render(&AppPage {
         layout: Layout::default(),
+        monitor_polls: services
+            .monitor_polls(&slug, 5)
+            .await?
+            .iter()
+            .map(monitor_poll_item)
+            .collect(),
+        monitor_detections: services
+            .monitor_detections(&slug, 20)
+            .await?
+            .iter()
+            .map(monitor_detection_item)
+            .collect(),
+        responses: services
+            .response_plans(&slug, 20)
+            .await?
+            .iter()
+            .map(response_item)
+            .collect(),
         host_inspections: services
             .host_inspections(&slug, 5)
             .await?

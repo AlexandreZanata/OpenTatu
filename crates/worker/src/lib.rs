@@ -24,6 +24,7 @@ mod hunt;
 mod incremental;
 mod lab;
 mod merge;
+mod monitor;
 pub mod pipeline;
 mod planning;
 mod reporting;
@@ -44,6 +45,7 @@ use opentatu_snapshots::Snapshots;
 
 pub use error::Error;
 pub use host::inspect_host;
+pub use monitor::{apply_response, monitor_once, reconcile_response, reconcile_responses};
 pub use usage::ServicesUsageRecorder;
 
 /// What the worker needs to run the AI roles.

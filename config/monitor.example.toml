@@ -1,0 +1,25 @@
+# Copy outside analyzed repositories as monitor.local.toml; select explicitly on the CLI.
+# Example only: no connection, rule activation or response occurs by loading this file.
+[profiles.abastevo-sensor]
+app = "abastevo"
+# Rotate after any reset/restore/replacement of the LAPI database (numeric alert IDs).
+instance = "abastevo-epoch-1"
+# Attest that only this app's remediation components consume this dedicated LAPI.
+# Never share with VPN/SSH/management protection or unrelated apps.
+dedicated_app_instance = true
+base_url = "http://127.0.0.1:8080"
+credentials_file = "/absolute/private/crowdsec-credentials.local.json"
+# Non-loopback private IPs require HTTPS, verified certificates, and optionally:
+# ca_file = "/absolute/private/lapi-ca.pem"
+
+[[profiles.abastevo-sensor.bindings]]
+# Replace both values after reviewing the app's actual current map and sensor metadata.
+entry_point = "EP-001"
+scenario = "crowdsecurity/http-probing"
+
+[profiles.abastevo-sensor.response]
+# Start with no response capability; add only individually authorized public IPs.
+allowed_ips = []
+# Replace/add every real owner, management, VPN and recovery egress network, IPv4/IPv6.
+# The documentation ranges below are placeholders, not discovered access networks.
+protected_networks = ["100.64.0.0/10", "203.0.113.0/24", "2001:db8::/32"]
