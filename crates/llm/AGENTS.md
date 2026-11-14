@@ -22,13 +22,40 @@ client, router, guards, retries, accounting port)
 | `src/context.rs` | `CallContext` (audit + provider session id) |
 | `src/retry.rs` | `RetryPolicy` (capped exponential backoff for `RateLimited` and `Transport`) |
 | `src/usage.rs` | `UsageRecorder` port (implemented by `opentatu_worker::ServicesUsageRecorder`) |
+| `src/campaign.rs`, `src/campaign_tests.rs` | Optional `CampaignBudget`: exclusively locked append-only billing ledger; durable full-context reservations before every transport attempt, finite outputs, actual-charge settlement and conservative unknown outcomes |
 | `src/client.rs` | `LlmClient` trait, `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` |
 | `src/config.rs` | `ModelsConfig` and parts; `validate()`; `set_role_model`, `set_audit_budget` (benchmark variants — still validated); test that `config/models.toml` parses |
 | `src/fake.rs` | `FakeClient` — the only test double for model calls |
 | `src/error.rs` | `Error` (`RateLimited`, `Authentication`, ...) |
 
-Planned: per-audit budget enforcement and the 60% monthly share (phase 4, with the worker).
-`llm_usage.jsonl` per audit is written by the worker (phase 3).
+Per-audit budget enforcement and `llm_usage.jsonl` belong to the worker. The monthly
+plan share is configured and reported; campaign admission adds its own durable aggregate
+ceiling rather than claiming a global monthly reservation across data directories.
+
+Campaign runs explicitly add `Llm::with_campaign_budget`. Reuse the exact same ledger path
+and unchanged spending cap/model/endpoint/input ceiling/prices across all runs. The guard uses researched `ModelsConfig::campaign`
+ceilings; every retry reserves separately. Missing, malformed, timed-out and interrupted
+responses retain the full reservation; model/token/price violations halt the campaign.
+The ledger contains only billing metadata and remains private runtime data. Regular usage
+recording and per-audit limits still apply independently.
+
+Provider responses with an existing choice and empty/null/whitespace content still carry
+usage metadata. Preserve that metadata through `Llm` accounting before the investigator
+rejects or retries the role answer. Malformed provider envelopes and missing charge data
+remain uncertain; older reservations are never retroactively refunded. Diagnostic `ping`
+requires a JSON object after accounting; it does not accept blank or malformed content.
+
+The current output ceiling is 131,072 tokens, reserving US$0.457287 per attempt at peak
+prices. Older 32,768-token attempts retain their original US$0.339322 reservation until
+settled. An increase appends a synced `output_limit_raised` record; replay validates
+historical reservations against the ceiling active for their own attempt. Decreases and
+all fixed-policy changes fail closed. The aggregate spending cap never changes.
+
+`RoleConfig::max_output_tokens` is optional and includes reasoning. `Llm::generate` uses
+it directly; omitted settings preserve the provider default, and zero is rejected by
+configuration validation. The campaign guard clamps it to its financial ceiling without
+reducing the full per-attempt reservation. These experimental generation settings change
+neither timeout classification nor retries.
 
 ## Local rules
 

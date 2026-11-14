@@ -536,14 +536,86 @@ async fn r05_r14_r18_full_investigation_produces_findings_report_and_coverage() 
     assert_eq!(record["results"]["new"], 1);
     assert_eq!(record["results"]["by_severity"]["HIGH"], 1);
     assert_eq!(record["coverage"]["failed"], 1);
-    assert_eq!(record["prompt_versions"]["skeptic"], "2.0.0");
+    assert_eq!(record["prompt_versions"]["skeptic"], "2.1.0");
     assert_eq!(record["prompt_versions"]["reporter"], "2.1.0", "R17");
-    assert_eq!(record["prompt_versions"]["hunter"], "2.2.0");
+    assert_eq!(record["prompt_versions"]["hunter"], "2.3.0");
     let memory = std::fs::read_to_string(layout.memory_file(&slug)).unwrap();
     assert!(memory.contains("Open: 0 critical, 1 high"), "{memory}");
     assert!(
         memory.contains("DEMO-SEC-0001 HIGH — Rota pública sem controle de acesso"),
         "{memory}"
+    );
+}
+
+#[tokio::test]
+async fn r14_investigation_includes_upstream_controls_and_preserves_review_gaps() {
+    let source = tempfile::tempdir().unwrap();
+    let repo = testing::create_repo(
+        source.path(),
+        &[
+            (
+                "src/route.ts",
+                "export function GET() { return readOrder(); }\n",
+            ),
+            (
+                "server/router.ts",
+                "import { GET } from '../src/route';\nimport { requireOwner } from './auth';\nrouter.get('/orders', requireOwner, GET);\n",
+            ),
+            (
+                "server/auth.ts",
+                "export function requireOwner() { verifyOwnership(); }\n",
+            ),
+        ],
+    );
+    let model = Arc::new(FakeClient::new());
+    let mut verifier: serde_json::Value = serde_json::from_str(VERIFIER_ANSWER).unwrap();
+    verifier["not_analyzed"] = serde_json::json!(["Política externa não disponível."]);
+    verifier["gaps"] = serde_json::json!(["Defesa compartilhada não fornecida."]);
+    let mut skeptic: serde_json::Value = serde_json::from_str(SKEPTIC_ANSWER).unwrap();
+    skeptic["not_analyzed"] = serde_json::json!(["Configuração do proxy não examinada."]);
+    skeptic["gaps"] = serde_json::json!(["Contexto de implantação ausente."]);
+    for answer in [
+        CARTOGRAPHER_ANSWER.to_owned(),
+        HUNTER_ANSWER.to_owned(),
+        verifier.to_string(),
+        skeptic.to_string(),
+        PLANNER_ANSWER.to_owned(),
+        REPORTER_ANSWER.to_owned(),
+    ] {
+        model.push_answer(answer);
+    }
+    let setup = setup(
+        Some(&repo),
+        FakeSuite::clean(),
+        Some((model.clone(), models())),
+    )
+    .await;
+    let audit = enqueue(&setup).await;
+    setup.worker.drain().await.unwrap();
+    let requests = model.requests();
+    for request in &requests[1..=3] {
+        let code = &request.messages[1].content;
+        assert!(code.contains("server/router.ts"), "{}", request.model);
+        assert!(code.contains("verifyOwnership()"), "{}", request.model);
+    }
+    let finished = setup.services.audit(&audit.id).await.unwrap();
+    for expected in [
+        "Verificador: Política externa não disponível.",
+        "Cético: Configuração do proxy não examinada.",
+        "Verificador: Defesa compartilhada não fornecida.",
+        "Cético: Contexto de implantação ausente.",
+    ] {
+        assert!(finished.limitations.iter().any(|note| note == expected));
+    }
+    let hypotheses = setup.services.hypotheses_of_audit(&audit.id).await.unwrap();
+    assert!(
+        hypotheses[0]
+            .verification
+            .as_ref()
+            .unwrap()
+            .system_notes
+            .iter()
+            .any(|note| note.contains("Política externa"))
     );
 }
 
@@ -1001,6 +1073,97 @@ async fn r09_closed_code_is_a_regression_only_when_its_fix_is_in_the_history() {
             .any(|r| r.contains("não conta como regressão")),
         "{:?}",
         approved.reasons
+    );
+}
+
+#[tokio::test]
+async fn r14_incremental_rejects_hypotheses_on_supplemental_upstream_context() {
+    let source = tempfile::tempdir().unwrap();
+    let repo = testing::create_repo(
+        source.path(),
+        &[
+            ("src/route.ts", "export const GET = 1;\n"),
+            (
+                "server/router.ts",
+                "import { GET } from '../src/route';\nimport { auth } from './auth';\nrouter.get('/orders', auth, GET);\n",
+            ),
+            (
+                "server/auth.ts",
+                "export function auth() { upstreamDefenseMarker(); }\n",
+            ),
+        ],
+    );
+    let model = Arc::new(FakeClient::new());
+    let mut empty_hunt: serde_json::Value = serde_json::from_str(HUNTER_ANSWER).unwrap();
+    empty_hunt["hypotheses"] = serde_json::json!([]);
+    let mut report: serde_json::Value = serde_json::from_str(REPORTER_ANSWER).unwrap();
+    report["report_md"] = "Nenhum achado confirmado nesta auditoria.".into();
+    for answer in [
+        CARTOGRAPHER_ANSWER.to_owned(),
+        empty_hunt.to_string(),
+        report.to_string(),
+    ] {
+        model.push_answer(answer);
+    }
+    let setup = setup(
+        Some(&repo),
+        FakeSuite::clean(),
+        Some((model.clone(), models())),
+    )
+    .await;
+    enqueue(&setup).await;
+    setup.worker.drain().await.unwrap();
+    testing::commit_files(
+        source.path(),
+        &[("src/route.ts", "export const GET = 2;\n")],
+        "change handler",
+    );
+    let queued = setup.worker.watch_once().await.unwrap();
+    let audit = setup.services.audit(&queued[0]).await.unwrap();
+    let adapt = |answer: &str| answer.replace("AUD-DEMO-20261112-0900", audit.id.as_str());
+    let mut supplemental_hunt: serde_json::Value =
+        serde_json::from_str(&adapt(HUNTER_ANSWER)).unwrap();
+    let mut hypothesis = supplemental_hunt["hypotheses"][0].clone();
+    hypothesis["location"]["file"] = "server/router.ts".into();
+    // A forged affected entry-point ID cannot authorize a supplemental location.
+    hypothesis["entry_point"] = "EP-001".into();
+    supplemental_hunt["hypotheses"] = serde_json::json!([hypothesis]);
+    model.push_answer(adapt(CARTOGRAPHER_ANSWER));
+    model.push_answer(supplemental_hunt.to_string());
+    let before = model.requests().len();
+    setup.worker.drain().await.unwrap();
+    let requests = model.requests();
+    assert_eq!(
+        requests.len() - before,
+        2,
+        "no out-of-scope verifier or reporter call"
+    );
+    let hunter = &requests[before + 1].messages[1].content;
+    assert!(
+        hunter.contains("server/router.ts"),
+        "upstream registration is useful context"
+    );
+    assert!(
+        hunter.contains("upstreamDefenseMarker"),
+        "the shared defense is still visible"
+    );
+    assert!(
+        setup
+            .services
+            .hypotheses_of_audit(&audit.id)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    let rounds = setup.services.hunt_rounds(&audit.id).await.unwrap();
+    assert_eq!(rounds[0].entry_points, ["EP-001"]);
+    assert_eq!(rounds[0].new_hypotheses, 0);
+    let finished = setup.services.audit(&audit.id).await.unwrap();
+    assert!(
+        finished
+            .limitations
+            .iter()
+            .any(|note| note.contains("fora do escopo"))
     );
 }
 

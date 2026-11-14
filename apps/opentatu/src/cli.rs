@@ -373,16 +373,9 @@ pub enum BenchmarkCommand {
     Run {
         /// Benchmark name.
         name: String,
-        /// Use another allowed model for a role, e.g. `skeptic=deepseek-v4.1-flash`
-        /// (repeatable; training consent still applies).
-        #[arg(long = "role-model", value_parser = parse_role_model)]
-        role_models: Vec<(AiRole, String)>,
-        /// Token limit of this run's FULL audit (default: config/models.toml).
-        #[arg(long)]
-        max_tokens: Option<u64>,
-        /// Minute limit of this run's FULL audit (default: config/models.toml).
-        #[arg(long)]
-        max_minutes: Option<u32>,
+        /// Scoped AI model and spending overrides.
+        #[command(flatten)]
+        ai: RunAiArgs,
         /// Benchmark directory.
         #[arg(long, default_value = "benchmark")]
         dir: PathBuf,
@@ -401,6 +394,26 @@ pub enum BenchmarkCommand {
         #[arg(long, default_value = "benchmark")]
         dir: PathBuf,
     },
+}
+
+/// AI overrides shared by benchmark runs and acceptance audits of registered apps.
+#[derive(Debug, Clone, Default, Args)]
+pub struct RunAiArgs {
+    /// Use another allowed model for a role (repeatable; training consent still applies).
+    #[arg(long = "role-model", value_parser = parse_role_model)]
+    pub role_models: Vec<(AiRole, String)>,
+    /// Token limit of this run's FULL audit (default: config/models.toml).
+    #[arg(long)]
+    pub max_tokens: Option<u64>,
+    /// Minute limit of this run's FULL audit (default: config/models.toml).
+    #[arg(long)]
+    pub max_minutes: Option<u32>,
+    /// Durable shared spending ledger; reuse the SAME path across all campaign runs.
+    #[arg(long, requires = "max_cost_usd")]
+    pub campaign_budget: Option<PathBuf>,
+    /// Aggregate USD cap, including in-flight and unknown attempts (requires ledger).
+    #[arg(long, requires = "campaign_budget")]
+    pub max_cost_usd: Option<f64>,
 }
 
 fn parse_role_model(text: &str) -> Result<(AiRole, String), String> {
@@ -447,6 +460,9 @@ pub enum AuditCommand {
 /// Worker options.
 #[derive(Debug, Args)]
 pub struct WorkerArgs {
+    /// Scoped AI model and spending overrides.
+    #[command(flatten)]
+    pub ai: RunAiArgs,
     /// Minutes between configured-branch checks (default: OPENTATU_WATCH_MINUTES or 10;
     /// 0 disables). Queue polling remains independent.
     #[arg(long)]
@@ -528,6 +544,31 @@ mod tests {
     #[test]
     fn cli_definition_is_valid() {
         Cli::command().debug_assert();
+    }
+
+    #[test]
+    fn r13_benchmark_and_worker_require_paired_campaign_flags() {
+        for prefix in [
+            vec!["opentatu", "benchmark", "run", "juice-shop"],
+            vec!["opentatu", "worker", "--once"],
+        ] {
+            let mut complete = prefix.clone();
+            complete.extend([
+                "--campaign-budget",
+                "/tmp/campaign.jsonl",
+                "--max-cost-usd",
+                "20",
+                "--role-model",
+                "skeptic=deepseek-v4.1-flash",
+            ]);
+            assert!(Cli::try_parse_from(complete).is_ok());
+            let mut missing_cap = prefix.clone();
+            missing_cap.extend(["--campaign-budget", "/tmp/campaign.jsonl"]);
+            assert!(Cli::try_parse_from(missing_cap).is_err());
+            let mut missing_ledger = prefix;
+            missing_ledger.extend(["--max-cost-usd", "20"]);
+            assert!(Cli::try_parse_from(missing_ledger).is_err());
+        }
     }
     #[test]
     fn r10_lab_config_and_explicit_audit_approval_parse() {

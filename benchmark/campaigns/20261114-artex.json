@@ -1,0 +1,590 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "public_aggregate_projection",
+  "campaign_id": "20261114-artex",
+  "projection_state": "final",
+  "raw_run_result_schema": false,
+  "ceiling_usd": "20.000000",
+  "publication_policy": {
+    "detailed_findings_target": "AlexandreZanata/Abastevo",
+    "juice_shop_outside_catalog_details_published": false,
+    "raw_runtime_paths_or_overrides_published": false
+  },
+  "benchmark": {
+    "benchmark": "juice-shop",
+    "revision": "v20.4.0",
+    "upstream_commit": "266448aba68cd8ba5915f526a128da4fa7bc3f9f"
+  },
+  "catalog_semantics": "partial coding-challenge markers; outside catalog does not mean false positive",
+  "evaluation_runs": [
+    {
+      "audit_id": "AUD-BENCH-JUICE-SHOP-2-20261114-1547",
+      "status": "PARTIAL",
+      "completed_at": "2026-11-14T17:06:23-03:00",
+      "duration_seconds": 4715,
+      "models_used": {
+        "cartographer": "deepseek-v4.1-flash",
+        "hunter": "deepseek-v4.1-flash",
+        "planner": "deepseek-v4.1-flash",
+        "reporter": "deepseek-v4.1-flash",
+        "skeptic": "deepseek-v4.1-flash",
+        "verifier": "deepseek-v4.1-flash"
+      },
+      "prompt_versions_used": {
+        "base": "1.1.0",
+        "cartographer": "2.2.0",
+        "hunter": "2.2.0",
+        "planner": "2.0.0",
+        "reporter": "2.1.0",
+        "skeptic": "2.0.0",
+        "verifier": "1.3.0"
+      },
+      "usage": {
+        "calls": 96,
+        "input_tokens": 5095583,
+        "output_tokens": 899207,
+        "provider_reported_cost_usd": "0.7546574800000002"
+      },
+      "pipeline_counts": {
+        "hypotheses": 46,
+        "confirmed": 33,
+        "dismissed_by_verifier": 1,
+        "inconclusive": 12,
+        "not_verified": 0,
+        "dismissed_by_skeptic": 1,
+        "downgraded_by_skeptic": 0
+      },
+      "raw_result_sha256": "009d490891a3d83c0b3a468f013325ce76baec606bbc763c495b2b002a4d32af",
+      "quality_evidence": true,
+      "known_marker_score": {
+        "expected": 33,
+        "reported": 32,
+        "found_count": 3,
+        "hypothesized_only_count": 2,
+        "missed_count": 28,
+        "outside_catalog_reported_count": 30,
+        "matched_report_count": 2,
+        "found": [
+          "EXP-020",
+          "EXP-021",
+          "EXP-023"
+        ],
+        "hypothesized_only": [
+          "EXP-018",
+          "EXP-024"
+        ],
+        "missed": [
+          "EXP-001",
+          "EXP-002",
+          "EXP-003",
+          "EXP-004",
+          "EXP-005",
+          "EXP-006",
+          "EXP-007",
+          "EXP-008",
+          "EXP-009",
+          "EXP-010",
+          "EXP-011",
+          "EXP-012",
+          "EXP-013",
+          "EXP-014",
+          "EXP-015",
+          "EXP-016",
+          "EXP-017",
+          "EXP-019",
+          "EXP-022",
+          "EXP-025",
+          "EXP-026",
+          "EXP-027",
+          "EXP-028",
+          "EXP-029",
+          "EXP-030",
+          "EXP-031",
+          "EXP-032",
+          "EXP-033"
+        ],
+        "known_flaw_metrics_count_marker_groups": true,
+        "catalog_recall": "0.09090909090909090909090909091",
+        "precision_against_partial_catalog": "0.0625",
+        "outside_catalog_items_are_not_adjudicated_false_positives": true
+      },
+      "usage_reconciliation": {
+        "settled_calls": 96,
+        "recorded_calls": 96,
+        "all_recorded_usage_has_known_settlement": true
+      },
+      "label": "baseline-bounded",
+      "provenance": {
+        "binary_sha256": "05f39dd7f9dd41e5000bd6b9d88e46840f4a19e49bbd0b8541e7b71fec2acad0",
+        "analysis_source_commit": "05e8bb33b9256eff35d5b6bc05ca8dee067a35c3",
+        "common_backport_source_commit": "49a14a9b60a4f2743d7288f507fac6f1048e4a72",
+        "shared_runtime_backport_verified": true
+      },
+      "limits": {
+        "audit_max_tokens": 6000000,
+        "audit_max_minutes": 90,
+        "generation_max_output_tokens_by_role": {
+          "cartographer": 65536,
+          "hunter": 32768,
+          "verifier": 16384,
+          "skeptic": 16384,
+          "planner": 32768,
+          "reporter": 16384
+        },
+        "financial_output_envelope": 131072
+      },
+      "scope_observations": {
+        "hunter_rounds_completed": 3,
+        "hunter_entry_points_declared_examined": 60,
+        "hunter_requirements_declared_checked": 40,
+        "round_checked_counts": [
+          {
+            "round": 1,
+            "entry_points": 20,
+            "requirements_checked": 32
+          },
+          {
+            "round": 2,
+            "entry_points": 20,
+            "requirements_checked": 10
+          },
+          {
+            "round": 3,
+            "entry_points": 20,
+            "requirements_checked": 11
+          }
+        ],
+        "hunter_coverage_is_model_declared_not_independent_execution": true,
+        "map_entry_points": 117,
+        "map_components": 11,
+        "coverage_summary": {
+          "applicable_requirements": 101,
+          "verified": 5,
+          "failed": 28,
+          "not_tested": 68,
+          "percent": 4
+        },
+        "assessed_requirement_status_count": 33,
+        "requirements_associated_with_entry_points": 87,
+        "entry_point_requirement_associations": 322,
+        "hunter_entry_points_unexamined_count": 57,
+        "coverage_statuses_are_not_complete_audit_proof": true,
+        "observed_operational_classes": {
+          "context_budget_omission_notes": 4,
+          "audit_budget_exhaustion_reported": false,
+          "hunter_empty_truncated_completion_rounds": [],
+          "dynamic_tests_not_executed_without_lab": true,
+          "configured_audit_token_limit": 6000000,
+          "recorded_audit_tokens_used": 5994790,
+          "recorded_tokens_remaining_to_configured_limit": 5210
+        },
+        "aggregate_source_sha256": {
+          "audit_record": "2d35124681b202700938dd4de71e54a3c8737f8885e3985d087885123026200d",
+          "coverage_record": "d4d78e9d17fdb92966926527b6773aa4c44b12f9a83dfb1f06ea896070f7e706",
+          "map_record": "bdfa798fc568e1108e415d5f3072faecdc2b1e59a2da93e28f3a369f08e05659",
+          "hypotheses_record": "2b08ddd87dafb98e793b9ec51c384a99cfb4f5f3d29f9865cdab1f6614c99757"
+        }
+      }
+    },
+    {
+      "audit_id": "AUD-BENCH-JUICE-SHOP-3-20261114-1707",
+      "status": "PARTIAL",
+      "completed_at": "2026-11-14T18:16:43-03:00",
+      "duration_seconds": 4160,
+      "models_used": {
+        "cartographer": "deepseek-v4.1-flash",
+        "hunter": "deepseek-v4.1-flash",
+        "planner": "deepseek-v4.1-flash",
+        "reporter": "deepseek-v4.1-flash",
+        "skeptic": "deepseek-v4.1-flash",
+        "verifier": "deepseek-v4.1-flash"
+      },
+      "prompt_versions_used": {
+        "base": "1.1.0",
+        "cartographer": "2.2.0",
+        "hunter": "2.3.0",
+        "planner": "2.0.0",
+        "reporter": "2.1.0",
+        "skeptic": "2.1.0",
+        "verifier": "1.4.0"
+      },
+      "usage": {
+        "calls": 75,
+        "input_tokens": 3939705,
+        "output_tokens": 733097,
+        "provider_reported_cost_usd": "0.5971397299999999"
+      },
+      "pipeline_counts": {
+        "hypotheses": 35,
+        "confirmed": 27,
+        "dismissed_by_verifier": 0,
+        "inconclusive": 8,
+        "not_verified": 0,
+        "dismissed_by_skeptic": 0,
+        "downgraded_by_skeptic": 0
+      },
+      "raw_result_sha256": "c4b13754facfed2ed90225acf37ff1afef1a7a1f49f5a0cc425ee1a234d0681c",
+      "quality_evidence": true,
+      "known_marker_score": {
+        "expected": 33,
+        "reported": 27,
+        "found_count": 8,
+        "hypothesized_only_count": 0,
+        "missed_count": 25,
+        "outside_catalog_reported_count": 21,
+        "matched_report_count": 6,
+        "found": [
+          "EXP-020",
+          "EXP-021",
+          "EXP-022",
+          "EXP-023",
+          "EXP-024",
+          "EXP-025",
+          "EXP-026",
+          "EXP-027"
+        ],
+        "hypothesized_only": [],
+        "missed": [
+          "EXP-001",
+          "EXP-002",
+          "EXP-003",
+          "EXP-004",
+          "EXP-005",
+          "EXP-006",
+          "EXP-007",
+          "EXP-008",
+          "EXP-009",
+          "EXP-010",
+          "EXP-011",
+          "EXP-012",
+          "EXP-013",
+          "EXP-014",
+          "EXP-015",
+          "EXP-016",
+          "EXP-017",
+          "EXP-018",
+          "EXP-019",
+          "EXP-028",
+          "EXP-029",
+          "EXP-030",
+          "EXP-031",
+          "EXP-032",
+          "EXP-033"
+        ],
+        "known_flaw_metrics_count_marker_groups": true,
+        "catalog_recall": "0.2424242424242424242424242424",
+        "precision_against_partial_catalog": "0.2222222222222222222222222222",
+        "outside_catalog_items_are_not_adjudicated_false_positives": true
+      },
+      "usage_reconciliation": {
+        "settled_calls": 75,
+        "recorded_calls": 75,
+        "all_recorded_usage_has_known_settlement": true
+      },
+      "label": "candidate-bounded",
+      "provenance": {
+        "binary_sha256": "7cffea3221d1c63057525dfbb734c813d6927674b07ea68a3893a08f3765f106",
+        "analysis_source_commit": "49a14a9b60a4f2743d7288f507fac6f1048e4a72"
+      },
+      "limits": {
+        "audit_max_tokens": 6000000,
+        "audit_max_minutes": 90,
+        "generation_max_output_tokens_by_role": {
+          "cartographer": 65536,
+          "hunter": 32768,
+          "verifier": 16384,
+          "skeptic": 16384,
+          "planner": 32768,
+          "reporter": 16384
+        },
+        "financial_output_envelope": 131072
+      },
+      "scope_observations": {
+        "hunter_rounds_completed": 1,
+        "hunter_entry_points_declared_examined": 13,
+        "hunter_requirements_declared_checked": 33,
+        "round_checked_counts": [
+          {
+            "round": 1,
+            "entry_points": 13,
+            "requirements_checked": 33
+          }
+        ],
+        "hunter_coverage_is_model_declared_not_independent_execution": true,
+        "map_entry_points": 93,
+        "map_components": 10,
+        "coverage_summary": {
+          "applicable_requirements": 126,
+          "verified": 2,
+          "failed": 29,
+          "not_tested": 95,
+          "percent": 1
+        },
+        "assessed_requirement_status_count": 31,
+        "requirements_associated_with_entry_points": 87,
+        "entry_point_requirement_associations": 297,
+        "hunter_entry_points_unexamined_count": 80,
+        "coverage_statuses_are_not_complete_audit_proof": true,
+        "observed_operational_classes": {
+          "context_budget_omission_notes": 67,
+          "audit_budget_exhaustion_reported": false,
+          "hunter_empty_truncated_completion_rounds": [
+            2
+          ],
+          "dynamic_tests_not_executed_without_lab": true,
+          "configured_audit_token_limit": 6000000,
+          "recorded_audit_tokens_used": 4672802,
+          "recorded_tokens_remaining_to_configured_limit": 1327198
+        },
+        "aggregate_source_sha256": {
+          "audit_record": "99992c96b9127b9375764809c23bd359be4cfa15f95ad4f1d9c8c6863545ad49",
+          "coverage_record": "70f3eb4fc4d4d8d575626551972cdc81de8153d343daef2ba44805d787fbd0a1",
+          "map_record": "772fa785ff495c5fb33dafb249a6e582e43758528fffb7cdaa377c3716a502b2",
+          "hypotheses_record": "351a2283ad36eb1f338d8b08a3591c80ea4331a3ba2392c263bc5a1aac749f5d"
+        }
+      }
+    }
+  ],
+  "pending_evaluation_labels": [],
+  "paired_controls_and_scope": {
+    "same_snapshot": true,
+    "same_scanner_versions": true,
+    "same_models": true,
+    "analyzed_snapshot_commit": "7803f2ecb8d57b3cbdae1423bd595727bb4e17c2",
+    "independent_model_generated_maps_differ": true,
+    "applicable_requirement_denominators_differ": true,
+    "known_marker_difference_is_observational_single_pair": true,
+    "aggregate_runtime_summary_sha256": "1aeb37b77e07b3c58c17cddcf61f76e7037e2492858be3fc5f30430bc30589f1"
+  },
+  "calibrations": [
+    {
+      "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1457",
+      "outcome_kind": "interrupted_output_limit_calibration",
+      "quality_evidence": false,
+      "financials": {
+        "attempts": 3,
+        "settled_attempts": 2,
+        "settled_charge_micro_usd": 43604,
+        "settled_input_tokens": 507773,
+        "settled_output_tokens": 53825,
+        "retained_reservation_micro_usd": 339322,
+        "committed_micro_usd": 382926
+      },
+      "known_marker_score": null,
+      "analysis_source_commit": "05e8bb33b9256eff35d5b6bc05ca8dee067a35c3",
+      "binary_sha256": "c711d54684230f2faa451845f6f5bced64fd80d45b38415571f48f04624a10eb",
+      "exact_common_backport_source_commit": null,
+      "generation_global_output_ceiling": 32768
+    },
+    {
+      "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1509",
+      "outcome_kind": "interrupted_process_exit_143",
+      "quality_evidence": false,
+      "financials": {
+        "attempts": 2,
+        "settled_attempts": 1,
+        "settled_charge_micro_usd": 38097,
+        "settled_input_tokens": 243584,
+        "settled_output_tokens": 44929,
+        "retained_reservation_micro_usd": 457287,
+        "committed_micro_usd": 495384
+      },
+      "known_marker_score": null,
+      "analysis_source_commit": null,
+      "binary_sha256": null,
+      "exact_common_backport_source_commit": null
+    },
+    {
+      "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1517",
+      "outcome_kind": "provider_timeout_global_output_ceiling_calibration",
+      "quality_evidence": false,
+      "financials": {
+        "attempts": 3,
+        "settled_attempts": 2,
+        "settled_charge_micro_usd": 43072,
+        "settled_input_tokens": 246362,
+        "settled_output_tokens": 58051,
+        "retained_reservation_micro_usd": 457287,
+        "committed_micro_usd": 500359
+      },
+      "known_marker_score": null,
+      "analysis_source_commit": null,
+      "binary_sha256": null,
+      "exact_common_backport_source_commit": null,
+      "completed_run_observation": {
+        "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1517",
+        "status": "PARTIAL",
+        "completed_at": "2026-11-14T15:41:14-03:00",
+        "duration_seconds": 1422,
+        "models_used": {
+          "cartographer": "deepseek-v4.1-flash",
+          "reporter": "deepseek-v4.1-flash"
+        },
+        "prompt_versions_used": {
+          "base": "1.1.0",
+          "cartographer": "2.2.0",
+          "reporter": "2.1.0"
+        },
+        "usage": {
+          "calls": 2,
+          "input_tokens": 246362,
+          "output_tokens": 58051,
+          "provider_reported_cost_usd": "0.04307094"
+        },
+        "pipeline_counts": {
+          "hypotheses": 0,
+          "confirmed": 0,
+          "dismissed_by_verifier": 0,
+          "inconclusive": 0,
+          "not_verified": 0,
+          "dismissed_by_skeptic": 0,
+          "downgraded_by_skeptic": 0
+        },
+        "raw_result_sha256": "a56dd6b2b2de0135a1dc67fe6148ac7f1872fafb62960aa5c9f4e8f5985d53fd",
+        "quality_evidence": false,
+        "known_marker_score": null,
+        "scoring_exclusion": "calibration_or_interrupted_run_not_a_vulnerability_accuracy_measurement",
+        "usage_reconciliation": {
+          "settled_calls": 2,
+          "recorded_calls": 2,
+          "all_recorded_usage_has_known_settlement": true
+        }
+      }
+    }
+  ],
+  "financial_accounting": {
+    "ceiling_micro_usd": 20000000,
+    "settled_charge_micro_usd": 1604494,
+    "retained_reservation_micro_usd": 1711183,
+    "committed_micro_usd": 3315677,
+    "peak_committed_micro_usd": 5118478,
+    "remaining_to_ceiling_micro_usd": 16684323,
+    "settled_charge_usd": "1.604494",
+    "retained_reservation_usd": "1.711183",
+    "committed_usd": "3.315677",
+    "peak_committed_usd": "5.118478",
+    "attempts": 192,
+    "settled_attempts": 188,
+    "unresolved_attempts": 4,
+    "unresolved_reservations": [
+      {
+        "attempt": 3,
+        "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1457",
+        "role": "hunter",
+        "reserved_micro_usd": 339322
+      },
+      {
+        "attempt": 5,
+        "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1509",
+        "role": "hunter",
+        "reserved_micro_usd": 457287
+      },
+      {
+        "attempt": 7,
+        "audit_id": "AUD-BENCH-JUICE-SHOP-1-20261114-1517",
+        "role": "hunter",
+        "reserved_micro_usd": 457287
+      },
+      {
+        "attempt": 108,
+        "audit_id": "AUD-BENCH-JUICE-SHOP-3-20261114-1707",
+        "role": "hunter",
+        "reserved_micro_usd": 457287
+      }
+    ],
+    "unresolved_state": "unknown_outcome_retained",
+    "halted": false,
+    "output_ceiling_transitions": [
+      {
+        "previous_output_ceiling": 32768,
+        "new_output_ceiling": 131072
+      }
+    ],
+    "active_financial_output_ceiling": 131072,
+    "ledger_sha256": "2e3e24f34ecc44867cdbb5420a9f958896cdb431fc627bf446a63db6db4b29e7",
+    "per_audit": {
+      "AUD-BENCH-JUICE-SHOP-1-20261114-1457": {
+        "attempts": 3,
+        "settled_attempts": 2,
+        "settled_charge_micro_usd": 43604,
+        "settled_input_tokens": 507773,
+        "settled_output_tokens": 53825,
+        "retained_reservation_micro_usd": 339322,
+        "committed_micro_usd": 382926
+      },
+      "AUD-BENCH-JUICE-SHOP-1-20261114-1509": {
+        "attempts": 2,
+        "settled_attempts": 1,
+        "settled_charge_micro_usd": 38097,
+        "settled_input_tokens": 243584,
+        "settled_output_tokens": 44929,
+        "retained_reservation_micro_usd": 457287,
+        "committed_micro_usd": 495384
+      },
+      "AUD-BENCH-JUICE-SHOP-1-20261114-1517": {
+        "attempts": 3,
+        "settled_attempts": 2,
+        "settled_charge_micro_usd": 43072,
+        "settled_input_tokens": 246362,
+        "settled_output_tokens": 58051,
+        "retained_reservation_micro_usd": 457287,
+        "committed_micro_usd": 500359
+      },
+      "AUD-BENCH-JUICE-SHOP-2-20261114-1547": {
+        "attempts": 96,
+        "settled_attempts": 96,
+        "settled_charge_micro_usd": 754703,
+        "settled_input_tokens": 5095583,
+        "settled_output_tokens": 899207,
+        "retained_reservation_micro_usd": 0,
+        "committed_micro_usd": 754703
+      },
+      "AUD-BENCH-JUICE-SHOP-3-20261114-1707": {
+        "attempts": 76,
+        "settled_attempts": 75,
+        "settled_charge_micro_usd": 597178,
+        "settled_input_tokens": 3939705,
+        "settled_output_tokens": 733097,
+        "retained_reservation_micro_usd": 457287,
+        "committed_micro_usd": 1054465
+      },
+      "AUD-ABASTEVO-20261114-1501": {
+        "attempts": 12,
+        "settled_attempts": 12,
+        "settled_charge_micro_usd": 127840,
+        "settled_input_tokens": 971356,
+        "settled_output_tokens": 141826,
+        "retained_reservation_micro_usd": 0,
+        "committed_micro_usd": 127840
+      }
+    }
+  },
+  "context_diagnostic": {
+    "improved_case_budget_pairs": 6,
+    "case_budget_pairs": 8,
+    "gained_selected_anchor_observations": 13,
+    "lost_selected_anchor_observations": 0,
+    "held_out": false,
+    "vulnerability_accuracy_measurement": false,
+    "method": "../acceptance/abastevo-20261114/METHOD.md"
+  },
+  "acceptance": {
+    "target": "AlexandreZanata/Abastevo",
+    "commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "audit_id": "AUD-ABASTEVO-20261114-1501",
+    "bundle": "../acceptance/abastevo-20261114/REPORT.md",
+    "status": "PARTIAL",
+    "engine_provenance": {
+      "analysis_source_commit": "7df5899cdb3844ac127e96c3041da66cc8925721",
+      "binary_sha256": "76e8742f210141463265b16ec9b540b0fd48a9c8d13f35d70d9bf8071e274ea0",
+      "relation_to_paired_evaluation": "separate_follow_up_engine_not_a_paired_benchmark_version"
+    }
+  },
+  "limitations": [
+    "Single baseline/candidate pair, not a statistical accuracy study.",
+    "Partial audit results do not establish complete application coverage.",
+    "Calibration timeouts/interruption are preserved financially and excluded from accuracy claims.",
+    "Ledger microcharges round each reported charge upward; usage totals preserve provider-reported decimals.",
+    "Uncertain outcomes retain their entire original reservation."
+  ]
+}

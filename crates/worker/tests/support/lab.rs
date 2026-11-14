@@ -276,5 +276,5 @@ async fn r05_r17_failed_follow_up_keeps_prompt_provenance_without_confirming() {
         &std::fs::read_to_string(layout.audit_record_file(&audit.id)).unwrap(),
     )
     .unwrap();
-    assert_eq!(record["prompt_versions"]["verifier"], "1.3.0");
+    assert_eq!(record["prompt_versions"]["verifier"], "1.4.0");
 }

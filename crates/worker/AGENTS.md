@@ -76,3 +76,10 @@ is never retried after uncertainty; cleanup resumes only an owned ID. Native fin
 has no dependency on this process. `tests/monitoring.rs` reuses `FakeMonitor` and includes
 opt-in actual Abastevo-snapshot/LAPI expiry acceptance; its explicit synthetic map is in
 `tests/fixtures/monitor-map.json`. Monitoring never enters the audit queue or calls AI.
+
+Audit refinement R1 (ADR-0044): hunter/verifier/skeptic use the shared
+`opentatu_context::investigation_code` selector for bounded upstream registrations and
+their defenses. Incremental dependency discovery retains `entry_point_code` semantics.
+Verifier omissions are persisted with the verification and propagated to audit limitations;
+skeptic omissions also remain limitations. The pipeline regression test exercises all
+three role inputs and prevents review gaps from disappearing in the final audit.

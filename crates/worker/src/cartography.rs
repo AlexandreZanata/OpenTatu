@@ -180,25 +180,48 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
         .collect())
 }
 
-/// pt-BR note about files that did not fit a context budget (R14).
+/// pt-BR note about omitted files or lines that did not fit a context budget (R14).
 pub(crate) fn left_out_note(what: &str, to_whom: &str, selection: &Selection) -> Option<String> {
-    if selection.left_out.is_empty() {
+    let mut omitted = selection.left_out.clone();
+    omitted.extend(
+        selection
+            .excerpts
+            .iter()
+            .filter(|excerpt| excerpt.partial)
+            .map(|excerpt| format!("{} (trechos omitidos)", excerpt.path)),
+    );
+    if omitted.is_empty() {
         return None;
     }
-    let shown: Vec<&str> = selection
-        .left_out
-        .iter()
-        .take(15)
-        .map(String::as_str)
-        .collect();
-    let more = selection.left_out.len().saturating_sub(shown.len());
+    let shown: Vec<&str> = omitted.iter().take(15).map(String::as_str).collect();
+    let more = omitted.len().saturating_sub(shown.len());
     let suffix = if more > 0 {
         format!(" e mais {more}")
     } else {
         String::new()
     };
     Some(format!(
-        "Arquivos de {what} não enviados {to_whom} por limite de contexto: {}{suffix}.",
+        "Arquivos ou trechos de {what} não enviados {to_whom} por limite de contexto: {}{suffix}.",
         shown.join(", ")
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn r14_partial_file_context_remains_an_explicit_limitation() {
+        let selected = Selection {
+            excerpts: vec![opentatu_context::Excerpt {
+                path: "server/router.go".into(),
+                text: "1| package server\n".into(),
+                partial: true,
+            }],
+            ..Selection::default()
+        };
+        let note = left_out_note("código", "ao verificador", &selected).unwrap();
+        assert!(note.contains("server/router.go (trechos omitidos)"));
+        assert!(left_out_note("código", "ao verificador", &Selection::default()).is_none());
+    }
 }

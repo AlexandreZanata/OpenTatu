@@ -94,3 +94,43 @@ The sample is small; the phase 6 benchmark re-evaluates the assignment per promp
 - Whether rate-limit headers exist: none observed.
 - The ToS clause on programmatic extraction (item 7): interpreted as anti-scraping; the
   owner may want to confirm with OpenCode support.
+
+## Bounded audit-refinement campaign (2026-11-14)
+
+The owner authorized at most **US$20 across all new benchmarks and acceptance audits**
+in the ARTEX/Abastevo refinement campaign. The existing OpenCode Go credential remains
+inside the binary; campaign role overrides use only the documented DeepSeek model.
+
+Rechecked the primary [Go usage-limit table](https://opencode.ai/docs/console/go/#usage-limits)
+on 2026-11-14: DeepSeek V4.1 Flash costs US$0.15/M input and US$0.60/M output off-peak,
+or US$0.30/M input and US$1.20/M output at peak. Cached input is cheaper. Prices count
+toward plan usage, reported through `usage.opencode.allowance`; the cap includes that
+allowance consumption, regardless of whether Extra Usage is enabled.
+
+The opt-in `[campaign]` config uses the higher peak rates and the already researched
+1,000,000-token input context ceiling. Each transport attempt reserves the entire input
+ceiling plus at most 131,072 output tokens (reasoning included), **US$0.457287** rounded up.
+This avoids token-count estimates. Successful responses settle to their reported charge;
+unknown outcomes retain the whole reservation. No automatic HTTP redirect or internal
+HTTP-client retry can bypass reservation. All runs must reuse the same private ledger
+and unchanged model, endpoint, input ceiling, prices and spending cap. Requests stop before admitting a reservation above the cap;
+provider/model/token/price violations halt subsequent spending.
+
+The first trial used 32,768 output tokens (US$0.339322 reserved per attempt), which
+truncated the cartographer's response. The revised ceiling remains below the documented
+384,000-token model output limit. Increasing an existing ledger's output ceiling appends
+a durable `output_limit_raised` record; it never rewrites its policy or earlier entries.
+Replay validates each attempt against its original ceiling. Prior settled costs and
+unresolved reservations still count toward the same US$20 cap. Decreases and changes to
+the fixed billing policy are refused.
+
+The comparison uses explicit experimental output caps per role, including reasoning:
+cartographer 65,536; hunter and planner 32,768; verifier, skeptic and reporter 16,384.
+These are generation settings selected from the observed 54,983-token map and the roles'
+bounded JSON outputs, rather than provider limits. Missing per-role settings remain
+backward-compatible and send no explicit output cap unless the campaign guard applies.
+The effective output cap is the smaller of the role setting and the campaign ceiling.
+Every attempt still reserves the full US$0.457287 financial envelope. Baseline and
+candidate must use identical role caps for comparison. The earlier provider-limited
+PARTIAL run remains calibration history; neither timeout classification nor retry
+behavior changes with this setting.

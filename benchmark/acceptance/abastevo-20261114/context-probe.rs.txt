@@ -1,0 +1,328 @@
+//! Deterministic, read-only context comparison. Only OpenTatu code is compiled.
+//! Usage: context-probe SNAPSHOT_DIRECTORY OPENTATU_DIRECTORY
+
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use opentatu_context::{Seed, Selection, SnapshotFiles, entry_point_code, investigation_code};
+use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
+
+const TARGET_COMMIT: &str = "018f2df18c8b029ec3e665fc98ba7318e6f076bc";
+
+struct Anchor {
+    id: &'static str,
+    path: &'static str,
+    line: u32,
+    purpose: &'static str,
+}
+
+struct Case {
+    id: &'static str,
+    path: &'static str,
+    line: u32,
+    anchors: Vec<Anchor>,
+}
+
+fn anchor(id: &'static str, path: &'static str, line: u32, purpose: &'static str) -> Anchor {
+    Anchor {
+        id,
+        path,
+        line,
+        purpose,
+    }
+}
+
+fn cases() -> Vec<Case> {
+    const COMPOSITION: &str = "backend/cmd/api/main.go";
+    const ADMIN: &str = "backend/internal/modules/admin/adapters/http/http.go";
+    vec![
+        Case {
+            id: "staff_admin_catalog",
+            path: "backend/internal/modules/staff/adapters/http/admin.go",
+            line: 30,
+            anchors: vec![
+                anchor(
+                    "handler",
+                    "backend/internal/modules/staff/adapters/http/admin.go",
+                    30,
+                    "catalog handler declaration",
+                ),
+                anchor(
+                    "route",
+                    "backend/internal/modules/staff/adapters/http/admin.go",
+                    25,
+                    "catalog route registration",
+                ),
+                anchor(
+                    "admin_surface_condition",
+                    COMPOSITION,
+                    928,
+                    "administrative routes are conditional on handler configuration",
+                ),
+                anchor(
+                    "upstream_middleware_binding",
+                    COMPOSITION,
+                    952,
+                    "shared admin middleware is applied to the route group",
+                ),
+                anchor(
+                    "upstream_handler_binding",
+                    COMPOSITION,
+                    954,
+                    "staff administrative handler is mounted in that group",
+                ),
+                anchor(
+                    "middleware_definition",
+                    ADMIN,
+                    617,
+                    "actual middleware list includes headers, network fence and session check",
+                ),
+                anchor(
+                    "session_implementation",
+                    ADMIN,
+                    110,
+                    "session authentication calls the service",
+                ),
+            ],
+        },
+        Case {
+            id: "organization_suspend",
+            path: "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+            line: 43,
+            anchors: vec![
+                anchor(
+                    "handler",
+                    "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+                    43,
+                    "lifecycle route registration",
+                ),
+                anchor(
+                    "handler_session_check",
+                    "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+                    53,
+                    "handler reads the administrative session",
+                ),
+                anchor(
+                    "upstream_enablement_check",
+                    "backend/internal/platform/enterprisesuite/admin.go",
+                    16,
+                    "enterprise and admin runtime prerequisites are checked before registration",
+                ),
+                anchor(
+                    "upstream_middleware_and_handler_binding",
+                    "backend/internal/platform/enterprisesuite/admin.go",
+                    28,
+                    "shared admin middleware and lifecycle handler are registered on one group",
+                ),
+                anchor(
+                    "middleware_definition",
+                    ADMIN,
+                    617,
+                    "actual middleware list includes headers, network fence and session check",
+                ),
+            ],
+        },
+        Case {
+            id: "public_contributor_list",
+            path: "backend/internal/modules/contributor/adapters/http/public.go",
+            line: 49,
+            anchors: vec![
+                anchor(
+                    "handler",
+                    "backend/internal/modules/contributor/adapters/http/public.go",
+                    49,
+                    "public list handler declaration",
+                ),
+                anchor(
+                    "local_middleware_binding",
+                    "backend/internal/modules/contributor/adapters/http/public.go",
+                    28,
+                    "CORS is locally bound to the list route",
+                ),
+                anchor(
+                    "local_origin_control",
+                    "backend/internal/modules/contributor/adapters/http/public.go",
+                    36,
+                    "CORS origin is compared with the configured origins",
+                ),
+                anchor(
+                    "shared_admin_middleware_definition",
+                    ADMIN,
+                    617,
+                    "shared admin middleware is distinct context and does not prove protection of this public route",
+                ),
+            ],
+        },
+        Case {
+            id: "map_assertions",
+            path: "backend/internal/modules/mapdata/http.go",
+            line: 29,
+            anchors: vec![
+                anchor(
+                    "handler",
+                    "backend/internal/modules/mapdata/http.go",
+                    29,
+                    "assertion handler declaration",
+                ),
+                anchor(
+                    "upstream_handler_binding",
+                    COMPOSITION,
+                    301,
+                    "composition root registers this handler",
+                ),
+                anchor(
+                    "local_cursor_validation",
+                    "backend/internal/modules/mapdata/http.go",
+                    91,
+                    "handler validates signed cursor before reading the store",
+                ),
+            ],
+        },
+    ]
+}
+
+fn digest(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+fn visible(selection: &Selection, files: &SnapshotFiles, anchor: &Anchor) -> bool {
+    let source = files
+        .read_text(anchor.path)
+        .expect("anchor file is safely readable");
+    let source_line = source
+        .content
+        .lines()
+        .nth(anchor.line as usize - 1)
+        .expect("anchor line exists");
+    let expected = format!("{:>5}| {}", anchor.line, source_line);
+    selection
+        .excerpts
+        .iter()
+        .filter(|excerpt| excerpt.path == anchor.path)
+        .any(|excerpt| excerpt.text.lines().any(|line| line == expected))
+}
+
+fn metrics(selection: &Selection, files: &SnapshotFiles, anchors: &[Anchor]) -> Value {
+    let paths: Vec<_> = selection
+        .excerpts
+        .iter()
+        .map(|excerpt| excerpt.path.as_str())
+        .collect();
+    let partial: Vec<_> = selection
+        .excerpts
+        .iter()
+        .filter(|excerpt| excerpt.partial)
+        .map(|excerpt| excerpt.path.as_str())
+        .collect();
+    json!({
+        "rendered_bytes": selection.bytes,
+        "rendered_sha256": digest(selection.render().as_bytes()),
+        "selected_files": paths,
+        "selected_file_count": selection.excerpts.len(),
+        "partial_files": partial,
+        "omitted_candidate_count": selection.left_out.len(),
+        "omitted_candidates_first_30": selection.left_out.iter().take(30).collect::<Vec<_>>(),
+        "omitted_candidates_not_listed": selection.left_out.len().saturating_sub(30),
+        "anchor_visibility": anchors.iter().map(|anchor| json!({
+            "id": anchor.id, "visible": visible(selection, files, anchor)
+        })).collect::<Vec<_>>(),
+    })
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<_> = std::env::args().collect();
+    assert_eq!(
+        args.len(),
+        3,
+        "usage: context-probe SNAPSHOT_DIRECTORY OPENTATU_DIRECTORY"
+    );
+    let files = SnapshotFiles::scan(Path::new(&args[1]))?;
+    let engine = Path::new(&args[2]);
+    let mut engine_sources = BTreeMap::new();
+    for path in [
+        "crates/context/src/defenses.rs",
+        "crates/context/src/registration.rs",
+        "crates/context/src/related.rs",
+        "crates/context/src/selection.rs",
+        "crates/context/src/files.rs",
+    ] {
+        engine_sources.insert(path, digest(&std::fs::read(engine.join(path))?));
+    }
+    let mut kinds: BTreeMap<String, usize> = BTreeMap::new();
+    for file in files.files() {
+        *kinds.entry(format!("{:?}", file.kind)).or_default() += 1;
+    }
+    let mut results = Vec::new();
+    for case in cases() {
+        let anchors: Vec<_> = case
+            .anchors
+            .iter()
+            .map(|anchor| {
+                let text = files
+                    .read_text(anchor.path)
+                    .expect("anchor source file is safely readable");
+                json!({"id": anchor.id, "path": anchor.path, "line": anchor.line,
+                "purpose": anchor.purpose, "source_file_sha256": digest(text.content.as_bytes())})
+            })
+            .collect();
+        let seeds = [Seed {
+            path: case.path.into(),
+            line: Some(case.line),
+        }];
+        let mut runs = Vec::new();
+        for (role, budget) in [("verifier", 160_000), ("hunter", 300_000)] {
+            let forward = entry_point_code(&files, &seeds, budget, 40_000);
+            let investigation = investigation_code(&files, &seeds, budget, 40_000);
+            assert!(forward.bytes <= budget && investigation.bytes <= budget);
+            assert!(
+                investigation
+                    .excerpts
+                    .iter()
+                    .all(|excerpt| !investigation.left_out.contains(&excerpt.path))
+            );
+            let gained: Vec<_> = case
+                .anchors
+                .iter()
+                .filter(|anchor| {
+                    !visible(&forward, &files, anchor) && visible(&investigation, &files, anchor)
+                })
+                .map(|anchor| anchor.id)
+                .collect();
+            let lost: Vec<_> = case
+                .anchors
+                .iter()
+                .filter(|anchor| {
+                    visible(&forward, &files, anchor) && !visible(&investigation, &files, anchor)
+                })
+                .map(|anchor| anchor.id)
+                .collect();
+            runs.push(json!({"role_budget": role, "total_byte_budget": budget, "per_file_byte_budget": 40_000,
+                "forward": metrics(&forward, &files, &case.anchors),
+                "investigation": metrics(&investigation, &files, &case.anchors),
+                "gained_anchor_ids": gained, "lost_anchor_ids": lost}));
+        }
+        results.push(json!({"case_id": case.id, "seed": {"path": case.path, "line": case.line}, "anchors": anchors, "runs": runs}));
+    }
+    let result = json!({
+        "schema_version": 1,
+        "artifact_kind": "deterministic_context_visibility_comparison",
+        "target": {"repository": "https://github.com/AlexandreZanata/Abastevo", "commit": TARGET_COMMIT,
+            "snapshot_scope": "full exact-commit archive, regular files only", "archive_regular_file_count": 7413,
+            "archive_skipped_nonregular_file_count": 0, "safe_index_file_count": files.files().len(), "safe_index_file_kinds": kinds},
+        "engine_source_sha256": engine_sources,
+        "provenance": {"target_code_executed": false, "target_tests_executed": false,
+            "production_contacted": false, "provider_calls": 0, "api_cost_usd": "0.00",
+            "vulnerability_accuracy_measurement": false, "recall_denominator": null},
+        "comparison": {"baseline_api": "entry_point_code", "candidate_api": "investigation_code",
+            "anchor_selection": "four manually selected real Go handler cases; exact source-line visibility, not a representative accuracy sample",
+            "visibility_rule": "the actual numbered source line must occur verbatim in the matching file excerpt; file inclusion alone is insufficient",
+            "engine_changed_during_probe": false},
+        "cases": results,
+    });
+    println!("{}", serde_json::to_string_pretty(&result)?);
+    Ok(())
+}

@@ -76,18 +76,8 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
         Command::Benchmark(BenchmarkCommand::Prepare { name, dir }) => {
             benchmark::prepare(data_dir, &dir, &name).await
         }
-        Command::Benchmark(BenchmarkCommand::Run {
-            name,
-            role_models,
-            max_tokens,
-            max_minutes,
-            dir,
-        }) => {
-            let overrides = worker::Overrides {
-                roles: role_models,
-                max_tokens,
-                max_minutes,
-            };
+        Command::Benchmark(BenchmarkCommand::Run { name, ai, dir }) => {
+            let overrides = worker::Overrides::from(&ai);
             benchmark::run(data_dir, &dir, configs, &name, &overrides).await
         }
         Command::Benchmark(BenchmarkCommand::Rescore { audit, dir }) => {

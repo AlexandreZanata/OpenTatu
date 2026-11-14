@@ -12,7 +12,7 @@
 
 use std::collections::BTreeSet;
 
-use opentatu_context::{Seed, entry_point_code};
+use opentatu_context::{Seed, entry_point_code, investigation_code};
 use opentatu_core::{
     AiRole, AuthenticationRequirement, Confidence, EntryPoint, FileIndex, HuntRound,
     HypothesisContent, ScannerKind, ScannerResult, SecurityMap,
@@ -107,8 +107,17 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
         {
             seeds.extend(scope.source_seeds(&run.files));
         }
-        let code = entry_point_code(&run.files, &seeds, ROUND_CODE_BYTES, ROUND_FILE_BYTES);
+        let code = investigation_code(&run.files, &seeds, ROUND_CODE_BYTES, ROUND_FILE_BYTES);
         let code_files: BTreeSet<&str> = code.excerpts.iter().map(|e| e.path.as_str()).collect();
+        // Upstream registration and defenses help evaluate affected paths, but they do
+        // not become new incremental finding locations merely by being model context.
+        let incremental_files: Option<BTreeSet<String>> = run.incremental.as_ref().map(|_| {
+            entry_point_code(&run.files, &seeds, ROUND_CODE_BYTES, ROUND_FILE_BYTES)
+                .excerpts
+                .into_iter()
+                .map(|excerpt| excerpt.path)
+                .collect()
+        });
         let scanner: Vec<&ScannerResult> = scanner_results
             .iter()
             .filter(|r| {
@@ -174,7 +183,10 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
                     continue;
                 }
             };
-            if run.incremental.is_some() && !code_files.contains(content.location.file.as_str()) {
+            if incremental_files.as_ref().is_some_and(|allowed| {
+                !allowed.contains(&content.location.file)
+                    || !code_files.contains(content.location.file.as_str())
+            }) {
                 dropped.push(format!(
                     "out of incremental scope: {}",
                     content.location.file
@@ -265,7 +277,7 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
         ));
         if !dropped.is_empty() {
             limitations.push(format!(
-                "Caçador: {} hipótese(s) descartada(s) pelo sistema por citarem arquivos inexistentes no commit.",
+                "Caçador: {} hipótese(s) descartada(s) pelo sistema por localização inválida ou fora do escopo da auditoria.",
                 dropped.len()
             ));
         }

@@ -5,8 +5,8 @@ use std::sync::Arc;
 use opentatu_core::{AiRole, LlmUsage};
 
 use crate::{
-    CallContext, Error, LlmClient, Message, ModelRequest, ModelResponse, ModelsConfig, RetryPolicy,
-    UsageRecorder,
+    CallContext, CampaignBudget, Error, LlmClient, Message, ModelRequest, ModelResponse,
+    ModelsConfig, RetryPolicy, UsageRecorder,
 };
 
 /// Output limit of `ping` (reasoning tokens count against it).
@@ -19,6 +19,7 @@ pub struct Llm {
     config: Arc<ModelsConfig>,
     recorder: Option<Arc<dyn UsageRecorder>>,
     retry: RetryPolicy,
+    campaign: Option<Arc<CampaignBudget>>,
 }
 
 impl Llm {
@@ -30,6 +31,7 @@ impl Llm {
             config: Arc::new(config),
             recorder: None,
             retry: RetryPolicy::default(),
+            campaign: None,
         }
     }
 
@@ -42,6 +44,13 @@ impl Llm {
     /// Replaces the rate-limit retry policy.
     pub fn with_retry_policy(mut self, retry: RetryPolicy) -> Self {
         self.retry = retry;
+        self
+    }
+
+    /// Applies the same durable aggregate spending cap to every call and transport retry.
+    /// All clones share the ledger and its in-flight reservations.
+    pub fn with_campaign_budget(mut self, campaign: Arc<CampaignBudget>) -> Self {
+        self.campaign = Some(campaign);
         self
     }
 
@@ -74,7 +83,7 @@ impl Llm {
             temperature: role_config.temperature,
             messages,
             json_schema,
-            max_output_tokens: None,
+            max_output_tokens: role_config.max_output_tokens,
             session_id: context.session_id.clone(),
         };
         self.call(context, Some(role), request).await
@@ -94,7 +103,15 @@ impl Llm {
             max_output_tokens: Some(PING_MAX_OUTPUT_TOKENS),
             session_id: context.session_id.clone(),
         };
-        self.call(context, None, request).await
+        let response = self.call(context, None, request).await?;
+        if !serde_json::from_str::<serde_json::Value>(&response.content)
+            .is_ok_and(|value| value.is_object())
+        {
+            return Err(Error::Provider(
+                "diagnostic response is not a JSON object".to_owned(),
+            ));
+        }
+        Ok(response)
     }
 
     /// Allowlist check, retries of rate limits and transport failures, then accounting of
@@ -103,13 +120,22 @@ impl Llm {
         &self,
         context: &CallContext,
         role: Option<AiRole>,
-        request: ModelRequest,
+        mut request: ModelRequest,
     ) -> Result<ModelResponse, Error> {
         if !self.config.provider.is_allowed(&request.model) {
             return Err(Error::ModelNotAllowed(request.model));
         }
+        if let Some(campaign) = &self.campaign {
+            campaign.constrain(&mut request)?;
+        }
         let mut retry = 0;
+        let mut reservation;
         let response = loop {
+            reservation = self
+                .campaign
+                .as_ref()
+                .map(|campaign| campaign.reserve(context, role))
+                .transpose()?;
             match self.client.complete(request.clone()).await {
                 Err(Error::RateLimited {
                     retry_after_seconds,
@@ -140,12 +166,15 @@ impl Llm {
                 .await
                 .map_err(|error| Error::UsageRecording(error.to_string()))?;
         }
+        if let (Some(campaign), Some(attempt)) = (&self.campaign, reservation) {
+            campaign.settle(attempt, &response)?;
+        }
         Ok(response)
     }
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use std::sync::Mutex;
 
     use opentatu_core::Timestamp;
@@ -163,7 +192,7 @@ mod tests {
     }
 
     #[derive(Debug, Default)]
-    struct MemoryRecorder(Mutex<Vec<LlmUsage>>);
+    pub(crate) struct MemoryRecorder(pub(crate) Mutex<Vec<LlmUsage>>);
 
     #[async_trait::async_trait]
     impl UsageRecorder for MemoryRecorder {
@@ -195,6 +224,70 @@ mod tests {
         let recorded = recorder.0.lock().unwrap();
         assert_eq!(recorded.len(), 1);
         assert_eq!(recorded[0].role, Some(AiRole::Verifier));
+    }
+
+    #[tokio::test]
+    async fn r13_invalid_ping_json_is_rejected_only_after_known_usage_and_charge_are_recorded() {
+        let fake = Arc::new(FakeClient::new());
+        let config = config();
+        let model = config.campaign.as_ref().unwrap().model.clone();
+        let contents = ["", " \n\t", "null", "[]", "not json", "{}"];
+        for content in contents {
+            fake.push_response(ModelResponse {
+                content: content.into(),
+                model: model.clone(),
+                input_tokens: 100,
+                output_tokens: 64,
+                reasoning_tokens: 60,
+                cost_usd: Some(0.00002),
+                finish_reason: Some("stop".into()),
+                duration_ms: 5,
+            });
+        }
+        let ledger = crate::campaign::tests::Ledger::new();
+        let campaign = Arc::new(CampaignBudget::open(ledger.path(), 20.0, &config).unwrap());
+        let recorder = Arc::new(MemoryRecorder::default());
+        let llm = Llm::new(fake.clone(), config)
+            .with_recorder(recorder.clone())
+            .with_campaign_budget(campaign.clone())
+            .with_retry_policy(RetryPolicy::none());
+        for content in contents {
+            let result = llm.ping(&context(), &model).await;
+            if content == "{}" {
+                assert_eq!(result.unwrap().content, "{}");
+            } else {
+                assert!(
+                    matches!(result, Err(Error::Provider(reason)) if reason == "diagnostic response is not a JSON object")
+                );
+            }
+        }
+        let recorded = recorder.0.lock().unwrap();
+        assert_eq!(recorded.len(), contents.len());
+        assert!(recorded.iter().all(|usage| usage.input_tokens == 100
+            && usage.output_tokens == 64
+            && usage.reasoning_tokens == 60
+            && usage.cost_usd == Some(0.00002)));
+        drop(recorded);
+        let records: Vec<serde_json::Value> = std::fs::read_to_string(ledger.path())
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(
+            records
+                .iter()
+                .filter(|record| record["event"] == "settled")
+                .count(),
+            contents.len()
+        );
+        assert_eq!(campaign.committed_usd(), 0.00012);
+        assert_eq!(
+            fake.requests().len(),
+            contents.len(),
+            "JSON rejection does not retry transport"
+        );
+        drop(llm);
+        drop(campaign);
     }
 
     #[tokio::test]
@@ -294,5 +387,34 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(error, Error::Provider(_)), "not retried");
+    }
+
+    #[tokio::test]
+    async fn each_role_uses_its_explicit_output_cap() {
+        let config = config();
+        let fake = Arc::new(FakeClient::new());
+        let llm = Llm::new(fake.clone(), config.clone());
+        for role in AiRole::ALL {
+            fake.push_answer("{}");
+            llm.generate(&context(), *role, vec![], None).await.unwrap();
+            assert_eq!(
+                fake.requests().last().unwrap().max_output_tokens,
+                config.roles[role].max_output_tokens
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn missing_role_output_cap_preserves_provider_default() {
+        let text =
+            include_str!("../../../config/models.toml").replace("max_output_tokens = 65_536\n", "");
+        let config = ModelsConfig::from_toml(&text).unwrap();
+        let fake = Arc::new(FakeClient::new());
+        fake.push_answer("{}");
+        Llm::new(fake.clone(), config)
+            .generate(&context(), AiRole::Cartographer, vec![], None)
+            .await
+            .unwrap();
+        assert_eq!(fake.requests()[0].max_output_tokens, None);
     }
 }

@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "static_review_handoff",
+  "review_date": "2026-11-14",
+  "target": {
+    "repository": "https://github.com/AlexandreZanata/Abastevo",
+    "source_ref": "main",
+    "commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "license": "LicenseRef-Abastevo-Visible-Attribution-1.0",
+    "license_url": "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/LICENSE",
+    "original_system": "Abastevo",
+    "creator": "Alexandre Zanata (@AlexandreZanata)",
+    "creator_url": "https://github.com/AlexandreZanata"
+  },
+  "provenance": {
+    "method": "human_directed_static_source_review",
+    "source_code_executed": false,
+    "target_tests_executed": false,
+    "production_contacted": false,
+    "provider_calls": 0,
+    "api_cost_usd": "0.00",
+    "benchmark_ground_truth": false,
+    "recall_denominator": null,
+    "engine_confirmed_findings": false,
+    "applies_to": "static review candidate and proposed target regression patch only"
+  },
+  "candidates": [
+    {
+      "id": "AB-STATIC-001",
+      "title": "Encoded paths bypass source-resource classification",
+      "status": "static_candidate_runtime_unverified",
+      "severity": null,
+      "suggested_cwe_for_review": "CWE-180",
+      "source_path": "backend/internal/modules/official/adapters/source/source.go",
+      "source_lines": [
+        75,
+        79,
+        96,
+        99,
+        104
+      ],
+      "fix_applied": false,
+      "regression_patch_executed": false
+    }
+  ],
+  "files": [
+    "ENGINE_REVIEW.md",
+    "FIX_TASK.md",
+    "METHOD.md",
+    "REPORT.md",
+    "REVIEW_GUIDE.md",
+    "TESTS.md",
+    "USE_CASES.md",
+    "context-comparison-initial.json",
+    "context-comparison.json",
+    "context-probe.rs.txt",
+    "engine-acceptance.json",
+    "engine-tasks/MANIFEST.json",
+    "manifest.json",
+    "regression-tests.patch"
+  ],
+  "publication_scope": {
+    "owner_authorized_target": "AlexandreZanata/Abastevo",
+    "proposed_target_directory": "docs/security/opentatu/2026-11-14",
+    "credentials_or_private_data_included": false,
+    "delivery": "review_artifacts_only_no_deployment"
+  },
+  "context_evaluation": {
+    "method": "deterministic numbered source-line visibility, four manually selected cases at two byte budgets",
+    "reference": "METHOD.md",
+    "result": "context-comparison.json",
+    "initial_unfavorable_calibration": "context-comparison-initial.json",
+    "source_code_executed": false,
+    "provider_calls": 0,
+    "vulnerability_accuracy_measured": false
+  },
+  "engine_acceptance": {
+    "artifact": "engine-acceptance.json",
+    "review": "ENGINE_REVIEW.md",
+    "task_manifest": "engine-tasks/MANIFEST.json",
+    "audit_id": "AUD-ABASTEVO-20261114-1501",
+    "target_commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "engine_source_commit": "7df5899cdb3844ac127e96c3041da66cc8925721",
+    "engine_binary_sha256": "76e8742f210141463265b16ec9b540b0fd48a9c8d13f35d70d9bf8071e274ea0",
+    "status": "PARTIAL",
+    "completed_at": "2026-11-14T18:43:15-03:00",
+    "duration_seconds": 1447,
+    "usage": {
+      "calls": 12,
+      "input_tokens": 971356,
+      "output_tokens": 141826,
+      "cost_usd": 0.12783331
+    },
+    "hypotheses": 7,
+    "confirmed": 0,
+    "dismissed": 1,
+    "inconclusive": 6,
+    "native_findings": 0,
+    "native_fix_tasks": 0,
+    "all_recorded_hypotheses_source_followed_up": true,
+    "predeclared_review_probes": "NOT_EXERCISED",
+    "native_states_and_verdicts_preserved": true,
+    "target_code_executed": false,
+    "target_tests_executed": false,
+    "production_contacted": false,
+    "benchmark_ground_truth": false,
+    "recall_denominator": null,
+    "source_artifact_sha256": {
+      "audit.json": "622b8df85e1327d553553175097bbdc5f76ed038a819c747ee0c20e58b74aedc",
+      "report.md": "35001fe81ba5ff32c96faeba39e97d6e99b827836866bc0457467db94cdea6ed",
+      "hypotheses.json": "de4463078080e2dac7e83f7e424cff47c9dd981d106e4802d8871d6ec52e45da",
+      "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  }
+}
