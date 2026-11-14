@@ -5,8 +5,8 @@ use std::sync::Arc;
 use opentatu_core::{AiRole, LlmUsage};
 
 use crate::{
-    CallContext, Error, LlmClient, Message, ModelRequest, ModelResponse, ModelsConfig, RetryPolicy,
-    UsageRecorder,
+    CallContext, CampaignBudget, Error, LlmClient, Message, ModelRequest, ModelResponse,
+    ModelsConfig, RetryPolicy, UsageRecorder,
 };
 
 /// Output limit of `ping` (reasoning tokens count against it).
@@ -19,6 +19,7 @@ pub struct Llm {
     config: Arc<ModelsConfig>,
     recorder: Option<Arc<dyn UsageRecorder>>,
     retry: RetryPolicy,
+    campaign: Option<Arc<CampaignBudget>>,
 }
 
 impl Llm {
@@ -30,6 +31,7 @@ impl Llm {
             config: Arc::new(config),
             recorder: None,
             retry: RetryPolicy::default(),
+            campaign: None,
         }
     }
 
@@ -42,6 +44,13 @@ impl Llm {
     /// Replaces the rate-limit retry policy.
     pub fn with_retry_policy(mut self, retry: RetryPolicy) -> Self {
         self.retry = retry;
+        self
+    }
+
+    /// Applies the same durable aggregate spending cap to every call and transport retry.
+    /// All clones share the ledger and its in-flight reservations.
+    pub fn with_campaign_budget(mut self, campaign: Arc<CampaignBudget>) -> Self {
+        self.campaign = Some(campaign);
         self
     }
 
@@ -103,13 +112,22 @@ impl Llm {
         &self,
         context: &CallContext,
         role: Option<AiRole>,
-        request: ModelRequest,
+        mut request: ModelRequest,
     ) -> Result<ModelResponse, Error> {
         if !self.config.provider.is_allowed(&request.model) {
             return Err(Error::ModelNotAllowed(request.model));
         }
+        if let Some(campaign) = &self.campaign {
+            campaign.constrain(&mut request)?;
+        }
         let mut retry = 0;
+        let mut reservation;
         let response = loop {
+            reservation = self
+                .campaign
+                .as_ref()
+                .map(|campaign| campaign.reserve(context, role))
+                .transpose()?;
             match self.client.complete(request.clone()).await {
                 Err(Error::RateLimited {
                     retry_after_seconds,
@@ -139,6 +157,9 @@ impl Llm {
                 .record(&usage)
                 .await
                 .map_err(|error| Error::UsageRecording(error.to_string()))?;
+        }
+        if let (Some(campaign), Some(attempt)) = (&self.campaign, reservation) {
+            campaign.settle(attempt, &response)?;
         }
         Ok(response)
     }

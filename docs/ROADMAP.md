@@ -446,3 +446,14 @@ S1 and later phases remain separately gated. Current status does not authorize d
   [MONITORING.md](MONITORING.md), [monitor.example.toml](../config/monitor.example.toml).
   Original phases 0–10 are delivered; Q-032 and Sentinel's separately gated expansion
   remain deferred. Stop here for owner review; do not start S0–S11 automatically.
+
+## Audit refinement R1 — ARTEX-informed analysis (2026-11-14)
+
+Status: 🟡 owner-requested Audit refinement, independent of Sentinel S0/S1 gates.
+ADR-0044 and Q-043 define the scope: bounded upstream/shared-defense context, stronger
+trace/reachability/control guidance, preserved review omissions, and a durable aggregate
+US$20 DeepSeek campaign gate. Baseline/candidate evaluation uses marker-derived Juice
+Shop scoring and pinned Abastevo acceptance. Abastevo-specific publication includes
+analyses, use cases, proposed regression tests and a concrete external-agent fix task.
+PENDING(phase-R1): complete full checks, paid evaluation within the shared cap, review
+the publication bundle and publish the requested GitHub branches/PRs.

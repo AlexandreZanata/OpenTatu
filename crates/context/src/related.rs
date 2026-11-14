@@ -90,18 +90,13 @@ pub fn entry_point_code(
             .map(|f| f.iter().copied().collect())
             .unwrap_or_default();
         let excerpt: Excerpt = render_file(&path, &text.content, per_file, &lines);
-        if selection.bytes + excerpt.text.len() <= budget {
-            selection.bytes += excerpt.text.len();
-            selection.excerpts.push(excerpt);
-        } else {
-            selection.left_out.push(path);
-        }
+        selection.push(excerpt, budget);
     }
     selection
 }
 
 /// `(module path, directory)` of every `go.mod` in the snapshot.
-fn go_modules(files: &SnapshotFiles) -> Vec<(String, String)> {
+pub(crate) fn go_modules(files: &SnapshotFiles) -> Vec<(String, String)> {
     files
         .files()
         .iter()
@@ -164,7 +159,7 @@ fn neighbours(
 }
 
 /// Candidate paths (files or directories) imported by `content`.
-fn import_targets(
+pub(crate) fn import_targets(
     content: &str,
     path: &str,
     extension: &str,

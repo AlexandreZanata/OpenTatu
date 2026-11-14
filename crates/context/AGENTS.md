@@ -19,11 +19,21 @@ configuration, cartographer selection); per-entry-point selection (phase 4) ✅;
 | `src/tree.rs` | `render_tree` — `<structure>` (code/config listed, the rest summarized per directory) |
 | `src/selection.rs` | `ContextBudget`, `Selection`, `Excerpt`, `cartographer_code`, `cartographer_config` (ranking signals, packing, excerpts of large files) |
 | `src/related.rs` | `Seed`, `entry_point_code` — handler files + imports/same package up to depth 2 (Go, Rust, JS/TS, Python) |
+| `src/defenses.rs` | `investigation_code` — existing forward context plus bounded reverse imports and upstream middleware dependencies; explicit budget omissions |
 | `src/error.rs` | `Error` |
 
 Phase 7: `src/diff.rs` — `diff_allowed` checks both rename sides before requesting patch
 bytes; `render_diff` reuses `Selection`/`Excerpt` and reports omissions within its byte
 budget; `affected_entry_points` reuses `entry_point_code` depth-2 selection.
+Investigation refinement keeps this dependency scope unchanged: supplemental upstream
+registration/defense files are context for the selected paths, not new affected paths.
+Every intermediate selection uses the caller's byte budget; omitted candidate paths still
+participate in reverse discovery. Included files never appear in `left_out`.
+
+Method limits: reverse discovery follows at most two explicit-import hops and expands at
+most twelve upstream files per hop. It inherits the existing language/import heuristics
+(no complete call graph or arbitrary alias resolution). Each call rebuilds the import
+index from safe snapshot text; topology caching is deferred until profiling justifies it.
 
 ## Local rules
 

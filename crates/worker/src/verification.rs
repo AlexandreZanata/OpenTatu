@@ -9,7 +9,7 @@
 use std::future::Future;
 use std::sync::Arc;
 
-use opentatu_context::{Seed, entry_point_code};
+use opentatu_context::{Seed, investigation_code};
 use opentatu_core::{
     AiRole, EntryPoint, Finding, FindingState, Hypothesis, SecurityMap, SkepticReview, Verdict,
     Verification,
@@ -23,6 +23,7 @@ use tokio::task::JoinSet;
 
 use crate::Error;
 use crate::ai_run::AiRun;
+use crate::cartography::left_out_note;
 
 /// Model calls of this step running at the same time.
 pub(crate) const CONCURRENCY: usize = 4;
@@ -35,7 +36,7 @@ const FILE_BYTES: usize = 40_000;
 
 /// What happened to one item.
 enum Outcome {
-    Done,
+    Done(Vec<String>),
     Skipped(String),
 }
 
@@ -66,7 +67,7 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
     let mut skipped = Vec::new();
     for (id, result) in results {
         match result {
-            Ok(Outcome::Done) => {}
+            Ok(Outcome::Done(notes)) => limitations.extend(notes),
             Ok(Outcome::Skipped(reason)) => skipped.push(format!("{id} ({reason})")),
             Err(error) => return Err(error),
         }
@@ -95,7 +96,7 @@ pub(crate) async fn run(run: &AiRun) -> Result<Vec<String>, Error> {
     let mut unreviewed = Vec::new();
     for (id, result) in results {
         match result {
-            Ok(Outcome::Done) => {}
+            Ok(Outcome::Done(notes)) => limitations.extend(notes),
             Ok(Outcome::Skipped(reason)) => unreviewed.push(format!("{id} ({reason})")),
             Err(error) => return Err(error),
         }
@@ -167,13 +168,14 @@ async fn verify_one(
         Ok(verification) => verification,
         Err(reason) => return Ok(Outcome::Skipped(reason)),
     };
+    let limitations = verification.system_notes.clone();
     let (recorded, finding) = run
         .worker
         .services
         .record_verification(&hypothesis.hypothesis_id, verification)
         .await?;
     tracing::info!(hypothesis = %recorded.hypothesis_id, state = %recorded.state, finding = ?finding.map(|f| f.finding_id.to_string()), "hypothesis verified");
-    Ok(Outcome::Done)
+    Ok(Outcome::Done(limitations))
 }
 
 /// A fix to reverify: the `<fix>` block and the files the fix is about.
@@ -212,7 +214,7 @@ pub(crate) async fn ask_verifier(
             });
         }
     }
-    let code = entry_point_code(&run.files, &seeds, CODE_BYTES, FILE_BYTES);
+    let code = investigation_code(&run.files, &seeds, CODE_BYTES, FILE_BYTES);
     let mut inputs = vec![
         (
             Block::Hypothesis,
@@ -283,6 +285,14 @@ pub(crate) async fn ask_verifier(
     }
     let prompt = answer.prompt_versions.last().cloned().unwrap_or_default();
     let output = answer.output;
+    let mut context_notes: Vec<String> = output
+        .common
+        .not_analyzed
+        .iter()
+        .chain(&output.common.gaps)
+        .map(|item| format!("Verificador: {item}"))
+        .collect();
+    context_notes.extend(left_out_note("código", "ao verificador", &code));
     let mut verification = Verification {
         lab_run_number: executed.as_ref().map(|r| r.number),
         verdict: output.verdict,
@@ -293,7 +303,7 @@ pub(crate) async fn ask_verifier(
         missing_to_conclude: output.missing_to_conclude,
         model: answer.model,
         prompt_version: prompt,
-        system_notes: Vec::new(),
+        system_notes: context_notes,
     };
     // A model's claimed test result is never an executed observation. Add only the
     // system-recorded receipt, after checking static evidence separately below.
@@ -416,7 +426,7 @@ async fn review_one(
     let hypothesis = services.hypothesis(&finding.hypothesis_id).await?;
     let entry = entry_of(map, hypothesis.content.entry_point.as_ref());
     let line = finding.location.line_range().map(|(first, _)| first);
-    let code = entry_point_code(
+    let code = investigation_code(
         &run.files,
         &seeds(&finding.location.file, line, entry),
         REVIEW_CODE_BYTES,
@@ -468,6 +478,14 @@ async fn review_one(
         )
         .await?;
     let output = answer.output;
+    let mut limitations: Vec<String> = output
+        .common
+        .not_analyzed
+        .iter()
+        .chain(&output.common.gaps)
+        .map(|item| format!("Cético: {item}"))
+        .collect();
+    limitations.extend(left_out_note("código", "ao cético", &code));
     let (decision, final_severity) = SkepticReview::decide(
         output.dismissed(),
         finding.severity,
@@ -486,5 +504,5 @@ async fn review_one(
     };
     let reviewed = services.record_review(&finding.finding_id, review).await?;
     tracing::info!(finding = %reviewed.finding_id, state = %reviewed.state, severity = %reviewed.severity, "finding reviewed");
-    Ok(Outcome::Done)
+    Ok(Outcome::Done(limitations))
 }

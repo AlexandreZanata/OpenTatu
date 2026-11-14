@@ -80,3 +80,15 @@ max_minutes = 30
 max_tokens = 300_000
 max_calls = 30
 max_minutes = 15
+
+# Opt-in campaign guard only: peak prices verified 2026-11-14 against the official
+# https://opencode.ai/docs/console/go/ usage table (docs/opencode-go.md).
+# Reserve the ENTIRE model input context on every attempt, without tokenizer estimates.
+# Output is deliberately bounded and includes reasoning. Existing audits are unchanged
+# unless --campaign-budget and --max-cost-usd are provided together.
+[campaign]
+model = "deepseek-v4.1-flash"
+max_input_tokens = 1_000_000
+max_output_tokens = 32_768
+input_micro_usd_per_million = 300_000
+output_micro_usd_per_million = 1_200_000

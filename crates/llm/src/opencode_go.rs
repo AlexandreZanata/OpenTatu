@@ -49,6 +49,9 @@ impl OpenCodeGoClient {
         }
         let http = reqwest::Client::builder()
             .user_agent(USER_AGENT)
+            // Every POST attempt must pass through the router's accounting gate.
+            .redirect(reqwest::redirect::Policy::none())
+            .retry(reqwest::retry::never())
             .timeout(Duration::from_secs(provider.timeout_seconds))
             .build()
             .map_err(|error| Error::Provider(format!("cannot build HTTP client: {error}")))?;
@@ -385,5 +388,51 @@ mod tests {
                 .unwrap()
                 .starts_with("OpenTatu/")
         );
+    }
+
+    #[tokio::test]
+    async fn r13_redirects_never_replay_a_billable_post() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let redirected = Arc::new(AtomicUsize::new(0));
+        let seen = redirected.clone();
+        let app = Router::new()
+            .route(
+                "/v1/chat/completions",
+                post(|| async {
+                    (
+                        axum::http::StatusCode::TEMPORARY_REDIRECT,
+                        [(axum::http::header::LOCATION, "/other")],
+                    )
+                }),
+            )
+            .route(
+                "/other",
+                post(move || {
+                    let seen = seen.clone();
+                    async move {
+                        seen.fetch_add(1, Ordering::Relaxed);
+                        DEEPSEEK_ANSWER
+                    }
+                }),
+            );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let mut provider =
+            crate::ModelsConfig::from_toml(include_str!("../../../config/models.toml"))
+                .unwrap()
+                .provider;
+        provider.base_url = format!("http://{address}/v1");
+        let client = OpenCodeGoClient::new(&provider, Secret::new("oc_sk_test")).unwrap();
+        assert!(
+            client
+                .complete(request(true))
+                .await
+                .unwrap_err()
+                .to_string()
+                .contains("HTTP 307")
+        );
+        assert_eq!(redirected.load(Ordering::Relaxed), 0);
     }
 }

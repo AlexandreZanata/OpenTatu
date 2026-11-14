@@ -21,6 +21,25 @@ pub struct ModelsConfig {
     pub roles: BTreeMap<AiRole, RoleConfig>,
     /// Usage limits.
     pub budget: BudgetConfig,
+    /// Optional, explicitly researched pricing ceiling for a bounded experiment.
+    #[serde(default)]
+    pub campaign: Option<CampaignPricing>,
+}
+
+/// Conservative per-attempt billing ceiling for one researched provider model.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CampaignPricing {
+    /// Exact allowed model id; a campaign refuses every other model.
+    pub model: String,
+    /// Full provider context ceiling, used instead of estimating prompt tokens.
+    pub max_input_tokens: u64,
+    /// Explicit output limit sent on every campaign request (reasoning included).
+    pub max_output_tokens: u32,
+    /// Highest documented input price, in micro-USD per million tokens.
+    pub input_micro_usd_per_million: u64,
+    /// Highest documented output price, in micro-USD per million tokens.
+    pub output_micro_usd_per_million: u64,
 }
 
 /// Provider connection settings.
@@ -200,6 +219,18 @@ impl ModelsConfig {
         }
         if !(self.budget.max_plan_share > 0.0 && self.budget.max_plan_share <= 1.0) {
             problems.push("budget.max_plan_share must be within (0, 1]".into());
+        }
+        if let Some(pricing) = &self.campaign {
+            if !provider.is_allowed(&pricing.model) || pricing.model.trim().is_empty() {
+                problems.push("campaign.model must be an allowed model".into());
+            }
+            if pricing.max_input_tokens == 0
+                || pricing.max_output_tokens == 0
+                || pricing.input_micro_usd_per_million == 0
+                || pricing.output_micro_usd_per_million == 0
+            {
+                problems.push("campaign token and pricing ceilings must be positive".into());
+            }
         }
         for kind in [
             AuditKind::Full,

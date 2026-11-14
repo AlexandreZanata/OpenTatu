@@ -82,6 +82,12 @@ a mirror and snapshots only — never push to it; changes a test needs (e.g. a f
 fix trail) are commits in a local clone in the session scratch area. The benchmark is the
 one exception: it measures against apps with known flaws.
 
+Q-043/ADR-0044 adds one explicit owner-authorized publication exception: the 2026-11-14
+Abastevo acceptance bundle may be published through a reviewable target PR. This does
+not authorize pushing planted flaws/fixes, running production tests, publishing secrets
+or exporting other applications' runtime history. Proposed target regression tests are
+clearly marked unexecuted until an authorized isolated executor actually runs them.
+
 ## Planned (when the features arrive)
 
 - Snapshot tests for `MEMORY.md`, `report.md` and SARIF (phase 1/4) — add `insta` through

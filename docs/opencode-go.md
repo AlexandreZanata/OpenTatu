@@ -94,3 +94,24 @@ The sample is small; the phase 6 benchmark re-evaluates the assignment per promp
 - Whether rate-limit headers exist: none observed.
 - The ToS clause on programmatic extraction (item 7): interpreted as anti-scraping; the
   owner may want to confirm with OpenCode support.
+
+## Bounded audit-refinement campaign (2026-11-14)
+
+The owner authorized at most **US$20 across all new benchmarks and acceptance audits**
+in the ARTEX/Abastevo refinement campaign. The existing OpenCode Go credential remains
+inside the binary; campaign role overrides use only the documented DeepSeek model.
+
+Rechecked the primary [Go usage-limit table](https://opencode.ai/docs/console/go/#usage-limits)
+on 2026-11-14: DeepSeek V4.1 Flash costs US$0.15/M input and US$0.60/M output off-peak,
+or US$0.30/M input and US$1.20/M output at peak. Cached input is cheaper. Prices count
+toward plan usage, reported through `usage.opencode.allowance`; the cap includes that
+allowance consumption, regardless of whether Extra Usage is enabled.
+
+The opt-in `[campaign]` config uses the higher peak rates and the already researched
+1,000,000-token input context ceiling. Each transport attempt reserves the entire input
+ceiling plus at most 32,768 output tokens (reasoning included), **US$0.339322** rounded up.
+This avoids token-count estimates. Successful responses settle to their reported charge;
+unknown outcomes retain the whole reservation. No automatic HTTP redirect or internal
+HTTP-client retry can bypass reservation. All runs must reuse the same private ledger
+and unchanged policy/cap. Requests stop before admitting a reservation above the cap;
+provider/model/token/price violations halt subsequent spending.

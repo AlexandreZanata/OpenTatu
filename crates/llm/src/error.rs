@@ -7,6 +7,10 @@ use opentatu_core::AiRole;
 /// Errors of `opentatu-llm`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// The durable campaign ledger cannot safely admit another transport attempt.
+    #[error("campaign budget refused the call: {0}")]
+    CampaignBudget(String),
+
     /// `config/models.toml` does not match the expected structure.
     #[error("invalid models config: {0}")]
     InvalidConfig(String),

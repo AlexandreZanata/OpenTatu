@@ -52,3 +52,7 @@ previous-map/diff blocks; output schemas and the fenced role execution path are 
 Phase 8: verifier prompt 1.3.0 and `VerifierOutput.lab_case_id` support selection of an
 owner-defined case and a fenced executed-result follow-up. Availability comes from actual
 approval/configuration; a descriptive app URL never grants network access.
+
+Audit refinement: hunter 2.3.0, verifier 1.4.0 and skeptic 2.1.0 add source-to-sink,
+upstream/shared-defense and attacker-capability guidance without changing output schemas.
+Static reasoning remains distinct from a system-recorded dynamic execution.

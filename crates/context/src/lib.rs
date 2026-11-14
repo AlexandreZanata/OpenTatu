@@ -12,11 +12,14 @@
 //!   the cartographer (§C.7 step 5), ranked and line-numbered.
 //!
 //! - [`entry_point_code`] — the code of entry points: handler files plus what they reach
-//!   (local imports, same package) up to depth 2, for the hunter, verifier and skeptic.
+//!   (local imports, same package) up to depth 2, for incremental dependency scope.
+//! - [`investigation_code`] — the same forward context plus upstream registration and
+//!   shared defenses, within the same explicit budget, for the investigation roles.
 //!
 //! [`render_diff`] packs safe incremental patches; [`affected_entry_points`] reuses
 //! depth-2 context to select changed scope (phase 7).
 
+mod defenses;
 mod diff;
 mod error;
 mod files;
@@ -25,6 +28,7 @@ mod related;
 mod selection;
 mod tree;
 
+pub use defenses::investigation_code;
 pub use error::Error;
 pub use files::{FileKind, SnapshotFiles, SourceFile, TextFile, classify, is_test_path};
 pub use lab::{PreparedLabSource, prepare_lab_source};

@@ -476,3 +476,17 @@ choice explicit rather than treating the broader protocol examples as accepted c
   success ACK, replay horizon or exactly-once claim is implemented by S0.4. Synthetic
   acceptance must cover lost ACK, crash boundaries, changed replay, mixed batches and
   revoked-source reconnect before any activation.
+
+## Q-043 — ARTEX refinement, evaluation budget and Abastevo publication
+- **Status:** answered (2026-11-14) · **Blocks:** nothing in this Audit refinement slice
+- **Context:** Q-031 and ADR-0033 kept real acceptance private and prohibited pushing
+  experimental target code. The owner now requested ARTEX integration, new DeepSeek
+  benchmarks with a maximum combined API expenditure of US$20, and GitHub publication
+  of Abastevo analyses, tests, use cases, vulnerabilities and a fix-agent handoff.
+- **Answer:** implement ARTEX-informed analysis within the Rust/local architecture;
+  enforce the aggregate ceiling before paid evaluation; use the documented OpenCode Go
+  credential and DeepSeek model. Publish sanitized Abastevo-specific artifacts through
+  a branch/PR, as an explicit exception to the older private-acceptance publication rule.
+  This authorizes neither production access nor publication of other applications'
+  findings. Preserve unexecuted/candidate labels and the existing fix/reverification gates.
+  See ADR-0044. Sentinel gates and later roadmap slices remain unchanged.

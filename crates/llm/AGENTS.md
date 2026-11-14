@@ -22,6 +22,7 @@ client, router, guards, retries, accounting port)
 | `src/context.rs` | `CallContext` (audit + provider session id) |
 | `src/retry.rs` | `RetryPolicy` (capped exponential backoff for `RateLimited` and `Transport`) |
 | `src/usage.rs` | `UsageRecorder` port (implemented by `opentatu_worker::ServicesUsageRecorder`) |
+| `src/campaign.rs`, `src/campaign_tests.rs` | Optional `CampaignBudget`: exclusively locked append-only billing ledger; durable full-context reservations before every transport attempt, finite outputs, actual-charge settlement and conservative unknown outcomes |
 | `src/client.rs` | `LlmClient` trait, `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` |
 | `src/config.rs` | `ModelsConfig` and parts; `validate()`; `set_role_model`, `set_audit_budget` (benchmark variants — still validated); test that `config/models.toml` parses |
 | `src/fake.rs` | `FakeClient` — the only test double for model calls |
@@ -29,6 +30,13 @@ client, router, guards, retries, accounting port)
 
 Planned: per-audit budget enforcement and the 60% monthly share (phase 4, with the worker).
 `llm_usage.jsonl` per audit is written by the worker (phase 3).
+
+Campaign runs explicitly add `Llm::with_campaign_budget`. Reuse the exact same ledger path
+and unchanged cap/pricing across all runs. The guard uses researched `ModelsConfig::campaign`
+ceilings; every retry reserves separately. Missing, malformed, timed-out and interrupted
+responses retain the full reservation; model/token/price violations halt the campaign.
+The ledger contains only billing metadata and remains private runtime data. Regular usage
+recording and per-audit limits still apply independently.
 
 ## Local rules
 

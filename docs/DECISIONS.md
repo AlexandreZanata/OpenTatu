@@ -1071,3 +1071,38 @@ Template:
   fixtures first and publish honest degraded/unknown outcomes on saturation. Q-019/Q-040
   retain independent outage/delivery requirements; passing a local benchmark cannot prove
   external delivery. Rollback removes this unconsumed proposal, not any runtime guard.
+
+## ADR-0044 — ARTEX-informed audit refinement and capped evaluation
+- **Date:** 2026-11-14 · **Status:** accepted (owner request; Q-043)
+- **Context:** the owner requested integration with ARTEX, new DeepSeek benchmarks with
+  an aggregate US$20 ceiling, and publication of Abastevo-only audit material and a fix
+  handoff. This is an Audit refinement slice, independent of gated Sentinel work.
+- **Reference:** [ARTEX](https://github.com/BaaRai/ARTEX/tree/ae792126dcfbf7292899bea2bd6fcdc32f7083da),
+  especially its [source-audit methodology](https://github.com/BaaRai/ARTEX/blob/ae792126dcfbf7292899bea2bd6fcdc32f7083da/skills/codeaudit/SKILL.md).
+  The reference repository is AGPL-3.0. OpenTatu implements the methodological ideas
+  independently in its existing Rust components; no ARTEX source, prompt text, daemon,
+  dependencies or runtime are incorporated. Existing source licenses are preserved.
+- **Method:** retain entry-point inventory, bounded forward context, verification and
+  skeptical review. Add explicit upstream registration/shared-defense context to the
+  investigator selection. Require source-to-sink reasoning, actual attacker control,
+  reachability and a concrete additional capability. Missing code and proposed tests
+  remain missing evidence. Context selection is heuristic, never a whole-repository
+  proof. Supplemental context does not expand INCREMENTAL finding scope.
+- **Accounting:** opt-in campaign admission lives in the existing LLM infrastructure.
+  One exclusively locked append-only ledger is shared across all evaluation runs.
+  Reserve a documented worst-case input/output charge before each transport attempt;
+  cap output, restrict the campaign to its configured model, and reconcile only valid
+  authoritative usage. Uncertain/error attempts retain their reservations. Restart
+  preserves reservations; corrupt history, changed policy and accounting failures refuse
+  further calls. The campaign cap supplements the existing per-audit budgets. No new
+  crate, SQL table, process, architecture edge or runtime dependency is introduced.
+- **Evaluation:** freeze the original engine source and the target commit. Compare
+  baseline/candidate with the same provider, budgets, scanner configuration and campaign
+  gate. Juice Shop keeps marker-derived scoring. Abastevo is a real-source acceptance
+  review with explicit negative controls, not an invented recall denominator. Record
+  partial runs and limitations rather than treating them as passing accuracy results.
+- **Publication:** source changes and sanitized evaluation records go to OpenTatu;
+  Abastevo-specific report, use cases, proposed regression tests and fix-agent task go
+  through a reviewable Abastevo PR. Owner permission is specific to this public target;
+  raw runtime directories, secrets, unrelated application findings and production data
+  remain private. No production tests, deployment or target fixes are implied.

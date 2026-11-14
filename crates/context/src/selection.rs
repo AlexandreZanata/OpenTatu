@@ -63,6 +63,16 @@ pub struct Selection {
 }
 
 impl Selection {
+    /// Packs one rendered excerpt without exceeding the selection's byte budget.
+    pub(crate) fn push(&mut self, excerpt: Excerpt, budget: usize) {
+        if self.bytes.saturating_add(excerpt.text.len()) <= budget {
+            self.bytes += excerpt.text.len();
+            self.excerpts.push(excerpt);
+        } else {
+            self.left_out.push(excerpt.path);
+        }
+    }
+
     /// The block contents: each file under a `=== path ===` header.
     pub fn render(&self) -> String {
         let mut out = String::with_capacity(self.bytes);

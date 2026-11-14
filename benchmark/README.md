@@ -46,3 +46,26 @@ cargo run -p opentatu -- --data-dir <run data> benchmark rescore <AUDIT>  # afte
   are recorded in the result.
 - After any prompt or model change, run the benchmark and commit the new result
   ([../docs/recipes/change-prompt.md](../docs/recipes/change-prompt.md)).
+
+## Shared cost-capped campaigns
+
+ADR-0044 adds optional `--campaign-budget <ledger.jsonl> --max-cost-usd <USD>` to
+`benchmark run` and `worker`/`serve`. Both flags are required together. The ledger's
+existing parent must be private (0700), and the ledger itself is private (0600).
+Always reuse the **same absolute ledger path** for every run in a combined budget.
+Its cap, provider and researched pricing cannot change on reopen.
+
+For the owner-authorized 2026-11-14 campaign, every role uses the configured DeepSeek
+model, including per-run `--role-model skeptic=deepseek-v4.1-flash` and
+`--role-model reporter=deepseek-v4.1-flash`; normal default role assignments stay intact.
+Use `--max-cost-usd 20` for the combined campaign. The gate reserves the maximum
+documented input/output cost before each HTTP attempt, including retries. Successful
+known charges release the unused reservation; failed, interrupted or malformed
+attempts retain it. Exhaustion can therefore stop earlier than actual billed US$20.
+Do not delete/reset the ledger or create another to continue the same campaign.
+
+The JSONL ledger is private billing state; publish only reviewed aggregate cost and
+attempt counts. Real-source Abastevo acceptance lives in
+[`acceptance/abastevo-20261114/`](acceptance/abastevo-20261114/REPORT.md) and has no
+invented known-flaw score. Its static review and proposed tests retain their own
+provenance, separate from provider-funded engine results.

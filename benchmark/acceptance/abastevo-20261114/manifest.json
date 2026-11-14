@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "static_review_handoff",
+  "review_date": "2026-11-14",
+  "target": {
+    "repository": "https://github.com/AlexandreZanata/Abastevo",
+    "source_ref": "main",
+    "commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "license": "LicenseRef-Abastevo-Visible-Attribution-1.0",
+    "license_url": "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/LICENSE",
+    "original_system": "Abastevo",
+    "creator": "Alexandre Zanata (@AlexandreZanata)",
+    "creator_url": "https://github.com/AlexandreZanata"
+  },
+  "provenance": {
+    "method": "human_directed_static_source_review",
+    "source_code_executed": false,
+    "target_tests_executed": false,
+    "production_contacted": false,
+    "provider_calls": 0,
+    "api_cost_usd": "0.00",
+    "benchmark_ground_truth": false,
+    "recall_denominator": null,
+    "engine_confirmed_findings": false
+  },
+  "candidates": [
+    {
+      "id": "AB-STATIC-001",
+      "title": "Encoded paths bypass source-resource classification",
+      "status": "static_candidate_runtime_unverified",
+      "severity": null,
+      "suggested_cwe_for_review": "CWE-180",
+      "source_path": "backend/internal/modules/official/adapters/source/source.go",
+      "source_lines": [75, 79, 96, 99, 104],
+      "fix_applied": false,
+      "regression_patch_executed": false
+    }
+  ],
+  "files": [
+    "REPORT.md",
+    "USE_CASES.md",
+    "TESTS.md",
+    "FIX_TASK.md",
+    "regression-tests.patch",
+    "manifest.json"
+  ],
+  "publication_scope": {
+    "owner_authorized_target": "AlexandreZanata/Abastevo",
+    "proposed_target_directory": "docs/security/opentatu/2026-11-14",
+    "credentials_or_private_data_included": false,
+    "delivery": "review_artifacts_only_no_deployment"
+  }
+}
