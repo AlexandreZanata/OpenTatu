@@ -1093,8 +1093,11 @@ Template:
   Reserve a documented worst-case input/output charge before each transport attempt;
   cap output, restrict the campaign to its configured model, and reconcile only valid
   authoritative usage. Uncertain/error attempts retain their reservations. Restart
-  preserves reservations; corrupt history, changed policy and accounting failures refuse
-  further calls. The campaign cap supplements the existing per-audit budgets. No new
+  preserves reservations; corrupt history, changed billing policy and accounting failures
+  refuse further calls. The output ceiling may only increase through a durable appended
+  transition; earlier attempts keep their original reservations and charges. The monetary
+  cap, endpoint, model, input ceiling and rates cannot change. The campaign cap supplements
+  the existing per-audit budgets. No new
   crate, SQL table, process, architecture edge or runtime dependency is introduced.
 - **Evaluation:** freeze the original engine source and the target commit. Compare
   baseline/candidate with the same provider, budgets, scanner configuration and campaign

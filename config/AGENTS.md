@@ -28,4 +28,6 @@ and raw lab artifacts must stay outside version control. See `docs/LAB.md`.
 `models.toml` also holds the optional `[campaign]` pricing/context/output ceilings,
 researched in `docs/opencode-go.md`. They are used only when an owner explicitly supplies
 a campaign ledger and cap; prices are integer micro-USD per million tokens. A ledger's
-endpoint, pricing policy and cap cannot change when reopened.
+endpoint, token prices, input ceiling and aggregate cap cannot change when reopened.
+An output ceiling increase appends a synced transition; historical attempts retain their
+original ceilings and reserved charges. Output decreases are refused.

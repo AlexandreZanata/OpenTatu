@@ -43,7 +43,10 @@ impl Drop for Ledger {
 }
 
 fn config() -> ModelsConfig {
-    ModelsConfig::from_toml(include_str!("../../../config/models.toml")).unwrap()
+    let mut config = ModelsConfig::from_toml(include_str!("../../../config/models.toml")).unwrap();
+    // Exercise old ledger histories independently of the current experiment's output cap.
+    config.campaign.as_mut().unwrap().max_output_tokens = 32_768;
+    config
 }
 
 fn context() -> CallContext {
@@ -201,6 +204,133 @@ fn r13_torn_ledger_is_never_silently_reset() {
     let mut output = OpenOptions::new().append(true).open(&file.0).unwrap();
     output.write_all(b"{\"event\":\"reserved\"").unwrap();
     assert!(CampaignBudget::open(&file.0, 20.0, &config()).is_err());
+}
+
+fn raised_config() -> ModelsConfig {
+    let mut config = config();
+    config.campaign.as_mut().unwrap().max_output_tokens = 131_072;
+    config
+}
+
+#[test]
+fn r13_output_raise_preserves_settled_and_unknown_history_under_same_cap() {
+    let file = Ledger::new();
+    let old = file.open(20.0);
+    let settled = old.reserve(&context(), None).unwrap();
+    old.settle(settled, &response(Some(0.001))).unwrap();
+    old.reserve(&context(), None).unwrap();
+    drop(old);
+    let original_history = std::fs::read(&file.0).unwrap();
+
+    let raised = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    assert_eq!(raised.committed_usd(), 0.340322);
+    let mut request = ModelRequest {
+        model: raised_config().campaign.unwrap().model,
+        temperature: 0.0,
+        messages: vec![],
+        json_schema: None,
+        max_output_tokens: None,
+        session_id: "output-raise-test".into(),
+    };
+    raised.constrain(&mut request).unwrap();
+    assert_eq!(request.max_output_tokens, Some(131_072));
+    raised.reserve(&context(), None).unwrap();
+    assert_eq!(raised.committed_usd(), 0.797609);
+    let updated_history = std::fs::read(&file.0).unwrap();
+    assert!(
+        updated_history.starts_with(&original_history),
+        "original history was never rewritten"
+    );
+    drop(raised);
+
+    let reopened = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    assert_eq!(reopened.committed_usd(), 0.797609);
+    let mut new_admissions = 1;
+    while reopened.reserve(&context(), None).is_ok() {
+        new_admissions += 1;
+    }
+    assert_eq!(new_admissions, 42);
+    assert!(reopened.committed_usd() <= 20.0);
+    drop(reopened);
+    assert_eq!(
+        std::fs::read_to_string(&file.0)
+            .unwrap()
+            .matches("output_limit_raised")
+            .count(),
+        1
+    );
+    assert!(
+        CampaignBudget::open(&file.0, 20.0, &config()).is_err(),
+        "output decreases fail closed"
+    );
+    assert!(
+        CampaignBudget::open(&file.0, 21.0, &raised_config()).is_err(),
+        "cap cannot increase"
+    );
+}
+
+#[test]
+fn r13_old_reservation_keeps_its_original_output_bound_after_raise() {
+    let file = Ledger::new();
+    let old = file.open(20.0);
+    let pending = old.reserve(&context(), None).unwrap();
+    drop(old);
+    let raised = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    let mut oversized_old_response = response(Some(0.001));
+    oversized_old_response.output_tokens = 40_000;
+    assert!(raised.settle(pending, &oversized_old_response).is_err());
+    assert_eq!(
+        raised.committed_usd(),
+        0.339322,
+        "old unknown reservation is never repriced or released"
+    );
+    assert!(raised.reserve(&context(), None).is_err());
+}
+
+#[test]
+fn r13_old_settlement_after_raise_replays_against_original_attempt_bound() {
+    let file = Ledger::new();
+    let old = file.open(20.0);
+    let pending = old.reserve(&context(), None).unwrap();
+    drop(old);
+    let raised = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    raised.settle(pending, &response(Some(0.001))).unwrap();
+    raised.reserve(&context(), None).unwrap();
+    assert_eq!(raised.committed_usd(), 0.458287);
+    drop(raised);
+    let reopened = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    assert_eq!(reopened.committed_usd(), 0.458287);
+}
+
+#[test]
+fn r13_corrupt_or_non_increasing_output_transitions_fail_closed() {
+    for transition in [
+        r#"{"event":"output_limit_raised","max_output_tokens":32768}"#,
+        r#"{"event":"output_limit_raised","max_output_tokens":0}"#,
+        r#"{"event":"output_limit_raised","max_output_tokens":131073}"#,
+        r#"{"event":"output_limit_raised","max_output_tokens":131072,"cap_micro_usd":21000000}"#,
+    ] {
+        let file = Ledger::new();
+        drop(file.open(20.0));
+        let mut output = OpenOptions::new().append(true).open(&file.0).unwrap();
+        writeln!(output, "{transition}").unwrap();
+        assert!(CampaignBudget::open(&file.0, 20.0, &raised_config()).is_err());
+    }
+}
+
+#[test]
+fn r13_output_raise_never_allows_price_model_or_input_ceiling_changes() {
+    let file = Ledger::new();
+    drop(file.open(20.0));
+    for mutate in [
+        |pricing: &mut CampaignPricing| pricing.max_input_tokens += 1,
+        |pricing: &mut CampaignPricing| pricing.output_micro_usd_per_million += 1,
+        |pricing: &mut CampaignPricing| pricing.model = "muse-spark-1.3-contributor".into(),
+    ] {
+        let mut changed = raised_config();
+        mutate(changed.campaign.as_mut().unwrap());
+        assert!(CampaignBudget::open(&file.0, 20.0, &changed).is_err());
+    }
 }
 
 #[tokio::test]

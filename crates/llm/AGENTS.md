@@ -32,11 +32,17 @@ Planned: per-audit budget enforcement and the 60% monthly share (phase 4, with t
 `llm_usage.jsonl` per audit is written by the worker (phase 3).
 
 Campaign runs explicitly add `Llm::with_campaign_budget`. Reuse the exact same ledger path
-and unchanged cap/pricing across all runs. The guard uses researched `ModelsConfig::campaign`
+and unchanged spending cap/model/endpoint/input ceiling/prices across all runs. The guard uses researched `ModelsConfig::campaign`
 ceilings; every retry reserves separately. Missing, malformed, timed-out and interrupted
 responses retain the full reservation; model/token/price violations halt the campaign.
 The ledger contains only billing metadata and remains private runtime data. Regular usage
 recording and per-audit limits still apply independently.
+
+The current output ceiling is 131,072 tokens, reserving US$0.457287 per attempt at peak
+prices. Older 32,768-token attempts retain their original US$0.339322 reservation until
+settled. An increase appends a synced `output_limit_raised` record; replay validates
+historical reservations against the ceiling active for their own attempt. Decreases and
+all fixed-policy changes fail closed. The aggregate spending cap never changes.
 
 ## Local rules
 

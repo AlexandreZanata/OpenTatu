@@ -29,8 +29,14 @@ struct State {
     cap: u64,
     committed: u64,
     next_attempt: u64,
-    pending: BTreeMap<u64, u64>,
+    pending: BTreeMap<u64, Pending>,
     halted: bool,
+}
+
+#[derive(Debug)]
+struct Pending {
+    reserved_micro_usd: u64,
+    max_output_tokens: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -54,6 +60,9 @@ enum Entry {
         input_tokens: u64,
         output_tokens: u64,
     },
+    OutputLimitRaised {
+        max_output_tokens: u32,
+    },
     Halted,
 }
 
@@ -63,8 +72,10 @@ fn refused(reason: impl Into<String>) -> Error {
 
 impl CampaignBudget {
     /// Opens or creates a 0600 JSONL ledger and holds an exclusive OS file lock until
-    /// dropped. Existing cap, endpoint and pricing must match exactly; unknown/torn records
-    /// fail closed. No owner data or secret values are written to this file.
+    /// dropped. Existing cap, endpoint and prices must match exactly; increasing the output
+    /// ceiling appends a synced transition while preserving all earlier reservations.
+    /// Unknown/torn records and decreases fail closed. No owner data or secret values
+    /// are written to this file.
     pub fn open(path: &Path, max_cost_usd: f64, config: &ModelsConfig) -> Result<Self, Error> {
         if !config.validate().is_empty() {
             return Err(refused(
@@ -176,6 +187,7 @@ impl CampaignBudget {
                 pricing: pricing.clone(),
             })?;
         } else {
+            let mut active_output_tokens = pricing.max_output_tokens;
             for (index, entry) in entries.into_iter().enumerate() {
                 match entry {
                     Entry::Policy {
@@ -186,16 +198,27 @@ impl CampaignBudget {
                     } if index == 0
                         && cap_micro_usd == cap
                         && endpoint == config.provider.base_url
-                        && stored == pricing => {}
+                        && same_fixed_pricing(&stored, &pricing)
+                        && stored.max_output_tokens > 0
+                        && stored.max_output_tokens <= pricing.max_output_tokens =>
+                    {
+                        active_output_tokens = stored.max_output_tokens;
+                    }
                     Entry::Reserved {
                         attempt,
                         reserved_micro_usd,
                         ..
                     } if index > 0
+                        && !state.halted
                         && attempt == state.next_attempt
-                        && reserved_micro_usd == per_attempt =>
+                        && reserved_micro_usd
+                            == ceiling(
+                                &pricing,
+                                pricing.max_input_tokens,
+                                active_output_tokens.into(),
+                            )? =>
                     {
-                        state.add_reservation(attempt, reserved_micro_usd)?;
+                        state.add_reservation(attempt, reserved_micro_usd, active_output_tokens)?;
                     }
                     Entry::Settled {
                         attempt,
@@ -204,13 +227,36 @@ impl CampaignBudget {
                         output_tokens,
                     } if index > 0
                         && input_tokens <= pricing.max_input_tokens
-                        && output_tokens <= u64::from(pricing.max_output_tokens) =>
+                        && state.pending.get(&attempt).is_some_and(|pending| {
+                            output_tokens <= u64::from(pending.max_output_tokens)
+                        })
+                        && charged_micro_usd
+                            <= ceiling(&pricing, input_tokens, output_tokens)?
+                                .saturating_add(1) =>
                     {
                         state.apply_settlement(attempt, charged_micro_usd)?;
+                    }
+                    Entry::OutputLimitRaised { max_output_tokens }
+                        if index > 0
+                            && !state.halted
+                            && max_output_tokens > active_output_tokens
+                            && max_output_tokens <= pricing.max_output_tokens =>
+                    {
+                        active_output_tokens = max_output_tokens;
                     }
                     Entry::Halted if index > 0 => state.halted = true,
                     _ => return Err(refused("campaign ledger policy or sequence mismatch")),
                 }
+            }
+            if active_output_tokens < pricing.max_output_tokens {
+                if state.halted {
+                    return Err(refused(
+                        "cannot raise the output ceiling of a halted campaign",
+                    ));
+                }
+                state.append(&Entry::OutputLimitRaised {
+                    max_output_tokens: pricing.max_output_tokens,
+                })?;
             }
         }
         // Also covers reopening after a previous creation-directory sync failed.
@@ -279,7 +325,7 @@ impl CampaignBudget {
             audit_id: context.audit_id.clone(),
             role,
         })?;
-        state.add_reservation(attempt, reserved)?;
+        state.add_reservation(attempt, reserved, self.pricing.max_output_tokens)?;
         Ok(attempt)
     }
 
@@ -299,10 +345,11 @@ impl CampaignBudget {
             || response.input_tokens > self.pricing.max_input_tokens
             || response.output_tokens > u64::from(self.pricing.max_output_tokens)
             || cost > expected.saturating_add(1)
-            || state
-                .pending
-                .get(&attempt)
-                .is_none_or(|reserved| cost > *reserved || expected > *reserved)
+            || state.pending.get(&attempt).is_none_or(|pending| {
+                cost > pending.reserved_micro_usd
+                    || expected > pending.reserved_micro_usd
+                    || response.output_tokens > u64::from(pending.max_output_tokens)
+            })
         {
             state.halted = true;
             state.append(&Entry::Halted)?;
@@ -334,7 +381,12 @@ impl State {
         Ok(())
     }
 
-    fn add_reservation(&mut self, attempt: u64, amount: u64) -> Result<(), Error> {
+    fn add_reservation(
+        &mut self,
+        attempt: u64,
+        amount: u64,
+        max_output_tokens: u32,
+    ) -> Result<(), Error> {
         self.committed = self
             .committed
             .checked_add(amount)
@@ -343,7 +395,13 @@ impl State {
         self.next_attempt = attempt
             .checked_add(1)
             .ok_or_else(|| refused("campaign attempt overflow"))?;
-        self.pending.insert(attempt, amount);
+        self.pending.insert(
+            attempt,
+            Pending {
+                reserved_micro_usd: amount,
+                max_output_tokens,
+            },
+        );
         Ok(())
     }
 
@@ -351,11 +409,17 @@ impl State {
         let reserved = self
             .pending
             .remove(&attempt)
-            .filter(|reserved| cost <= *reserved)
+            .filter(|pending| cost <= pending.reserved_micro_usd)
             .ok_or_else(|| refused("invalid or duplicate campaign settlement"))?;
-        self.committed = self.committed - reserved + cost;
+        self.committed = self.committed - reserved.reserved_micro_usd + cost;
         Ok(())
     }
+}
+
+fn same_fixed_pricing(stored: &CampaignPricing, requested: &CampaignPricing) -> bool {
+    let mut comparable = stored.clone();
+    comparable.max_output_tokens = requested.max_output_tokens;
+    comparable == *requested
 }
 
 fn dollars(value: f64) -> Result<u64, Error> {

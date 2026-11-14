@@ -53,7 +53,9 @@ ADR-0044 adds optional `--campaign-budget <ledger.jsonl> --max-cost-usd <USD>` t
 `benchmark run` and `worker`/`serve`. Both flags are required together. The ledger's
 existing parent must be private (0700), and the ledger itself is private (0600).
 Always reuse the **same absolute ledger path** for every run in a combined budget.
-Its cap, provider and researched pricing cannot change on reopen.
+Its cap, provider and researched pricing cannot change on reopen. A larger configured
+output ceiling is recorded as an append-only transition before dispatch; older charges
+and unknown-attempt reservations remain intact. Decreasing the ceiling is refused.
 
 For the owner-authorized 2026-11-14 campaign, every role uses the configured DeepSeek
 model, including per-run `--role-model skeptic=deepseek-v4.1-flash` and

@@ -109,9 +109,17 @@ allowance consumption, regardless of whether Extra Usage is enabled.
 
 The opt-in `[campaign]` config uses the higher peak rates and the already researched
 1,000,000-token input context ceiling. Each transport attempt reserves the entire input
-ceiling plus at most 32,768 output tokens (reasoning included), **US$0.339322** rounded up.
+ceiling plus at most 131,072 output tokens (reasoning included), **US$0.457287** rounded up.
 This avoids token-count estimates. Successful responses settle to their reported charge;
 unknown outcomes retain the whole reservation. No automatic HTTP redirect or internal
 HTTP-client retry can bypass reservation. All runs must reuse the same private ledger
-and unchanged policy/cap. Requests stop before admitting a reservation above the cap;
+and unchanged model, endpoint, input ceiling, prices and spending cap. Requests stop before admitting a reservation above the cap;
 provider/model/token/price violations halt subsequent spending.
+
+The first trial used 32,768 output tokens (US$0.339322 reserved per attempt), which
+truncated the cartographer's response. The revised ceiling remains below the documented
+384,000-token model output limit. Increasing an existing ledger's output ceiling appends
+a durable `output_limit_raised` record; it never rewrites its policy or earlier entries.
+Replay validates each attempt against its original ceiling. Prior settled costs and
+unresolved reservations still count toward the same US$20 cap. Decreases and changes to
+the fixed billing policy are refused.

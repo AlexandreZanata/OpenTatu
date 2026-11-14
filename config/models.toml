@@ -89,6 +89,6 @@ max_minutes = 15
 [campaign]
 model = "deepseek-v4.1-flash"
 max_input_tokens = 1_000_000
-max_output_tokens = 32_768
+max_output_tokens = 131_072
 input_micro_usd_per_million = 300_000
 output_micro_usd_per_million = 1_200_000
