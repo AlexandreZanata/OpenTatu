@@ -260,7 +260,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `render_tree(files, max_lines)` | `<structure>` block |
 | `cartographer_code`, `cartographer_config` → `Selection { excerpts, left_out, bytes }` | Ranked, line-numbered `<code>` / `<config>` within `ContextBudget::CARTOGRAPHER` |
 | `entry_point_code(files, seeds: &[Seed], budget, per_file)` | Handler files + what they reach (imports, same package) up to depth 2 |
-| `investigation_code(files, seeds, budget, per_file)` | Shared forward selection plus bounded upstream registration and defense context; does not change incremental dependency discovery |
+| `investigation_code(files, seeds, budget, per_file)` | Preserved forward trace plus focused upstream bindings and referenced controls (`defenses.rs`, `registration.rs`); bounded first/last focus metadata and merged same-file windows; incremental dependency discovery unchanged |
 
 ## opentatu-investigator role execution (`crates/investigator`)
 

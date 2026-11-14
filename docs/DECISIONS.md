@@ -1088,6 +1088,13 @@ Template:
   reachability and a concrete additional capability. Missing code and proposed tests
   remain missing evidence. Context selection is heuristic, never a whole-repository
   proof. Supplemental context does not expand INCREMENTAL finding scope.
+  Focused registration windows use at most 8KB each; supplemental packing reserves
+  25% of context with an 8KB floor, always capped by the actual total budget. Follow
+  actual handler imports and directly referenced controls rather than sweeping every
+  dependency of a composition root. Bound first/last reference metadata and merge
+  registration/control windows belonging to the same file. Preserve forward trace
+  semantics. The pinned Abastevo calibration and its initial unfavorable result are
+  retained in [the visibility method](../benchmark/acceptance/abastevo-20261114/METHOD.md).
 - **Accounting:** opt-in campaign admission lives in the existing LLM infrastructure.
   One exclusively locked append-only ledger is shared across all evaluation runs.
   Reserve a documented worst-case input/output charge before each transport attempt;

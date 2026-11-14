@@ -20,6 +20,7 @@ configuration, cartographer selection); per-entry-point selection (phase 4) ✅;
 | `src/selection.rs` | `ContextBudget`, `Selection`, `Excerpt`, `cartographer_code`, `cartographer_config` (ranking signals, packing, excerpts of large files) |
 | `src/related.rs` | `Seed`, `entry_point_code` — handler files + imports/same package up to depth 2 (Go, Rust, JS/TS, Python) |
 | `src/defenses.rs` | `investigation_code` — existing forward context plus bounded reverse imports and upstream middleware dependencies; explicit budget omissions |
+| `src/registration.rs` | Compact upstream windows around imported handler/type references; only directly imported/same-package security-control definitions supplement them |
 | `src/error.rs` | `Error` |
 
 Phase 7: `src/diff.rs` — `diff_allowed` checks both rename sides before requesting patch
@@ -31,9 +32,18 @@ Every intermediate selection uses the caller's byte budget; omitted candidate pa
 participate in reverse discovery. Included files never appear in `left_out`.
 
 Method limits: reverse discovery follows at most two explicit-import hops and expands at
-most twelve upstream files per hop. It inherits the existing language/import heuristics
-(no complete call graph or arbitrary alias resolution). Each call rebuilds the import
-index from safe snapshot text; topology caching is deferred until profiling justifies it.
+most twelve upstream files per hop. It starts from actual handler references; only when
+none are found can omitted forward paths seed a fallback. Each file retains only the
+first sixteen and last sixteen reference indices; only twelve candidate focus vectors
+are kept while lower-ranked paths remain explicit omissions. Shared controls must be
+referenced in registration windows and defined in direct imports/the same package.
+Windows are capped at 8K bytes; supplemental selection receives a quarter of the total
+budget with an 8K floor clipped to that total. Seeds and the first two forward files
+stay first; already-selected forward controls are promoted intact. Other forward context
+can still be displaced and is reported explicitly. The original forward selector is
+unchanged. Language/import/name heuristics do not establish a full call graph or arbitrary
+alias resolution. Each call rescans safe snapshot text; topology caching is deferred
+until profiling justifies it.
 
 ## Local rules
 

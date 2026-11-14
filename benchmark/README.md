@@ -71,3 +71,10 @@ attempt counts. Real-source Abastevo acceptance lives in
 [`acceptance/abastevo-20261114/`](acceptance/abastevo-20261114/REPORT.md) and has no
 invented known-flaw score. Its static review and proposed tests retain their own
 provenance, separate from provider-funded engine results.
+
+The owner limits detailed publication to Abastevo. New Juice Shop raw run results
+therefore stay in the private campaign data directory; reviewed public projections in
+[`campaigns/`](campaigns/README.md) retain counts, known-marker scores, model/prompt
+versions, limits, timing and cost. They expose only the count of findings outside the
+known catalog, never their locations or CWEs. These are labeled aggregate projections,
+not substituted raw `RunResult` files. Historical committed results are unchanged.

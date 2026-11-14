@@ -21,7 +21,8 @@
     "api_cost_usd": "0.00",
     "benchmark_ground_truth": false,
     "recall_denominator": null,
-    "engine_confirmed_findings": false
+    "engine_confirmed_findings": false,
+    "applies_to": "static review candidate and proposed target regression patch only"
   },
   "candidates": [
     {
@@ -31,23 +32,43 @@
       "severity": null,
       "suggested_cwe_for_review": "CWE-180",
       "source_path": "backend/internal/modules/official/adapters/source/source.go",
-      "source_lines": [75, 79, 96, 99, 104],
+      "source_lines": [
+        75,
+        79,
+        96,
+        99,
+        104
+      ],
       "fix_applied": false,
       "regression_patch_executed": false
     }
   ],
   "files": [
-    "REPORT.md",
-    "USE_CASES.md",
-    "TESTS.md",
     "FIX_TASK.md",
-    "regression-tests.patch",
-    "manifest.json"
+    "METHOD.md",
+    "REPORT.md",
+    "REVIEW_GUIDE.md",
+    "TESTS.md",
+    "USE_CASES.md",
+    "context-comparison-initial.json",
+    "context-comparison.json",
+    "context-probe.rs.txt",
+    "manifest.json",
+    "regression-tests.patch"
   ],
   "publication_scope": {
     "owner_authorized_target": "AlexandreZanata/Abastevo",
     "proposed_target_directory": "docs/security/opentatu/2026-11-14",
     "credentials_or_private_data_included": false,
     "delivery": "review_artifacts_only_no_deployment"
+  },
+  "context_evaluation": {
+    "method": "deterministic numbered source-line visibility, four manually selected cases at two byte budgets",
+    "reference": "METHOD.md",
+    "result": "context-comparison.json",
+    "initial_unfavorable_calibration": "context-comparison-initial.json",
+    "source_code_executed": false,
+    "provider_calls": 0,
+    "vulnerability_accuracy_measured": false
   }
 }

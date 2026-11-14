@@ -243,7 +243,7 @@ pub(crate) fn import_targets(
 }
 
 /// Identifiers followed by `(` (calls), at least 3 characters, minus keywords.
-fn called_identifiers(content: &str) -> BTreeSet<String> {
+pub(crate) fn called_identifiers(content: &str) -> BTreeSet<String> {
     const KEYWORDS: &[&str] = &[
         "if", "for", "while", "match", "switch", "return", "func", "fn", "function", "def",
         "catch", "new", "make", "len", "append", "Some", "Ok", "Err", "println", "format", "print",
@@ -271,7 +271,7 @@ fn called_identifiers(content: &str) -> BTreeSet<String> {
 }
 
 /// 0-based lines of `content` that define one of `names`.
-fn definition_lines(content: &str, names: &BTreeSet<String>) -> Vec<usize> {
+pub(crate) fn definition_lines(content: &str, names: &BTreeSet<String>) -> Vec<usize> {
     content
         .lines()
         .enumerate()

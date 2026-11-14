@@ -195,6 +195,15 @@ const SECURITY_WORDS: &[&str] = &[
     "upload",
 ];
 
+/// Reuses the existing vocabulary when selecting referenced shared controls.
+pub(crate) fn is_security_identifier(name: &str) -> bool {
+    let lower = name.to_ascii_lowercase();
+    SECURITY_WORDS
+        .iter()
+        .chain(["owner", "tenant", "access", "fence"].iter())
+        .any(|word| lower.contains(word))
+}
+
 /// File stems that usually start or route an application.
 const ENTRY_STEMS: &[&str] = &[
     "main",
@@ -440,6 +449,57 @@ pub(crate) fn render_file(path: &str, content: &str, per_file: usize, focus: &[u
     }
     Excerpt {
         path: path.to_owned(),
+        text,
+        partial: true,
+    }
+}
+
+/// Compact supplemental context: caller-supplied focus takes precedence over route
+/// signals. The original forward renderer is unchanged for incremental scope/baselines.
+pub(crate) fn render_focused_file(
+    path: &str,
+    content: &str,
+    per_file: usize,
+    focus: &[usize],
+) -> Excerpt {
+    let lines: Vec<&str> = content.lines().collect();
+    let full = number(path, &lines, &[(0, lines.len())], lines.len(), false);
+    if full.len() <= per_file {
+        return Excerpt {
+            path: path.into(),
+            text: full,
+            partial: false,
+        };
+    }
+    let mut ranges = vec![(0, HEADER_LINES.min(lines.len()))];
+    for index in focus.iter().copied().filter(|line| *line < lines.len()) {
+        let mut candidate = ranges.clone();
+        candidate.push((
+            index.saturating_sub(WINDOW_LINES),
+            (index + WINDOW_LINES + 1).min(lines.len()),
+        ));
+        candidate.sort_unstable();
+        let mut merged: Vec<(usize, usize)> = Vec::new();
+        for (start, end) in candidate {
+            match merged.last_mut() {
+                Some(last) if start <= last.1 => last.1 = last.1.max(end),
+                _ => merged.push((start, end)),
+            }
+        }
+        if number(path, &lines, &merged, lines.len(), true).len() <= per_file {
+            ranges = merged;
+        }
+    }
+    let mut text = number(path, &lines, &ranges, lines.len(), true);
+    if text.len() > per_file {
+        let mut end = per_file.min(text.len());
+        while !text.is_char_boundary(end) {
+            end = end.saturating_sub(1);
+        }
+        text.truncate(end);
+    }
+    Excerpt {
+        path: path.into(),
         text,
         partial: true,
     }

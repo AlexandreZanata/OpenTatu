@@ -24,6 +24,7 @@ mod diff;
 mod error;
 mod files;
 mod lab;
+mod registration;
 mod related;
 mod selection;
 mod tree;

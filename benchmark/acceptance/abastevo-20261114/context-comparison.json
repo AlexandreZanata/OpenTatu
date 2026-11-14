@@ -1,0 +1,1286 @@
+{
+  "artifact_kind": "deterministic_context_visibility_comparison",
+  "cases": [
+    {
+      "anchors": [
+        {
+          "id": "handler",
+          "line": 30,
+          "path": "backend/internal/modules/staff/adapters/http/admin.go",
+          "purpose": "catalog handler declaration",
+          "source_file_sha256": "2235f474bb37ee1fe72086bd674eac53e5855951fc1168001aa0ba53d0269353"
+        },
+        {
+          "id": "route",
+          "line": 25,
+          "path": "backend/internal/modules/staff/adapters/http/admin.go",
+          "purpose": "catalog route registration",
+          "source_file_sha256": "2235f474bb37ee1fe72086bd674eac53e5855951fc1168001aa0ba53d0269353"
+        },
+        {
+          "id": "admin_surface_condition",
+          "line": 928,
+          "path": "backend/cmd/api/main.go",
+          "purpose": "administrative routes are conditional on handler configuration",
+          "source_file_sha256": "ee37d36b65a7910c9456f56c3242b1e534f5a80eb990e2b87549b6e82fdd00ea"
+        },
+        {
+          "id": "upstream_middleware_binding",
+          "line": 952,
+          "path": "backend/cmd/api/main.go",
+          "purpose": "shared admin middleware is applied to the route group",
+          "source_file_sha256": "ee37d36b65a7910c9456f56c3242b1e534f5a80eb990e2b87549b6e82fdd00ea"
+        },
+        {
+          "id": "upstream_handler_binding",
+          "line": 954,
+          "path": "backend/cmd/api/main.go",
+          "purpose": "staff administrative handler is mounted in that group",
+          "source_file_sha256": "ee37d36b65a7910c9456f56c3242b1e534f5a80eb990e2b87549b6e82fdd00ea"
+        },
+        {
+          "id": "middleware_definition",
+          "line": 617,
+          "path": "backend/internal/modules/admin/adapters/http/http.go",
+          "purpose": "actual middleware list includes headers, network fence and session check",
+          "source_file_sha256": "12286a5dd16d3acb2ff124ab56d0ce5d2397924aef8dc13faa0cadf03e01bbbd"
+        },
+        {
+          "id": "session_implementation",
+          "line": 110,
+          "path": "backend/internal/modules/admin/adapters/http/http.go",
+          "purpose": "session authentication calls the service",
+          "source_file_sha256": "12286a5dd16d3acb2ff124ab56d0ce5d2397924aef8dc13faa0cadf03e01bbbd"
+        }
+      ],
+      "case_id": "staff_admin_catalog",
+      "runs": [
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "route",
+                "visible": true
+              },
+              {
+                "id": "admin_surface_condition",
+                "visible": false
+              },
+              {
+                "id": "upstream_middleware_binding",
+                "visible": false
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": false
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              },
+              {
+                "id": "session_implementation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [],
+            "rendered_bytes": 84934,
+            "rendered_sha256": "eb17cfe4ba85216a6c5ea40e60d872fea0536919c507f6009bfb9805bd956906",
+            "selected_file_count": 14,
+            "selected_files": [
+              "backend/internal/modules/staff/adapters/http/admin.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/staff/application/service.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/staff/domain/catalog.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go"
+            ]
+          },
+          "gained_anchor_ids": [
+            "admin_surface_condition",
+            "upstream_middleware_binding",
+            "upstream_handler_binding"
+          ],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "route",
+                "visible": true
+              },
+              {
+                "id": "admin_surface_condition",
+                "visible": true
+              },
+              {
+                "id": "upstream_middleware_binding",
+                "visible": true
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": true
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              },
+              {
+                "id": "session_implementation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 97451,
+            "rendered_sha256": "a8778bf6df01c29b05afe23441d71cdc943a25c5ded5c55b38c1a784475c1318",
+            "selected_file_count": 18,
+            "selected_files": [
+              "backend/internal/modules/staff/adapters/http/admin.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/staff/application/service.go",
+              "backend/cmd/api/admin.go",
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/internal/platform/enterprisesuite/admin.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/staff/domain/catalog.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "verifier",
+          "total_byte_budget": 160000
+        },
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "route",
+                "visible": true
+              },
+              {
+                "id": "admin_surface_condition",
+                "visible": false
+              },
+              {
+                "id": "upstream_middleware_binding",
+                "visible": false
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": false
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              },
+              {
+                "id": "session_implementation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [],
+            "rendered_bytes": 84934,
+            "rendered_sha256": "eb17cfe4ba85216a6c5ea40e60d872fea0536919c507f6009bfb9805bd956906",
+            "selected_file_count": 14,
+            "selected_files": [
+              "backend/internal/modules/staff/adapters/http/admin.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/staff/application/service.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/staff/domain/catalog.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go"
+            ]
+          },
+          "gained_anchor_ids": [
+            "admin_surface_condition",
+            "upstream_middleware_binding",
+            "upstream_handler_binding"
+          ],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "route",
+                "visible": true
+              },
+              {
+                "id": "admin_surface_condition",
+                "visible": true
+              },
+              {
+                "id": "upstream_middleware_binding",
+                "visible": true
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": true
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              },
+              {
+                "id": "session_implementation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 97451,
+            "rendered_sha256": "a8778bf6df01c29b05afe23441d71cdc943a25c5ded5c55b38c1a784475c1318",
+            "selected_file_count": 18,
+            "selected_files": [
+              "backend/internal/modules/staff/adapters/http/admin.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/staff/application/service.go",
+              "backend/cmd/api/admin.go",
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/internal/platform/enterprisesuite/admin.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/staff/domain/catalog.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "hunter",
+          "total_byte_budget": 300000
+        }
+      ],
+      "seed": {
+        "line": 30,
+        "path": "backend/internal/modules/staff/adapters/http/admin.go"
+      }
+    },
+    {
+      "anchors": [
+        {
+          "id": "handler",
+          "line": 43,
+          "path": "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+          "purpose": "lifecycle route registration",
+          "source_file_sha256": "2101fa7742bcb9ca62aa72e12fd25f48462d0d7dea63db4135099706a0407a5f"
+        },
+        {
+          "id": "handler_session_check",
+          "line": 53,
+          "path": "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+          "purpose": "handler reads the administrative session",
+          "source_file_sha256": "2101fa7742bcb9ca62aa72e12fd25f48462d0d7dea63db4135099706a0407a5f"
+        },
+        {
+          "id": "upstream_enablement_check",
+          "line": 16,
+          "path": "backend/internal/platform/enterprisesuite/admin.go",
+          "purpose": "enterprise and admin runtime prerequisites are checked before registration",
+          "source_file_sha256": "28cecbc018c101743436a7f0b39b04ad5c07be73f62788eb2bcdb8b8ed503b65"
+        },
+        {
+          "id": "upstream_middleware_and_handler_binding",
+          "line": 28,
+          "path": "backend/internal/platform/enterprisesuite/admin.go",
+          "purpose": "shared admin middleware and lifecycle handler are registered on one group",
+          "source_file_sha256": "28cecbc018c101743436a7f0b39b04ad5c07be73f62788eb2bcdb8b8ed503b65"
+        },
+        {
+          "id": "middleware_definition",
+          "line": 617,
+          "path": "backend/internal/modules/admin/adapters/http/http.go",
+          "purpose": "actual middleware list includes headers, network fence and session check",
+          "source_file_sha256": "12286a5dd16d3acb2ff124ab56d0ce5d2397924aef8dc13faa0cadf03e01bbbd"
+        }
+      ],
+      "case_id": "organization_suspend",
+      "runs": [
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "handler_session_check",
+                "visible": true
+              },
+              {
+                "id": "upstream_enablement_check",
+                "visible": false
+              },
+              {
+                "id": "upstream_middleware_and_handler_binding",
+                "visible": false
+              },
+              {
+                "id": "middleware_definition",
+                "visible": false
+              }
+            ],
+            "omitted_candidate_count": 98,
+            "omitted_candidates_first_30": [
+              "backend/internal/modules/organization/domain/organization.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/organization/adapters/http/ownership_transfer.go",
+              "backend/internal/modules/companysession/adapters/http/http.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/organization/adapters/http/onboarding.go",
+              "backend/internal/modules/organization/application/suspension.go",
+              "backend/internal/modules/orgaccess/adapters/http/gateway.go",
+              "backend/internal/modules/orgcapability/domain/capability.go",
+              "backend/internal/modules/orgaccess/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/organization/application/settings.go",
+              "backend/internal/modules/organization/domain/cost_centre.go",
+              "backend/internal/modules/organization/domain/settings.go",
+              "backend/internal/modules/organization/domain/team.go",
+              "backend/internal/modules/organization/domain/unit.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/platform/orgapi/errors.go",
+              "backend/internal/modules/organization/adapters/settings_codec.go",
+              "backend/internal/modules/orgaccess/application/authority_queries.go",
+              "backend/internal/modules/orgaccess/application/recorded_periods.go",
+              "backend/internal/modules/orgaccess/application/repository.go",
+              "backend/internal/modules/orgaccess/domain/context.go",
+              "backend/internal/modules/orgaccess/domain/roles.go",
+              "backend/internal/modules/orgaccess/domain/source.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/membership/adapters/redemption.go",
+              "backend/internal/modules/organization/adapters/store.go",
+              "backend/internal/modules/kernel/cnpj.go"
+            ],
+            "omitted_candidates_not_listed": 68,
+            "partial_files": [],
+            "rendered_bytes": 159818,
+            "rendered_sha256": "ad5c66a79a683f283af5e4ea4d57980116c3c56e7123721316c61090bbab9110",
+            "selected_file_count": 15,
+            "selected_files": [
+              "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles.go",
+              "backend/internal/modules/orgaccess/application/roles.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles_json.go",
+              "backend/internal/modules/orgaccess/application/authorization.go",
+              "backend/internal/modules/orgaccess/domain/assignment.go",
+              "backend/internal/modules/organization/adapters/http/cost_centres.go",
+              "backend/internal/modules/organization/adapters/http/legal.go",
+              "backend/internal/modules/organization/adapters/http/settings.go",
+              "backend/internal/modules/organization/adapters/http/teams.go",
+              "backend/internal/modules/organization/adapters/http/units.go",
+              "backend/internal/platform/orgapi/redact.go",
+              "backend/internal/modules/orgaccess/domain/coverage.go",
+              "backend/internal/modules/orgaccess/adapters/http/account.go",
+              "backend/internal/modules/kernel/org_scope.go"
+            ]
+          },
+          "gained_anchor_ids": [
+            "upstream_enablement_check",
+            "upstream_middleware_and_handler_binding",
+            "middleware_definition"
+          ],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "handler_session_check",
+                "visible": true
+              },
+              {
+                "id": "upstream_enablement_check",
+                "visible": true
+              },
+              {
+                "id": "upstream_middleware_and_handler_binding",
+                "visible": true
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 99,
+            "omitted_candidates_first_30": [
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/companysession/adapters/http/http.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/modules/membership/adapters/access_change.go",
+              "backend/internal/modules/membership/adapters/device_contact.go",
+              "backend/internal/modules/membership/adapters/device_intake.go",
+              "backend/internal/modules/membership/adapters/devices.go",
+              "backend/internal/modules/membership/adapters/employee_register.go",
+              "backend/internal/modules/membership/adapters/invitation_secrets.go",
+              "backend/internal/modules/membership/adapters/invitations.go",
+              "backend/internal/modules/membership/adapters/merge.go",
+              "backend/internal/modules/membership/adapters/offboarding.go",
+              "backend/internal/modules/membership/adapters/redemption.go",
+              "backend/internal/modules/membership/adapters/rehire.go",
+              "backend/internal/modules/membership/adapters/store.go",
+              "backend/internal/modules/orgaccess/adapters/http/gateway.go",
+              "backend/internal/modules/orgaccess/application/authority_queries.go",
+              "backend/internal/modules/orgaccess/application/recorded_periods.go",
+              "backend/internal/modules/orgaccess/application/repository.go",
+              "backend/internal/modules/orgaccess/domain/catalog.go"
+            ],
+            "omitted_candidates_not_listed": 69,
+            "partial_files": [
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 159497,
+            "rendered_sha256": "9454e0fb0e170d160aef075bdd7a8c8ab2512ab9bf68af65423f7873fe94119b",
+            "selected_file_count": 18,
+            "selected_files": [
+              "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles.go",
+              "backend/internal/modules/orgaccess/application/roles.go",
+              "backend/cmd/api/admin.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/internal/platform/enterprisesuite/admin.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles_json.go",
+              "backend/internal/modules/orgaccess/application/authorization.go",
+              "backend/internal/modules/orgaccess/domain/assignment.go",
+              "backend/internal/modules/organization/adapters/http/cost_centres.go",
+              "backend/internal/modules/organization/adapters/http/legal.go",
+              "backend/internal/modules/organization/adapters/http/settings.go",
+              "backend/internal/modules/organization/adapters/http/teams.go",
+              "backend/internal/platform/orgapi/redact.go",
+              "backend/internal/modules/orgaccess/adapters/http/account.go",
+              "backend/internal/modules/kernel/org_scope.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "verifier",
+          "total_byte_budget": 160000
+        },
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "handler_session_check",
+                "visible": true
+              },
+              {
+                "id": "upstream_enablement_check",
+                "visible": false
+              },
+              {
+                "id": "upstream_middleware_and_handler_binding",
+                "visible": false
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 82,
+            "omitted_candidates_first_30": [
+              "backend/internal/modules/organization/domain/settings.go",
+              "backend/internal/modules/organization/domain/team.go",
+              "backend/internal/modules/organization/domain/unit.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/platform/orgapi/errors.go",
+              "backend/internal/modules/organization/adapters/settings_codec.go",
+              "backend/internal/modules/orgaccess/application/repository.go",
+              "backend/internal/modules/orgaccess/domain/context.go",
+              "backend/internal/modules/orgaccess/domain/roles.go",
+              "backend/internal/modules/orgaccess/domain/source.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/membership/adapters/redemption.go",
+              "backend/internal/modules/organization/adapters/store.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/modules/organization/adapters/http/company_proof.go",
+              "backend/internal/modules/organization/adapters/http/contexts.go",
+              "backend/internal/modules/organization/adapters/http/setup_directory.go",
+              "backend/internal/modules/organization/application/contexts.go",
+              "backend/internal/modules/organization/application/cost_centre.go",
+              "backend/internal/modules/organization/application/legal.go",
+              "backend/internal/modules/organization/application/onboarding.go",
+              "backend/internal/modules/organization/application/ownership_transfer.go",
+              "backend/internal/modules/organization/application/repository.go",
+              "backend/internal/modules/organization/application/setup_directory.go"
+            ],
+            "omitted_candidates_not_listed": 52,
+            "partial_files": [],
+            "rendered_bytes": 299717,
+            "rendered_sha256": "0df026fbfcbb336e865eb881226eac95c1ebfbe9493f4c167bbd49a2f7852167",
+            "selected_file_count": 31,
+            "selected_files": [
+              "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles.go",
+              "backend/internal/modules/orgaccess/application/roles.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles_json.go",
+              "backend/internal/modules/orgaccess/application/authorization.go",
+              "backend/internal/modules/orgaccess/domain/assignment.go",
+              "backend/internal/modules/organization/adapters/http/cost_centres.go",
+              "backend/internal/modules/organization/adapters/http/legal.go",
+              "backend/internal/modules/organization/adapters/http/settings.go",
+              "backend/internal/modules/organization/adapters/http/teams.go",
+              "backend/internal/modules/organization/adapters/http/units.go",
+              "backend/internal/modules/organization/domain/organization.go",
+              "backend/internal/platform/orgapi/redact.go",
+              "backend/internal/modules/orgaccess/domain/coverage.go",
+              "backend/internal/modules/orgaccess/adapters/http/account.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/organization/adapters/http/ownership_transfer.go",
+              "backend/internal/modules/companysession/adapters/http/http.go",
+              "backend/internal/modules/kernel/org_scope.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/organization/adapters/http/onboarding.go",
+              "backend/internal/modules/organization/application/suspension.go",
+              "backend/internal/modules/orgaccess/adapters/http/gateway.go",
+              "backend/internal/modules/orgcapability/domain/capability.go",
+              "backend/internal/modules/orgaccess/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/organization/application/settings.go",
+              "backend/internal/modules/organization/domain/cost_centre.go",
+              "backend/internal/modules/orgaccess/application/authority_queries.go",
+              "backend/internal/modules/orgaccess/application/recorded_periods.go"
+            ]
+          },
+          "gained_anchor_ids": [
+            "upstream_enablement_check",
+            "upstream_middleware_and_handler_binding"
+          ],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "handler_session_check",
+                "visible": true
+              },
+              {
+                "id": "upstream_enablement_check",
+                "visible": true
+              },
+              {
+                "id": "upstream_middleware_and_handler_binding",
+                "visible": true
+              },
+              {
+                "id": "middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 84,
+            "omitted_candidates_first_30": [
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/modules/membership/adapters/access_change.go",
+              "backend/internal/modules/membership/adapters/device_contact.go",
+              "backend/internal/modules/membership/adapters/device_intake.go",
+              "backend/internal/modules/membership/adapters/devices.go",
+              "backend/internal/modules/membership/adapters/employee_register.go",
+              "backend/internal/modules/membership/adapters/invitation_secrets.go",
+              "backend/internal/modules/membership/adapters/invitations.go",
+              "backend/internal/modules/membership/adapters/merge.go",
+              "backend/internal/modules/membership/adapters/offboarding.go",
+              "backend/internal/modules/membership/adapters/redemption.go",
+              "backend/internal/modules/membership/adapters/rehire.go",
+              "backend/internal/modules/membership/adapters/store.go",
+              "backend/internal/modules/orgaccess/application/repository.go",
+              "backend/internal/modules/orgaccess/domain/context.go",
+              "backend/internal/modules/orgaccess/domain/roles.go",
+              "backend/internal/modules/orgaccess/domain/source.go",
+              "backend/internal/modules/organization/adapters/company_authority.go",
+              "backend/internal/modules/organization/adapters/contexts.go",
+              "backend/internal/modules/organization/adapters/cost_centres.go",
+              "backend/internal/modules/organization/adapters/devices.go",
+              "backend/internal/modules/organization/adapters/employee_merge.go"
+            ],
+            "omitted_candidates_not_listed": 54,
+            "partial_files": [
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 296133,
+            "rendered_sha256": "17fce3afcd321e5de74e3154dfc4ad9234e0dade1da73c3b1242c00202a5724f",
+            "selected_file_count": 33,
+            "selected_files": [
+              "backend/internal/modules/organization/adapters/http/suspension_admin.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles.go",
+              "backend/internal/modules/orgaccess/application/roles.go",
+              "backend/cmd/api/admin.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/forum/adapters/http/admin.go",
+              "backend/internal/platform/enterprisesuite/admin.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/modules/orgaccess/adapters/http/roles_json.go",
+              "backend/internal/modules/orgaccess/application/authorization.go",
+              "backend/internal/modules/orgaccess/domain/assignment.go",
+              "backend/internal/modules/organization/adapters/http/cost_centres.go",
+              "backend/internal/modules/organization/adapters/http/legal.go",
+              "backend/internal/modules/organization/adapters/http/settings.go",
+              "backend/internal/modules/organization/adapters/http/teams.go",
+              "backend/internal/modules/organization/adapters/http/units.go",
+              "backend/internal/modules/organization/domain/organization.go",
+              "backend/internal/platform/orgapi/redact.go",
+              "backend/internal/modules/orgaccess/domain/coverage.go",
+              "backend/internal/modules/orgaccess/adapters/http/account.go",
+              "backend/internal/modules/organization/adapters/http/ownership_transfer.go",
+              "backend/internal/modules/companysession/adapters/http/http.go",
+              "backend/internal/modules/kernel/org_scope.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/organization/adapters/http/onboarding.go",
+              "backend/internal/modules/organization/application/suspension.go",
+              "backend/internal/modules/orgaccess/adapters/http/gateway.go",
+              "backend/internal/modules/orgcapability/domain/capability.go",
+              "backend/internal/modules/orgaccess/domain/catalog.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/orgaccess/application/authority_queries.go",
+              "backend/internal/modules/orgaccess/application/recorded_periods.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "hunter",
+          "total_byte_budget": 300000
+        }
+      ],
+      "seed": {
+        "line": 43,
+        "path": "backend/internal/modules/organization/adapters/http/suspension_admin.go"
+      }
+    },
+    {
+      "anchors": [
+        {
+          "id": "handler",
+          "line": 49,
+          "path": "backend/internal/modules/contributor/adapters/http/public.go",
+          "purpose": "public list handler declaration",
+          "source_file_sha256": "49c8740e1eb01576a9fd3304f6b1832d6db08399435823aad185985956ab0591"
+        },
+        {
+          "id": "local_middleware_binding",
+          "line": 28,
+          "path": "backend/internal/modules/contributor/adapters/http/public.go",
+          "purpose": "CORS is locally bound to the list route",
+          "source_file_sha256": "49c8740e1eb01576a9fd3304f6b1832d6db08399435823aad185985956ab0591"
+        },
+        {
+          "id": "local_origin_control",
+          "line": 36,
+          "path": "backend/internal/modules/contributor/adapters/http/public.go",
+          "purpose": "CORS origin is compared with the configured origins",
+          "source_file_sha256": "49c8740e1eb01576a9fd3304f6b1832d6db08399435823aad185985956ab0591"
+        },
+        {
+          "id": "shared_admin_middleware_definition",
+          "line": 617,
+          "path": "backend/internal/modules/admin/adapters/http/http.go",
+          "purpose": "shared admin middleware is distinct context and does not prove protection of this public route",
+          "source_file_sha256": "12286a5dd16d3acb2ff124ab56d0ce5d2397924aef8dc13faa0cadf03e01bbbd"
+        }
+      ],
+      "case_id": "public_contributor_list",
+      "runs": [
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "local_middleware_binding",
+                "visible": true
+              },
+              {
+                "id": "local_origin_control",
+                "visible": true
+              },
+              {
+                "id": "shared_admin_middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [],
+            "rendered_bytes": 139967,
+            "rendered_sha256": "51bb7e1916a88e290e347b5c942398b8a53cde73f3cd00a10aafb77bfcc3e137",
+            "selected_file_count": 23,
+            "selected_files": [
+              "backend/internal/modules/contributor/adapters/http/public.go",
+              "backend/internal/modules/contributor/adapters/http/common.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/contributor/adapters/http/admin.go",
+              "backend/internal/modules/contributor/adapters/http/user.go",
+              "backend/internal/modules/contributor/application/profile.go",
+              "backend/internal/modules/contributor/domain/ids.go",
+              "backend/internal/modules/contributor/domain/login.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/contributor/application/claims.go",
+              "backend/internal/modules/contributor/application/service.go",
+              "backend/internal/modules/contributor/domain/claim.go",
+              "backend/internal/modules/contributor/domain/profile.go",
+              "backend/internal/modules/contributor/domain/snapshot.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/platform/httpapi/respond.go"
+            ]
+          },
+          "gained_anchor_ids": [],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "local_middleware_binding",
+                "visible": true
+              },
+              {
+                "id": "local_origin_control",
+                "visible": true
+              },
+              {
+                "id": "shared_admin_middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [
+              "backend/internal/modules/account/application/accounts.go",
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 150595,
+            "rendered_sha256": "3af20e6fe614541cbdad73c94372a5cefd097a2aa2b0eace13f082a8b8a02363",
+            "selected_file_count": 25,
+            "selected_files": [
+              "backend/internal/modules/contributor/adapters/http/public.go",
+              "backend/internal/modules/contributor/adapters/http/common.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/account/application/accounts.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/contributor/adapters/http/admin.go",
+              "backend/internal/modules/contributor/adapters/http/user.go",
+              "backend/internal/modules/contributor/application/profile.go",
+              "backend/internal/modules/contributor/domain/ids.go",
+              "backend/internal/modules/contributor/domain/login.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/contributor/application/claims.go",
+              "backend/internal/modules/contributor/application/service.go",
+              "backend/internal/modules/contributor/domain/claim.go",
+              "backend/internal/modules/contributor/domain/profile.go",
+              "backend/internal/modules/contributor/domain/snapshot.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/platform/httpapi/respond.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "verifier",
+          "total_byte_budget": 160000
+        },
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "local_middleware_binding",
+                "visible": true
+              },
+              {
+                "id": "local_origin_control",
+                "visible": true
+              },
+              {
+                "id": "shared_admin_middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [],
+            "rendered_bytes": 139967,
+            "rendered_sha256": "51bb7e1916a88e290e347b5c942398b8a53cde73f3cd00a10aafb77bfcc3e137",
+            "selected_file_count": 23,
+            "selected_files": [
+              "backend/internal/modules/contributor/adapters/http/public.go",
+              "backend/internal/modules/contributor/adapters/http/common.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/contributor/adapters/http/admin.go",
+              "backend/internal/modules/contributor/adapters/http/user.go",
+              "backend/internal/modules/contributor/application/profile.go",
+              "backend/internal/modules/contributor/domain/ids.go",
+              "backend/internal/modules/contributor/domain/login.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/contributor/application/claims.go",
+              "backend/internal/modules/contributor/application/service.go",
+              "backend/internal/modules/contributor/domain/claim.go",
+              "backend/internal/modules/contributor/domain/profile.go",
+              "backend/internal/modules/contributor/domain/snapshot.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/platform/httpapi/respond.go"
+            ]
+          },
+          "gained_anchor_ids": [],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "local_middleware_binding",
+                "visible": true
+              },
+              {
+                "id": "local_origin_control",
+                "visible": true
+              },
+              {
+                "id": "shared_admin_middleware_definition",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [
+              "backend/internal/modules/account/application/accounts.go",
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 150595,
+            "rendered_sha256": "3af20e6fe614541cbdad73c94372a5cefd097a2aa2b0eace13f082a8b8a02363",
+            "selected_file_count": 25,
+            "selected_files": [
+              "backend/internal/modules/contributor/adapters/http/public.go",
+              "backend/internal/modules/contributor/adapters/http/common.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/account/application/accounts.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/modules/admin/adapters/http/http.go",
+              "backend/internal/modules/admin/domain/admin.go",
+              "backend/internal/modules/admin/application/grants.go",
+              "backend/internal/modules/admin/application/service.go",
+              "backend/internal/modules/contributor/adapters/http/admin.go",
+              "backend/internal/modules/contributor/adapters/http/user.go",
+              "backend/internal/modules/contributor/application/profile.go",
+              "backend/internal/modules/contributor/domain/ids.go",
+              "backend/internal/modules/contributor/domain/login.go",
+              "backend/internal/modules/entitlement/domain/catalog.go",
+              "backend/internal/modules/entitlement/domain/grant.go",
+              "backend/internal/modules/contributor/application/claims.go",
+              "backend/internal/modules/contributor/application/service.go",
+              "backend/internal/modules/contributor/domain/claim.go",
+              "backend/internal/modules/contributor/domain/profile.go",
+              "backend/internal/modules/contributor/domain/snapshot.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/platform/httpapi/respond.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "hunter",
+          "total_byte_budget": 300000
+        }
+      ],
+      "seed": {
+        "line": 49,
+        "path": "backend/internal/modules/contributor/adapters/http/public.go"
+      }
+    },
+    {
+      "anchors": [
+        {
+          "id": "handler",
+          "line": 29,
+          "path": "backend/internal/modules/mapdata/http.go",
+          "purpose": "assertion handler declaration",
+          "source_file_sha256": "df323893392c7218bc807207b2aa914852166f68d94f22ed447ac83b9f7c7239"
+        },
+        {
+          "id": "upstream_handler_binding",
+          "line": 301,
+          "path": "backend/cmd/api/main.go",
+          "purpose": "composition root registers this handler",
+          "source_file_sha256": "ee37d36b65a7910c9456f56c3242b1e534f5a80eb990e2b87549b6e82fdd00ea"
+        },
+        {
+          "id": "local_cursor_validation",
+          "line": 91,
+          "path": "backend/internal/modules/mapdata/http.go",
+          "purpose": "handler validates signed cursor before reading the store",
+          "source_file_sha256": "df323893392c7218bc807207b2aa914852166f68d94f22ed447ac83b9f7c7239"
+        }
+      ],
+      "case_id": "map_assertions",
+      "runs": [
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": false
+              },
+              {
+                "id": "local_cursor_validation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [],
+            "rendered_bytes": 117308,
+            "rendered_sha256": "e33b7df9ecc0ed80b2b04a31c323c11db0aea80607cc1aa73678963675077e91",
+            "selected_file_count": 18,
+            "selected_files": [
+              "backend/internal/modules/mapdata/http.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/mapdata/store.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/kernel/org_scope.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/platform/mapcontract/prepared.go",
+              "backend/internal/modules/mapdata/static_overlay.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/platform/mapcontract/mapcontract.go"
+            ]
+          },
+          "gained_anchor_ids": [
+            "upstream_handler_binding"
+          ],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": true
+              },
+              {
+                "id": "local_cursor_validation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 123081,
+            "rendered_sha256": "eba06a8a8da3fbde9ad1ea30d5c81b24d34fefcf430b0b0edd2d8c943c0df643",
+            "selected_file_count": 19,
+            "selected_files": [
+              "backend/internal/modules/mapdata/http.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/mapdata/store.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/kernel/org_scope.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/platform/mapcontract/prepared.go",
+              "backend/internal/modules/mapdata/static_overlay.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/platform/mapcontract/mapcontract.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "verifier",
+          "total_byte_budget": 160000
+        },
+        {
+          "forward": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": false
+              },
+              {
+                "id": "local_cursor_validation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [],
+            "rendered_bytes": 117308,
+            "rendered_sha256": "e33b7df9ecc0ed80b2b04a31c323c11db0aea80607cc1aa73678963675077e91",
+            "selected_file_count": 18,
+            "selected_files": [
+              "backend/internal/modules/mapdata/http.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/mapdata/store.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/kernel/org_scope.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/platform/mapcontract/prepared.go",
+              "backend/internal/modules/mapdata/static_overlay.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/platform/mapcontract/mapcontract.go"
+            ]
+          },
+          "gained_anchor_ids": [
+            "upstream_handler_binding"
+          ],
+          "investigation": {
+            "anchor_visibility": [
+              {
+                "id": "handler",
+                "visible": true
+              },
+              {
+                "id": "upstream_handler_binding",
+                "visible": true
+              },
+              {
+                "id": "local_cursor_validation",
+                "visible": true
+              }
+            ],
+            "omitted_candidate_count": 0,
+            "omitted_candidates_first_30": [],
+            "omitted_candidates_not_listed": 0,
+            "partial_files": [
+              "backend/cmd/api/main.go"
+            ],
+            "rendered_bytes": 123081,
+            "rendered_sha256": "eba06a8a8da3fbde9ad1ea30d5c81b24d34fefcf430b0b0edd2d8c943c0df643",
+            "selected_file_count": 19,
+            "selected_files": [
+              "backend/internal/modules/mapdata/http.go",
+              "backend/internal/platform/httpapi/respond.go",
+              "backend/internal/modules/mapdata/store.go",
+              "backend/cmd/api/main.go",
+              "backend/internal/platform/httpapi/cursor.go",
+              "backend/internal/modules/kernel/org_scope.go",
+              "backend/internal/modules/kernel/station_name.go",
+              "backend/internal/platform/mapcontract/prepared.go",
+              "backend/internal/modules/mapdata/static_overlay.go",
+              "backend/internal/platform/httpapi/decode.go",
+              "backend/internal/platform/httpapi/development_storage.go",
+              "backend/internal/platform/httpapi/doc.go",
+              "backend/internal/modules/kernel/cnpj.go",
+              "backend/internal/modules/kernel/condition.go",
+              "backend/internal/modules/kernel/doc.go",
+              "backend/internal/modules/kernel/enterprise_access.go",
+              "backend/internal/modules/kernel/price.go",
+              "backend/internal/modules/kernel/time_zone.go",
+              "backend/internal/platform/mapcontract/mapcontract.go"
+            ]
+          },
+          "lost_anchor_ids": [],
+          "per_file_byte_budget": 40000,
+          "role_budget": "hunter",
+          "total_byte_budget": 300000
+        }
+      ],
+      "seed": {
+        "line": 29,
+        "path": "backend/internal/modules/mapdata/http.go"
+      }
+    }
+  ],
+  "comparison": {
+    "anchor_selection": "four manually selected real Go handler cases; exact source-line visibility, not a representative accuracy sample",
+    "baseline_api": "entry_point_code",
+    "candidate_api": "investigation_code",
+    "engine_changed_during_probe": false,
+    "visibility_rule": "the actual numbered source line must occur verbatim in the matching file excerpt; file inclusion alone is insufficient"
+  },
+  "engine_source_sha256": {
+    "crates/context/src/defenses.rs": "06127b2a75f2b0e223b1b689d763a4486548c266db290fd85e163af6218b923c",
+    "crates/context/src/files.rs": "41b1a5849f575ca73b20d7a534d3a839525ae6cfbc527cd61fb538e239befb86",
+    "crates/context/src/registration.rs": "043c7af10bdd1f6f7d5880bdd38e4014c1aa683877846045392decca07aed57d",
+    "crates/context/src/related.rs": "a407fd93155b7c2a198151837d17b7ff3f75b57ebeae824d9c3c57fa5c89a05a",
+    "crates/context/src/selection.rs": "746ff85ee9046db610b954a40fc9b9576ecb42c308d12066c3557dbc715894e0"
+  },
+  "provenance": {
+    "api_cost_usd": "0.00",
+    "production_contacted": false,
+    "provider_calls": 0,
+    "recall_denominator": null,
+    "target_code_executed": false,
+    "target_tests_executed": false,
+    "vulnerability_accuracy_measurement": false
+  },
+  "schema_version": 1,
+  "target": {
+    "archive_regular_file_count": 7413,
+    "archive_skipped_nonregular_file_count": 0,
+    "commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "repository": "https://github.com/AlexandreZanata/Abastevo",
+    "safe_index_file_count": 7407,
+    "safe_index_file_kinds": {
+      "Config": 43,
+      "Doc": 1211,
+      "Other": 1303,
+      "Secret": 1,
+      "Source": 4849
+    },
+    "snapshot_scope": "full exact-commit archive, regular files only"
+  }
+}
