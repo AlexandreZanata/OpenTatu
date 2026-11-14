@@ -55,8 +55,23 @@ record; use references in team configuration. Resolve only an explicitly registe
 with required context, structured-output and tool/runtime capabilities. Reject unknown
 capabilities rather than assuming every “compatible” API behaves identically. Default
 deny new models, data classes and remote destinations. The composition root reads secrets;
-config contains credential references, never keys. Mobile can choose only approved
-bindings and must not receive the provider key.
+config contains credential references, never keys. The ZaturoBot bot/app may present
+only approved bindings through a future authenticated service contract; it never receives
+OpenTatu's provider key or overrides purpose, scope, provider eligibility or budgets.
+
+Under ADR-0038, OpenTatu remains the service and ZaturoBot owns client presentation.
+The bot's own model/task system is not an OpenTatu provider grant or a replacement for
+OpenTatu's orchestrator/accounting. Existing ZaturoBot credentials cannot select arbitrary
+models, send incident data to a different provider or invoke response tools. Q-040 must
+define the narrow integration principal and trusted owner context; see the
+[integration plan](ZATUROBOT_INTEGRATION_PLAN.md). No runtime telemetry is shared with a
+bot-side model merely because it arrived through a conversation.
+
+The inspected ZaturoBot model/tool path is scoped to bounded public-coding diagnostics.
+Keep OpenTatu management data outside that path by default. A sanitized service view is
+still disclosure to an additional system and requires an approved field policy; ordinary
+chat routing must not turn it into a model prompt. ZaturoBot coding-provider consent and
+OpenTatu Audit-role consent each remain insufficient for runtime incident material.
 
 Routing order: purpose/data eligibility -> model allowlist -> capability/context bounds ->
 shared budget reservation -> provider circuit state -> incident priority -> dispatch.

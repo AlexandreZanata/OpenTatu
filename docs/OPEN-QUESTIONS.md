@@ -147,6 +147,10 @@ authorize implementation, deployment or a production action.
 - **Context:** the custom Android app and defensive execution could delay useful monitoring.
 - **Answer:** prioritize read-only monitoring and Android alerts through an existing
   transport; deliver the custom Kotlin Multiplatform application later (owner).
+- **Superseding answer (2026-11-14):** the owner will not create an OpenTatu app.
+  OpenTatu is a service integrated later into ZaturoBot and its existing bot/application.
+  Read-only monitoring stays first; S3 plans minimal alerts through that integration,
+  S7 plans authenticated management. ADR-0038 supersedes the standalone KMP direction.
 
 ## Q-017 — Expansion entry gate and original phase 10 mapping
 - **Status:** answered (2026-11-13) · **Blocks:** nothing
@@ -171,14 +175,17 @@ authorize implementation, deployment or a production action.
 - **Working interpretation:** document the classes and expiration events only; no real data
   collection or deletion policy is enabled. Preserve all current append-only triggers.
 
-## Q-019 — Android transport, fallback and external watchdog
+## Q-019 — ZaturoBot alert delivery, fallback and external watchdog
 - **Status:** open · **Blocks:** Sentinel S3
-- **Context:** Q-016 selects an existing transport approach, not a service. Android device
-  services, VPN reachability, notification metadata and independent outage detection matter.
-- **Options:** authenticated existing Android transport such as ntfy, tested on the actual
-  device, plus an approved independent critical channel; or another standard service.
-- **Working interpretation:** compare candidates with synthetic payloads; no account,
-  subscription, external message, watchdog or automation is created during planning.
+- **Context:** ADR-0038 selects ZaturoBot as the future bot/app integration, without
+  selecting a delivery protocol or proving OpenTatu support in its current service registry.
+  Q-040 must define handoff/ACK compatibility; independent monitor-outage detection remains.
+- **Options:** a bounded authenticated ZaturoBot handoff with durable acknowledgments and
+  approved independent critical fallback/watchdog; or an explicitly reviewed alternative
+  while that integration is unavailable. No default ntfy/FCM/APNs integration is selected.
+- **Working interpretation:** synthetic contract/availability tests first. Do not conflate
+  OpenTatu queued, ZaturoBot accepted, app synchronized and owner acknowledged states;
+  no external message, account or watchdog is created by this documentation change.
 
 ## Q-020 — Resource envelope, traffic, thresholds and numeric caps
 - **Status:** open · **Blocks:** Sentinel S1–S3 load acceptance
@@ -190,7 +197,7 @@ authorize implementation, deployment or a production action.
 - **Working interpretation:** use synthetic fixtures only; reject unbounded resource growth.
 
 ## Q-021 — Source credentials, remote owner access and recovery
-- **Status:** open · **Blocks:** Sentinel S1 authenticated ingress; S7 mobile exposure
+- **Status:** open · **Blocks:** Sentinel S1 authenticated ingress; S3/S7 service detail exposure
 - **Context:** current dashboard authentication is absent; VPN alone is insufficient.
   Q-005 requires password + TOTP + short sessions before non-loopback owner access.
 - **Options:** scoped revocable source tokens over VPN/TLS and owner password/TOTP sessions
@@ -198,6 +205,10 @@ authorize implementation, deployment or a production action.
   alternative with an ADR explicitly superseding any conflicting existing requirement.
 - **Working interpretation:** keep current loopback-only behavior; no remote bind until
   relevant authentication, rotation, revocation and recovery tests pass.
+- **ZaturoBot addendum:** the integration principal, authenticated owner and enrolled app
+  device are distinct. ZaturoBot's existing credentials do not automatically authenticate
+  an OpenTatu owner or authorize actions. Q-040 defines delegation/attribution and transport;
+  any alternative to Q-005's remote-owner controls requires an accepted superseding ADR.
 
 ## Q-022 — Runtime telemetry and provider eligibility
 - **Status:** open · **Blocks:** Sentinel S5 AI calls; S8 provider selection
@@ -246,13 +257,15 @@ authorize implementation, deployment or a production action.
   detector is permitted to invent proof or close an Audit finding.
 
 ## Q-027 — Android devices, distribution, assets and iOS preparation
-- **Status:** open · **Blocks:** Sentinel S7 release
+- **Status:** superseded (2026-11-14) · **Blocks:** nothing in OpenTatu
 - **Context:** supported devices/SDKs, availability of platform push services, distribution,
   brand assets, secure cache and eventual Mac/iOS build ownership are not established.
 - **Options:** Android-first signed test distribution on the owner's device with pinned
   compatible KMP/Compose tooling; shared platform ports and iOS delivery later.
-- **Working interpretation:** the mobile plan proposes modules/wireframes; it does not claim
-  assets or a working app exist. No Android features are added to Abastevo.
+- **Superseding answer:** ADR-0038 removes the standalone OpenTatu client. Device/UI/
+  distribution/toolchain ownership belongs to ZaturoBot's existing application. S7 is a
+  service-integration contract and authorized cross-repository acceptance, not a new
+  OpenTatu KMP/Android/iOS project. Q-021/Q-040 retain identity, sync and recovery gates.
 
 ## Q-028 — Shared AI budgets and Audit versus Sentinel priorities
 - **Status:** open · **Blocks:** Sentinel S5 model admission; S8 fallback expansion
@@ -389,3 +402,34 @@ authorize implementation, deployment or a production action.
   Implement S0.1 only, following the linked contract and preserving every later gate.
   The 16-KiB/128-byte/64-byte bounds govern pure validation; they do not resolve Q-020's
   operational workload/capacity, retention, authentication, IO layout or source permissions.
+
+## Q-039 — Minimal S0.2 manifest and scope semantics
+- **Status:** answered (2026-11-14) · **Blocks:** nothing in S0.2
+- **Context:** S0.1 is delivered. The requested next task needs a concrete declaration,
+  package-version interpretation and initial capability vocabulary; the full protocol
+  example remains proposed and Q-038 approved telemetry bounds only.
+- **Proposal:** [S0.2 contract](sentinel/S0_2_ADAPTER_CONTRACT.md): typed in-memory portable
+  package identity/exact opaque version, protocol 1.0, artifact/source provenance,
+  declared source/event pairs; capabilities `telemetry.emit` and `health.read` only.
+  Exact app/installation/source/stream grants bind the full manifest digest and explicit
+  validity; effective permission is requested ∩ approved ∩ runtime-enabled. No loader,
+  action, new operational limits, authentication or live integration is introduced.
+- **Answer:** the owner approved the proposed minimal contract. Implement pure typed
+  declarations and scope checks only; all loader, operational, authentication and actual
+  ZaturoBot-integration questions retain their later gates. See ADR-0039.
+
+## Q-040 — ZaturoBot service integration contract
+- **Status:** open · **Blocks:** Sentinel S3 handoff and S7 authenticated management
+- **Context:** the owner selected ZaturoBot and its existing bot/application, replacing a
+  new OpenTatu app. Read-only inspection at ZaturoBot commit
+  `2d34f73f50915f9ff71723744dc9554b96ca3469` found fixed typed YoutubeBot/Android service
+  operations, native clients and durable tasks/feed, but no OpenTatu operation registration.
+- **Required decisions:** exact transport/direction and endpoint or process boundary;
+  separate least-privilege integration identity and authenticated owner attribution;
+  permitted read/control verbs, compatibility/version policy, durable operation IDs,
+  cursor/ACK/replay semantics, deployment topology and revocation/recovery. S9/S10 keep
+  separate exact-action approval/reauthentication and execution gates.
+- **Working interpretation:** the [integration plan](sentinel/ZATUROBOT_INTEGRATION_PLAN.md)
+  records observed reusable patterns and proposed contracts only. No route, MCP profile,
+  credential, chat permission, external repository write or production deployment is
+  inferred from selecting the integration project.

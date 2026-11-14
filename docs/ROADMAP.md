@@ -12,12 +12,17 @@ Future expansion planning is recorded in the
 [S0–S11 implementation roadmap](sentinel/SENTINEL_IMPLEMENTATION_ROADMAP.md).
 These are proposals after completion and owner acceptance of Audit phases 0–7; they do
 not advance the phase statuses below or authorize optional phases 8–10. The owner selected
-a separate VPN-accessed Sentinel VPS and a read-only monitoring/Android-alert MVP, with
-the custom mobile client later. Remaining gates are in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+a separate VPN-accessed Sentinel VPS and a read-only monitoring MVP. On 2026-11-14 the
+owner replaced the standalone-client proposal: OpenTatu stays a service managed later
+through [ZaturoBot and its existing bot/application](sentinel/ZATUROBOT_INTEGRATION_PLAN.md).
+S3 covers the minimal alert handoff; S7 covers authenticated service management and
+projections. Remaining transport/authentication gates are in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
 
 Sentinel update (2026-11-13): after original phase 10, the owner requested continuation
 and approved Q-038's [S0.1 contract](sentinel/S0_1_TELEMETRY_CONTRACT.md). S0 is 🟡:
-pure telemetry validation is delivered; `PENDING(phase-S0): S0.2–S0.4 contracts and decisions`.
+pure telemetry validation is delivered. On 2026-11-14 Q-039 approved and S0.2 implemented
+typed portable adapter declarations, exact source/event scopes and current capability
+preflight. `PENDING(phase-S0): S0.3–S0.4 incident/evidence contracts and decisions`.
 S1 and later phases remain separately gated. Current status does not authorize deployment.
 
 | Phase | Status | Scope | Done when |

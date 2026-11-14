@@ -19,7 +19,8 @@ when each document matters.
 | [ROADMAP.md](ROADMAP.md) | You need the current phase and its "done when" criterion |
 | [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) | You hit an ambiguity (check here, then add it if missing) |
 | [opencode-go.md](opencode-go.md) | You work on the LLM provider client (phase 0 research record) |
-| [Sentinel expansion plan](sentinel/SENTINEL_MASTER_PLAN.md) | You review the proposed post-foundation expansion: requirements, adapter contracts, continuous monitoring, MCP, teams, Android client and response gates |
+| [Sentinel expansion plan](sentinel/SENTINEL_MASTER_PLAN.md) | You review the post-foundation service expansion: adapter contracts, monitoring, MCP, teams, ZaturoBot integration and response gates |
+| [ZaturoBot integration plan](sentinel/ZATUROBOT_INTEGRATION_PLAN.md) | You work on the future service-to-bot/application contract; OpenTatu has no standalone mobile client |
 
 - [LAB.md](LAB.md): offline dynamic evidence and QEMU setup.
 - [HOST_INSPECTION.md](HOST_INSPECTION.md): explicit restricted SSH inventory, provisioning,

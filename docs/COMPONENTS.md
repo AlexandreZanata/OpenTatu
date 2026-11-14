@@ -452,3 +452,21 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
   Contract: [S0.1](sentinel/S0_1_TELEMETRY_CONTRACT.md), ADR-0037. CrowdSec SensorAlert
   remains phase-10-specific: its approved action IPs are unsuitable for this minimized
   universal envelope.
+
+## Sentinel S0.2 additions
+
+- Core `AdapterCapability`, `AdapterIdentity`, source-scoped `AdapterEventType` and
+  immutable `AdapterManifest` in `adapter.rs`; validated constructors, canonical sorted
+  sets and full digest via existing serialization/content hashing. The closed vocabulary
+  is `telemetry.emit`/`health.read`; an opaque package version is not a SemVer range.
+- `AdapterBinding` and `AdapterGrant` in `adapter_scope.rs`: exact app/installation/source/
+  stream, issue/revoke via Clock, explicit expiry and current-state
+  `effective_capabilities`/`check_operation`/`check_event`. No global authentication,
+  registry, durable ACK or execution-token claim; current trusted state is caller-supplied.
+- Telemetry read-only `schema_version`/`source`/`event_type`/`category` and shared
+  crate-private `machine_text` reuse the approved grammar without changing the wire schema.
+- `text_enum!` optionally accepts `parse_error = <static Error expression>;` for unknown
+  value/type redaction; default enum diagnostics stay unchanged. Reuse this opt-in rather
+  than duplicating textual enum mappings for untrusted values.
+- Ten synthetic adapter tests reuse the existing telemetry fixture/FixedClock; no new
+  dependency or loader. [Contract](sentinel/S0_2_ADAPTER_CONTRACT.md), ADR-0039.

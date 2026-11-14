@@ -1,34 +1,79 @@
 # Sentinel security model proposal
 
-Status: proposed extension of [the current security model](../SECURITY.md), not implemented controls. Existing R01–R20, accepted ADRs and architecture guardrails remain in force. The owner selected a separate small Sentinel VPS reachable through a VPN and a first useful release of read-only monitoring plus Android notifications through an existing transport. Response execution, remote MCP and the custom mobile client require later accepted gates.
+Status: proposed extension of [the current security model](../SECURITY.md), not implemented
+controls. Existing R01–R20, accepted ADRs and architecture guards remain in force. The
+owner selected a separate small VPN-accessed Sentinel VPS and, on 2026-11-14, ZaturoBot
+as the bot/application surface for the OpenTatu service (ADR-0038). S3's alert handoff and
+S7's fuller integration are planned; no standalone OpenTatu app is built. Exact transport,
+principal/owner attribution and ACK semantics remain Q-040. See the canonical
+[integration plan](ZATUROBOT_INTEGRATION_PLAN.md).
 
 ## Assets, actors and boundaries
 
-Protect provider credentials, adapter/device credentials, incident history, private source findings, telemetry and personal data, action approvals, deployment identities, evidence integrity, notification content and availability of the protected application. The Sentinel itself is a sensitive application and must be auditable as an OpenTatu Audit target.
+Protect provider, adapter and integration credentials, incident history, private source
+findings, telemetry and personal data, approvals, deployment identities, evidence integrity,
+notification content and protected-app availability. ZaturoBot owns device credentials and
+client cache protection; their loss remains an integration threat. The Sentinel itself
+is sensitive and must be auditable as an OpenTatu Audit target.
 
-Actors are the owner, authenticated adapter instances, registered owner devices, authorized development agents, bounded internal investigation roles, the deterministic policy/execution service and notification/provider services. The single-owner model remains; application scope is still required to prevent one protected app's evidence or adapter from accessing another app.
+Actors are the owner, authenticated adapter instances, the scoped ZaturoBot integration
+principal and its authenticated owner clients, authorized development agents, bounded
+internal investigation roles, the deterministic policy/execution service and notification/
+provider services. The single-owner model remains. App scope prevents one protected app's
+evidence, adapter or integration request from accessing another app. The bot is a separate
+trust boundary, not an investigator identity or a replacement policy authority.
 
 Treat analyzed repositories, log entries, metric labels, routes, webhooks, scanner results, peer-agent messages, generated code, MCP tool outputs, external enrichment and model responses as untrusted. An adapter credential proves which adapter submitted data; it does not prove the application host is uncompromised or the reported event is true. A malicious source can send plausible lies and must not obtain action authority through high severity claims.
 
-The selected dedicated VPS separates Sentinel control-plane credentials from Abastevo's production host. Connect through the VPN using narrowly scoped endpoints and credentials. A VPN connection does not replace application authentication. Factory discovery/build environments receive no production, incident-store or response-execution credentials. The notification service and model provider are external data recipients with explicit data minimization rules.
+The selected dedicated VPS separates Sentinel control-plane credentials from Abastevo's
+production host. Connect through the VPN using narrow endpoints/credentials; a VPN does
+not replace application authentication. Factory environments receive no production,
+incident-store or execution credential. ZaturoBot is an additional confidentiality
+boundary: transmit only approved sanitized projections/opaque references, not raw runtime
+evidence. Its ordinary public-coding model/tool path is not authorized for incident data.
+Neither its coding-provider consent nor OpenTatu Audit consent changes Q-022/Q-028 runtime
+eligibility and budgets. Notification/model recipients each need explicit minimization.
 
 ## Preserve existing controls
 
 Reuse the current `Secret` wrapper, masked output, strict prompt rendering, untrusted-content fences, exact-commit snapshots, immutable event log and service-layer transactions. Keep the dashboard's Host/Origin protections, escaping, CSP and no-JavaScript design. Keep SQL out of interfaces and process execution out of agent tools.
 
-The current dashboard only permits loopback and has no remote owner authentication. Existing documentation of TOTP, short sessions and VPN deployment does not establish an implemented login system. Implement and test authentication before enabling owner remote access or mobile APIs. Browser CSRF/session protections and API token authentication require different checks; do not broadly disable Origin middleware to accommodate a native client.
+The current dashboard permits loopback and has no remote owner authentication. Keep it
+and the CLI as local operational support. TOTP/session/VPN documentation does not establish
+implemented authentication. Q-005's owner authentication requirements remain unless an
+accepted ADR explicitly supersedes them; a ZaturoBot login alone does not do so. Test
+service integration authentication and delegated owner authorization before remote detail
+access or control. Its future facade is not permission to rebind existing dashboard
+routes. Browser CSRF/session protections and service token authentication need distinct
+checks; do not broadly disable Origin middleware for bot/app integration.
 
 The existing process restriction has a documented hardened-git exception in snapshots (ADR-0020), in addition to isolated scanner containers. This exception is not authority for the Factory to execute arbitrary build scripts. New execution infrastructure needs an accepted design and explicit guardrail ownership. Existing scanner isolation flags are a starting point, not a complete Factory sandbox specification.
 
 ## Authentication and least privilege
 
-Bind credentials to purpose and audience: telemetry ingestion, Factory development, Investigation MCP, Audit fixing MCP, owner device access and future response execution. Require explicit application/environment scope. Verify audience, issuer where applicable, expiry, revocation and capabilities at the service use case as well as at transport dispatch. Model-supplied application IDs cannot override the authenticated scope.
+Bind credentials to purpose and audience: telemetry ingestion, Factory development,
+Investigation MCP, Audit fixing MCP, ZaturoBot service integration and future execution.
+Require explicit app/environment/operation scope. Verify audience, issuer where applicable,
+expiry, revocation and capabilities at services and transport dispatch. Separately verify
+any delegated owner context according to Q-021/Q-040; model/client-supplied app, actor,
+device, session or authentication-strength fields cannot override authenticated scope.
 
 Adapter registration verifies owner control, capabilities and endpoint identity before activation. Choose and document authenticated transport and token/certificate lifecycle during the contract gate; do not invent a custom signing protocol. If event signatures are needed for buffered/untrusted hops, cover canonical versioned content, source identity, stream epoch, sequence and key ID and use an established library/format. TLS alone and per-event signatures solve different threats; neither establishes truth on a compromised source host.
 
-Store only verifier material for opaque tokens where practical; keep private keys/tokens protected by local permissions and the selected secret storage mechanism. Rotate and revoke per adapter/device without replacing all credentials. Record registration, grants, rotations, revocations and rejected capability escalation without logging credentials. Test stale credentials after revocation and reconnect.
+Store verifier material for opaque tokens where practical; protect keys/tokens through
+local permissions and reviewed secret storage. Rotate/revoke each adapter or integration
+credential independently. ZaturoBot owns client-device/session revocation; OpenTatu must
+reject revoked integration authority and any invalid delegated owner context. Record
+registration, grants, rotations, revocations and denied escalation without credentials.
+Test stale credentials after revocation and reconnect across both systems.
 
-Owner pairing must occur through an already-authenticated path or a short-lived, single-use challenge confirmed on the trusted Sentinel instance. The custom mobile client later needs secure platform credential storage, device list/revocation, lock-screen privacy and reauthentication for sensitive approvals. Losing a device cannot grant indefinite incident access. Define an offline owner recovery procedure; recovery itself is auditable.
+Owner-to-integration binding must use an already-authenticated path or a reviewed short-
+lived, single-use confirmation on a trusted service. Q-021/Q-040 choose the concrete
+delegation, reauthentication and recovery contract. ZaturoBot clients retain the secure
+platform storage, lock-screen privacy, session/device revocation and cache requirements
+of the former mobile plan; this repository does not build those clients. Losing a device
+or compromising the bot cannot grant indefinite access or self-assert approval strength.
+Recovery and integration re-enrollment are auditable and cannot bypass response limits.
 
 ## Telemetry input and privacy
 
@@ -84,7 +129,13 @@ The first useful release exposes no production action executor. Future releases 
 
 The candidate action lifecycle below includes evaluation, cancellation, uncertain effects and rollback failure. Define allowed transitions once in core and record every transition transactionally with an event. Keep notification acknowledgment separate from action approval.
 
-An approval is single-use and bound to the exact proposal/action digest, owner/device identity, policy version, target, parameters and expiry. Execution rechecks approval validity, revocation, application scope, current policy, target identity and preconditions immediately before dispatch. Changes invalidate approval and require a new proposal. A push notification, conversational “yes” without a bound action, stale mobile screen or agent-to-agent message is not authorization.
+An approval is single-use and bound to the exact proposal/action digest, authenticated
+owner context, verified integration/session provenance, policy, target, parameters and
+expiry. Device provenance is used only where verified by the chosen contract, never
+fabricated from chat. Execution rechecks validity, revocation, app scope, current policy,
+target identity and preconditions immediately before dispatch. Changes require a new
+proposal. A bot reply, notification tap/ACK, conversational “yes”, stale client screen or
+agent message is not authorization. Only OpenTatu admits and consumes the exact grant.
 
 Use an outbox/operation record with a stable idempotency key and a scoped external executor credential. External effects are not atomically committed with SQLite; after timeout/restart, reconcile using operation ID and observed target state before retrying. Record unknown outcome when it cannot be determined. Claiming exactly-once execution across the network would be misleading.
 
@@ -92,17 +143,30 @@ Bound targets, duration/TTL, affected subjects, parameter ranges, concurrency, c
 
 An owner override is recorded as R20 `OWNER_DECISION` with justification. It does not transform a model into a privileged executor or allow an unsigned request to bypass authentication. Changes to a fixed capability boundary require an explicit owner policy/configuration change and review under the accepted security design, not a chat-generated shell command. Reconcile any more permissive interpretation of R20 through a spec decision before response implementation.
 
-## Notifications and mobile channels
+## ZaturoBot delivery and client projections
 
-Select an existing Android-capable notification transport for the read-only MVP. Verify its authentication, delivery semantics, outage behavior, privacy and retention in the notification phase; do not hardcode a guessed provider or send secrets in a provider payload. Use generic alert text, incident reference and severity with deeper content fetched through authenticated owner access where possible.
+S3 plans a minimal authenticated alert handoff through the OpenTatu outbox; Q-040 must
+select actual transport, durable ACK/replay and integration scope. The existing ZaturoBot
+Youtube/Android contracts do not supply OpenTatu capabilities. Use safe generic text,
+opaque incident references, priority and freshness; fetch approved detail only through
+authenticated scoped access. Privacy/retention and the fallback/watchdog remain explicit
+decisions, not inferred from the selected bot/app owner.
 
-Store send attempt, provider acceptance, device delivery when supported, owner read and owner acknowledgment as distinct states. Retry transient failures with bounded backoff and deduplication; surface permanent failure and stale channel health. Critical alerts have deterministic fallback content during model outages. Select any fallback channel explicitly; do not silently send private incidents to a newly chosen service.
+Store OpenTatu queued/attempted, ZaturoBot durably accepted, observable client sync and
+owner read/acknowledgment separately; unknown remains unknown. Retry transient failures
+with bounded backoff/deduplication and surface permanent failure or stale health. Critical
+content remains deterministic without models. An independent approved watchdog must
+detect failures that can silence both OpenTatu and ZaturoBot; neither can be its own only
+outage notifier. Do not silently disclose incidents to a new fallback recipient.
 
-Custom KMP mobile later needs authenticated fetch, pagination/cursor sync, offline read
-cache protection, device revocation, notification deep-link authorization and a separate
-approval API. The initial mobile client does not queue offline approvals: it requires
-fresh online state and authentication. Never embed provider, production or executor
-credentials in the app or notification actions.
+S7 plans authenticated projections, pagination/cursor replay, reconnect, cache privacy,
+revocation and contextual navigation through ZaturoBot's existing bot/app. UI/platform
+implementation belongs in its separately authorized repository task. Sensitive decisions
+need fresh online state and approved reauthentication; clients do not queue offline
+approvals. OpenTatu's provider, production and executor credentials are never transferred
+to the bot/app or an inline notification action. Its feed cannot replace OpenTatu's
+policy, history or budgets, and ordinary model-assisted chat cannot process incident
+projections without a separately approved runtime data-sharing policy.
 
 ## Availability, host security and recovery
 
@@ -180,15 +244,24 @@ Proposal content is immutable after generation of `action_digest`. Updating evid
 
 Separate an immutable `ActionDecision` from its optional execution grant. The decision
 requires `schema_version`, `decision_id`, `proposal_id`, `action_digest`, `application_id`,
-authenticated `owner_actor`, `device_id`, `session_id`, `authentication_strength`,
+authenticated `owner_actor`, verified integration/session provenance, `authentication_strength`,
 `policy_version`, server `decided_at`, `decision` (`APPROVE | REJECT | REQUEST_INFORMATION`)
 and `decision_event_id`. Only `APPROVE` may create an `Approval` grant, which additionally
 requires `approval_id`, `decision_id`, server `approved_at`/`expires_at`, one-time `nonce`
 and `state` (`ACTIVE | CONSUMED | REVOKED | EXPIRED`). Rejection and information requests
 have a null grant reference and can never be consumed for execution. A bounded
 `justification` is required by owner-override policy and available otherwise. Only
-authenticated owner context supplies owner/device/session fields; clients cannot
-self-assert authentication strength.
+verified owner context supplies owner/session fields; integration requests must also
+retain their verified service-principal provenance. Device provenance is included only
+when the chosen ZaturoBot contract can verify it; it cannot be fabricated to fill a
+required field. Q-021/Q-040 must resolve this illustrative field set before it becomes
+a wire schema. A bot credential alone is not an authenticated owner decision, and clients
+cannot self-assert authentication strength.
+
+OpenTatu decision/approval times remain Clock-assigned even when ZaturoBot uses another
+timestamp representation for its task/feed. Q-040 must explicitly define any ISO-offset/
+UTC-millisecond conversion and precision; external message time cannot set proposal
+expiry, authorization freshness or execution ordering.
 
 An approval stores its exact permitted target/parameter digest and granted capability scope; it is neither a bearer action token copied into a notification nor a reusable permission grant. Claiming it for execution atomically checks state/expiry/revocation and transitions `ACTIVE -> CONSUMED` in the same transaction that creates the execution intent and immutable authorization event. A consumed approval never becomes active again. Provider timeout or restart does not create a second authorization. New action attempts beyond reconciliation need a new proposal/approval. Reject stale `expected_revision` and return current state without executing.
 
@@ -258,10 +331,11 @@ This register maps concrete trust failures to implementation checks and owner ga
 - **TH-03 — Factory workspace escape/supply-chain code:** actor controls repository/build dependency; boundary is development sandbox to host. Mitigate with disposable isolation, pinned provenance, no host secrets/socket and restricted downloads. Test hooks, symlinks, traversal, network escape and scripts. Residual risk: sandbox/kernel/toolchain vulnerabilities remain. Owner gate: execution/runtime ADR and reviewed installation artifact.
 - **TH-04 — MCP capability confusion:** actor is a compromised development/investigation agent; boundary is distinct MCP profiles and service scopes. Mitigate with separate registries/audiences/environments and scoped service authorization. Test wrong-audience and cross-profile tokens plus parameter-based scope escalation. Residual risk: same-owner host compromise can defeat process environment separation. Owner gate: remote transport and privilege boundaries.
 - **TH-05 — Data exfiltration/provider disclosure:** actor is malicious source/agent/provider; boundary is persistence/export/model/notification output. Mitigate with minimization, egress/data-class policy, masking and minimized notification payload. Test secret canaries in all outputs and policy-denied provider calls. Residual risk: approved external recipients can retain permitted metadata under their terms. Owner gate: runtime-data/provider/notification disclosure policy.
-- **TH-06 — Message/approval replay or stale action:** actor controls a device/session/request replay; boundary is owner intent to execution. Mitigate with fresh authentication, digest binding, nonce, server expiry, atomic single-use consumption and preflight. Test duplicate approval, altered scope/parameters, offline-stale approval and revocation race. Residual risk: a fully compromised unlocked owner device may act as the owner until revoked. Owner gate: reauthentication/recovery and response allowlist.
+- **TH-06 — Message/approval replay or stale action:** actor controls a client, bot/session or request replay; boundary is verified owner intent to execution. Mitigate with fresh owner authentication, trusted integration attribution, digest binding, nonce, server expiry, atomic single-use consumption and preflight. Test duplicate approval, forged owner provenance, altered scope/parameters, offline-stale approval and revocation race. Residual risk: a compromised unlocked client or trusted owner session may act as the owner until revoked. Owner gate: delegation/reauthentication/recovery and response allowlist.
 - **TH-07 — Response creates denial of service:** actor is mistaken/compromised agent or malicious stimulus; boundary is recommendation to production effect. Mitigate with read-only MVP, reviewed bounded playbooks, target TTL, protected admin paths, health guards and rollback. Test false-positive block, rollback failure and lost Sentinel connectivity. Residual risk: an approved bounded action can still degrade availability. Owner gate: per-playbook blast radius, expiry and independent recovery.
 - **TH-08 — Unknown external effect after crash/timeout:** actor is a network/system failure; boundary is SQLite intent to external effect. Mitigate with operation identity, effect reconciliation and unknown state. Test restart at every dispatch/result commit boundary. Residual risk: a target without idempotency/readback may prevent reliable reconciliation and is ineligible for automatic execution. Owner gate: executor target capability and operator recovery plan.
 - **TH-09 — Event/cost/resource storm:** actor is attacker, buggy adapter or agent loop; boundary is bounded resource admission. Mitigate with quotas, durable cursors, budget reservations, turn caps, priority capacity and explicit loss accounting. Test saturation/invalid batches/delegation cycles/provider fallback loops. Residual risk: sufficiently large traffic can exceed a small VPS; monitoring becomes visibly degraded. Owner gate: hardware/workload/caps and alert latency targets.
 - **TH-10 — History/evidence tampering or unsafe expiry:** actor is buggy component, local attacker or retention job; boundary is evidence bytes versus permanent decision history. Mitigate with append-only transitions, digests, access policy, expiry events and consistent backups. Test unauthorized mutation, missing evidence, expiry and restore. Residual risk: local root can change database/files and evidence expiry reduces later verifiability. Owner gate: accepted R04 retention interpretation and data durations.
-- **TH-11 — Silent Sentinel/source/notification outage:** actor is a host/network/storage failure; boundary is monitoring health to owner awareness. Mitigate with source freshness, processing/outbox health and an external watchdog in a separate failure domain. Test the Sentinel VPS offline from outside it and notification transport failure. Residual risk: shared network/provider outages may affect primary and fallback channels. Owner gate: independent watchdog/fallback service and disclosure choices.
-- **TH-12 — Host/device/key compromise:** actor gains restricted or root access; boundary is runtime/OS/credential storage. Mitigate with separate VPS, restricted service user, VPN/auth, per-source/device revocation, encrypted backups, patching and recovery drills. Test a synthetic lost-device/revoked-source recovery and backup restore. Residual risk: host root can read process memory and defeat in-process controls; no false claim of protection after full host compromise. Owner gate: host hardening, key custody, backup and incident recovery policy.
+- **TH-11 — Silent Sentinel/source/integration outage:** actor is a host/network/storage failure; boundary is monitoring health to owner awareness. Mitigate with source freshness, processing/outbox/handoff health and an approved external watchdog in a separate failure domain. Test OpenTatu offline, ZaturoBot offline, lost durable ACK and shared transport failure independently. Residual risk: shared hosts, networks or providers may silence primary and fallback channels; bot acceptance is not owner delivery. Owner gate: independent watchdog/fallback, topology and disclosure choices.
+- **TH-12 — Host/client/integration-key compromise:** actor gains restricted or root access; boundary is runtime/OS/credential storage across OpenTatu and ZaturoBot. Mitigate with separate protected-app host, restricted service users, VPN/auth, per-source/integration/client revocation, encrypted backups, patching and recovery drills. Test lost-client/revoked-integration/revoked-source recovery and backup restore. Residual risk: host root can read memory and defeat in-process controls; an offline stolen client may retain authorized cached data. Owner gate: host hardening, key custody, cache privacy, backup and recovery policy.
+- **TH-13 — ZaturoBot confused deputy:** actor controls chat, a generic model/task credential or the bot integration process; boundary is external request to OpenTatu authority. Mitigate with a dedicated audience/scope, verified owner attribution, separate read/analysis/approval/execution admission and no shared provider/executor credentials. Test generic credentials on integration routes, spoofed owner/session/strength, ungranted operations and a bot message posing as an approval. Residual risk: a compromised integration can misuse its legitimate read scope until revoked. Owner gate: Q-021/Q-040 service contract, delegation and revocation policy.

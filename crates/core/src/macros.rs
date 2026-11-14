@@ -7,8 +7,11 @@
 
 /// Declares an enum whose canonical text representation is defined exactly once.
 ///
-/// Generates: `ALL`, `as_str()`, `Display`, `FromStr` (error [`crate::Error::UnknownValue`]),
-/// `Serialize` and `Deserialize` (as a string). Declaration order defines `Ord`.
+/// Generates: `ALL`, `as_str()`, `Display`, `FromStr` (default error
+/// [`crate::Error::UnknownValue`]), `Serialize` and `Deserialize` (as a string).
+/// Declaration order defines `Ord`. Append `parse_error = <static Error expression>;`
+/// after the enum to sanitize unknown values and serde type errors for untrusted inputs.
+/// Omitting that option preserves the existing diagnostics exactly.
 ///
 /// ```
 /// opentatu_core::text_enum! {
@@ -30,6 +33,7 @@ macro_rules! text_enum {
         pub enum $name:ident {
             $( $(#[$vmeta:meta])* $variant:ident => $text:literal ),+ $(,)?
         }
+        $(parse_error = $parse_error:expr;)?
     ) => {
         $(#[$meta])*
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -61,10 +65,7 @@ macro_rules! text_enum {
             fn from_str(text: &str) -> ::std::result::Result<Self, Self::Err> {
                 match text {
                     $( $text => Ok($name::$variant), )+
-                    _ => Err($crate::Error::UnknownValue {
-                        kind: stringify!($name),
-                        value: text.to_owned(),
-                    }),
+                    _ => Err($crate::text_enum!(@parse_error $name, text $(, $parse_error)?)),
                 }
             }
         }
@@ -83,11 +84,21 @@ macro_rules! text_enum {
             where
                 D: $crate::__serde::Deserializer<'de>,
             {
-                let text =
-                    <::std::string::String as $crate::__serde::Deserialize>::deserialize(deserializer)?;
+                let text = $crate::text_enum!(@decode deserializer, D $(, $parse_error)?);
                 text.parse().map_err(<D::Error as $crate::__serde::de::Error>::custom)
             }
         }
+    };
+    (@parse_error $name:ident, $text:ident, $error:expr) => { $error };
+    (@parse_error $name:ident, $text:ident) => {
+        $crate::Error::UnknownValue { kind: stringify!($name), value: $text.to_owned() }
+    };
+    (@decode $deserializer:ident, $de:ident, $error:expr) => {
+        <::std::string::String as $crate::__serde::Deserialize>::deserialize($deserializer)
+            .map_err(|_| <$de::Error as $crate::__serde::de::Error>::custom($error))?
+    };
+    (@decode $deserializer:ident, $de:ident) => {
+        <::std::string::String as $crate::__serde::Deserialize>::deserialize($deserializer)?
     };
 }
 

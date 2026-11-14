@@ -95,3 +95,23 @@ registration, persistence or incident truth. Reuse these types for later admissi
 not CrowdSec-specific `SensorAlert`. Eight tests are in `telemetry_tests.rs`, fixture in
 `tests/fixtures/telemetry-minimal.json`, generated schema in
 `docs/sentinel/telemetry-v1.schema.json`. Existing workspace schemars is dev-only.
+
+Sentinel S0.2 (ADR-0039/Q-039): `src/adapter.rs` defines validated portable
+`AdapterIdentity`, source-scoped `AdapterEventType`, immutable `AdapterManifest` and the
+closed `AdapterCapability` vocabulary. Canonical sorted declarations reject duplicates;
+the complete manifest digest binds every requested permission and source/version field.
+`src/adapter_scope.rs` owns exact `AdapterBinding` and private `AdapterGrant`. Each check
+recomputes requested/approved/runtime intersection against current caller-supplied state,
+exact manifest/binding and Clock validity; no grant or result is an execution credential.
+Grant issue/revocation uses Clock, explicit expiry has no invented maximum, and revoked
+grants never reactivate. Event admission checks source/event/category tuples plus exact
+app/installation/source/stream. `telemetry.rs` shares its existing label/reference grammar
+crate-privately and adds read-only getters without changing the S0.1 wire schema.
+`adapter_tests.rs` uses synthetic in-memory declarations and existing telemetry fixtures.
+No loader/Deserialize, registry/authentication, installation or external-client authority
+is introduced; the caller must load current trusted grants before every policy check.
+
+`text_enum!` supports an optional trailing `parse_error = <static Error expression>;`
+for input-safe enum diagnostics. AdapterCapability uses it to sanitize both unknown
+values and serde type errors without duplicating enum mappings. Enums omitting the option
+retain their original UnknownValue and serde diagnostics; regression tests cover both.

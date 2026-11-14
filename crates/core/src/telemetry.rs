@@ -214,9 +214,25 @@ impl TelemetryInput {
     pub fn observed_at(&self) -> Option<Timestamp> {
         self.0.observed_at
     }
+    /// Structurally validated protocol label; compatibility still needs configured policy.
+    pub fn schema_version(&self) -> &str {
+        &self.0.schema_version
+    }
+    /// Declared source claim, to be matched against trusted installation configuration.
+    pub fn source(&self) -> &str {
+        &self.0.source
+    }
+    /// Declared event type; it cannot enlarge an installation's manifest permissions.
+    pub fn event_type(&self) -> &str {
+        &self.0.event_type
+    }
+    /// Declared category, checked together with source and event type.
+    pub fn category(&self) -> &str {
+        &self.0.category
+    }
 }
 
-fn machine_text(s: &str, max: usize, lowercase: bool) -> bool {
+pub(crate) fn machine_text(s: &str, max: usize, lowercase: bool) -> bool {
     let start = |b: &u8| {
         if lowercase {
             b.is_ascii_lowercase()

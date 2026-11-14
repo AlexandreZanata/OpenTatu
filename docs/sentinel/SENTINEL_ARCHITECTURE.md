@@ -5,7 +5,13 @@ Kickoff update (2026-11-13): original phases 0–10 are delivered; Q-017/Q-038 a
 the narrow S0.1 pure foundation. Its implementation adds no crate, production dependency
 or architecture edge. Proposed layouts below remain gated by the existing workflow.
 
-The owner selected a separate small Sentinel VPS connected to protected applications through a VPN. The first useful release is read-only monitoring with Android alerts through an existing notification transport; the custom Kotlin Multiplatform client follows later. These decisions define the delivery order below. The exact provider, device pairing, resource envelope and retention durations still need phase-specific decisions.
+The owner selected a separate small Sentinel VPS connected to protected applications
+through a VPN. On 2026-11-14 the owner selected ZaturoBot as the bot/application surface
+for managing OpenTatu as a service (ADR-0038); a separate OpenTatu mobile application is
+no longer planned. S3 provides the minimal read-only alert handoff; S7 provides fuller
+authenticated service management and projections. The exact integration transport,
+delegated owner identity and ACK contract remain Q-040 decisions. Canonical scope:
+[ZaturoBot integration](ZATUROBOT_INTEGRATION_PLAN.md).
 
 ## Existing foundations and boundaries
 
@@ -17,7 +23,13 @@ phase 3 plus uncommitted phase 4. Current kickoff HEAD is
 MCP operational. Factory and Investigation MCP profiles remain unimplemented. CrowdSec's
 scoped observations/responses are not a universal authenticated Sentinel ingest protocol.
 
-Keep a modular monolith: one Rust executable, SQLite WAL, Tokio tasks, embedded prompts/templates/migrations and a server-rendered administrative dashboard. Additional invocations of the same executable may provide distinct MCP profiles. Kotlin Multiplatform is a separate native client. No Kubernetes, broker, Redis, Elasticsearch or PostgreSQL is required for Sentinel; the protected application's PostgreSQL is not Sentinel's datastore.
+Keep a modular monolith: one Rust executable, SQLite WAL, Tokio tasks, embedded
+prompts/templates/migrations and the existing server-rendered local administrative
+dashboard and CLI. Additional invocations of the same executable may provide distinct
+MCP profiles. ZaturoBot owns client code, platform storage and distribution in its own
+repository; no `mobile/`, Gradle/KMP or iOS project is added to OpenTatu. No Kubernetes,
+broker, Redis, Elasticsearch or PostgreSQL is required for Sentinel; the protected
+application's PostgreSQL is not Sentinel's datastore.
 
 Domain entities, typed IDs, states and deterministic rules belong in `opentatu-core`; SQL and migrations belong exclusively in `opentatu-db`; use cases belong in `opentatu-services`; interfaces remain thin. Reuse `Clock`, `Timestamp`, `Secret`, `Actor`, events, app identity, validated Audit findings and evidence references. Existing interface crates keep their currently allowed edges. This proposal names logical components rather than adding crate dependencies. Any new infrastructure port, crate, process capability or dependency edge needs an accepted ADR and the repository's dependency recipe before implementation.
 
@@ -29,7 +41,7 @@ or dependency in this planning change. Per-phase paths in the roadmap refine thi
 
 ```text
 apps/opentatu/                         [extend] same executable and composition root
-  src/config.rs                       source/device/provider credential references
+  src/config.rs                       source/integration/provider credential references
   src/cli.rs, src/commands/            scoped future Sentinel and MCP profile commands
 crates/core/                          [extend] all domain contracts and pure policies
   src/telemetry.rs, adapter.rs         universal input/event/manifest/capability types
@@ -51,8 +63,9 @@ crates/worker/src/sentinel/            [extend] bounded scheduling, no interface
   teams.rs, response.rs                delegation, reconciliation, verification/TTL
 crates/mcp/src/                       [extend] thin tools calling services
   factory/, investigation/             separate profiles; retain phase-5 fixing tools
-crates/dashboard/src/                 [extend] owner views and authenticated API
-  pages/, view/, api/sentinel/         HTML and REST/SSE remain thin service adapters
+crates/dashboard/src/                 [extend] existing local owner views
+  pages/, view/                       reuse service-backed HTML projections
+future integration facade             [proposal] placement/transport under Q-023/Q-040
 crates/dashboard/templates/           [extend] reuse components/ui.html macros
 crates/llm/, investigator/             [extend] existing provider/role path and fakes
 crates/memory/, reports/              [extend] pure incident views/provenance as needed
@@ -64,7 +77,7 @@ crates/responses/                     [new proposal] typed target IO at S10 only
 config/sentinel.toml                  [new proposal] bounded source/rule/queue policies
 config/adapters/                      [new proposal] curated manifests/templates
 prompts/                              [extend] versioned runtime-role contexts
-mobile/                               [new proposal] independent KMP project at S7
+external ZaturoBot repository          [later authorized task] bot/app presentation
 docs/recipes/                         [future] adapter/lab/recovery maintenance recipes
 ```
 
@@ -88,10 +101,10 @@ native plugins. A future executable bridge needs explicit packaging and sandbox 
 
 ```mermaid
 flowchart TB
-    Owner[Owner Android device]
+    Owner[Owner using ZaturoBot clients]
     Dev[Authorized coding agent]
     Provider[Configured model provider]
-    Push[Selected notification transport]
+    Push[ZaturoBot alert handoff]
     subgraph AppHost[Protected application host]
         App[Abastevo services]
         Sensor[Restricted telemetry adapter]
@@ -116,7 +129,7 @@ flowchart TB
     end
     Sensor -->|Authenticated read-only telemetry over VPN| VPN
     VPN --> Monolith
-    Owner -->|Authenticated owner access over VPN| VPN
+    Owner -->|Authenticated delegated owner requests over VPN| VPN
     Dev -->|Development-only credentials| FactoryMCP
     Monolith -->|Minimized permitted context| Provider
     Monolith -->|Opaque alert and reference| Push
@@ -125,7 +138,22 @@ flowchart TB
 
 Arrows represent proposed logical contracts, not new `architecture.toml` edges or implemented network transports. MCP stdio remains appropriate for local agent sessions. Remote MCP is a separate gated ADR; neither a public MCP endpoint nor public dashboard exposure is implied. Never host the Factory's build/test workspace with production credentials. The Factory can consume released schemas/templates without connecting to the live incident store.
 
-A VPN is an access restriction, not application authentication. Register source adapters and owner devices independently; scope tokens to application, adapter, environment, operation and expiry. Keep provider keys on the Sentinel service side. Mobile receives authenticated projections, never the provider key.
+A VPN is an access restriction, not application authentication. Register source adapters
+and the ZaturoBot integration principal independently; scope credentials to audience,
+application, environment, operation and expiry. Q-040 defines how authenticated owner
+context is verified across that external trust boundary; a bot/client identity label is
+not proof. ZaturoBot owns its device/session lifecycle, while OpenTatu independently
+checks delegated owner authority and integration revocation. Keep provider/executor keys,
+security policy, budgets, approvals and execution on the OpenTatu service side. The
+bot/app receives only authorized projections and request results.
+
+Treat that output as disclosure across an additional confidentiality boundary. ZaturoBot's
+ordinary model/tool path for public-coding diagnostics does not gain access to runtime
+incidents. Apply an approved field policy to sanitized service projections and opaque
+references; runtime model disclosure/consent and shared budgets keep their own gates.
+OpenTatu Clock timestamps remain authoritative for its history and approvals; Q-040
+defines any cross-project timestamp-unit/precision conversion rather than reusing
+external feed time as an approval clock.
 
 ## Deterministic runtime and AI-assisted runtime
 
@@ -158,7 +186,12 @@ Detection consumes durable, ordered processing cursors and records rule version,
 
 The Incident Engine correlates within explicit application and rule/fingerprint scopes. Retain separate concepts for suspicious signal, active investigation, probable attack, confirmed compromise, false positive and operational issue. A lifecycle such as open/investigating/contained/resolved is separate from the confidence classification. Resolution of a runtime incident does not close an Audit finding.
 
-The Notification Engine reads a transactional outbox and sends deterministic critical alert text if no model is available. Persist attempts, next attempt, transport receipt where supported, delivery state and owner acknowledgment separately. Device receipt and owner acknowledgment are different facts. Alert aggregation and escalation reduce storms without suppressing distinct critical incidents.
+The Notification Engine reads a transactional outbox and hands off deterministic safe
+alert content to ZaturoBot even if every model is unavailable. Persist attempts, retry
+state, durable integration ACK, observable client synchronization and owner acknowledgment
+separately; none implies another. Q-040 defines actual transport/ACK semantics. Alert
+aggregation reduces storms without suppressing distinct critical incidents. An approved
+watchdog must also detect failures outside the shared OpenTatu/ZaturoBot failure domain.
 
 ## Time and event identity
 
@@ -174,7 +207,14 @@ hints, not authorization credentials.
 
 ## Persistence and retention
 
-Candidate domain aggregates are application capability grants, adapter registrations/versions, normalized telemetry, detection rule versions/runs, incidents, evidence references, investigation tasks, agent profiles, conversation messages, action proposals/approvals/executions, devices and notification attempts. Define these once in core; store them through dedicated db repository modules and services. Avoid copying full Audit artifacts into each incident: reference app, exact audited commit, finding ID, deployed commit and evidence provenance.
+Candidate domain aggregates are application capability grants, adapter registrations/
+versions, normalized telemetry, detection rule versions/runs, incidents, evidence
+references, investigation tasks, agent profiles, conversation messages, action proposals/
+approvals/executions, integration identities/revocations and notification attempts. Define
+these once in core and store them through db repositories and services. ZaturoBot's feed
+and UI cache are projections, not duplicate incident or approval authorities. Avoid copying
+full Audit artifacts into each incident: reference app, exact audited commit, finding ID,
+deployed commit and evidence provenance.
 
 Use short write transactions, bounded batches and indexed cursor reads. Suggested index access paths are application/time, application/event type/time, incident/evidence, task status/next-run, and outbox status/next-attempt. Validate them with `EXPLAIN QUERY PLAN` and workload measurements during implementation. Do not create one immutable domain-history row for every raw access-log line by default.
 

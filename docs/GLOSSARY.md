@@ -96,3 +96,11 @@ Sentinel S0.1 vocabulary: **Telemetry input** is the bounded untrusted producer 
 (`TelemetryInput`); **Telemetry event** is structurally validated data with Clock-assigned
 receipt (`TelemetryEvent`). Neither is a permanent ledger Event, authenticated source
 claim, durable ingestion acknowledgment or Audit Finding. Source time stays untrusted.
+
+Sentinel S0.2 vocabulary: **Adapter identity** describes a portable package/version and
+declared artifact/source provenance (`AdapterIdentity`); **Adapter manifest** is its
+immutable source/event/capability declaration (`AdapterManifest`). **Adapter binding** is
+the trusted configured app/installation/source/stream tuple (`AdapterBinding`); **Adapter
+grant** is a pure Clock-valid permission record whose effective labels require current
+requested/approved/runtime intersection (`AdapterGrant`). None is an authenticated sender,
+installed adapter, durable registry record or reusable execution credential.

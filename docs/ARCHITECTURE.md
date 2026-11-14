@@ -292,3 +292,19 @@ retry. Continuous `monitor run` is explicit and only reconciles already approved
 Dashboard/CLI history reuse services; no new MCP tools, crates or architecture edges.
 Migration 0011 and the private bounded HTTP boundary are described in ADR-0036 and
 [MONITORING.md](MONITORING.md). Established sensor/bouncer deployment stays owner-managed.
+
+## Sentinel pure foundation and service direction
+
+S0.1's bounded telemetry envelope and S0.2's portable adapter declarations/configured
+scope/grants live only in core. They reuse Slug, Timestamp/Clock, source Severity and
+existing content hashing. Every grant check evaluates supplied current manifest/binding/
+capabilities and Clock; no loader, authenticated registry, durable receipt, migration,
+new runtime dependency or IO edge is introduced. See ADR-0037/0039 and the
+[adapter contract](sentinel/S0_2_ADAPTER_CONTRACT.md).
+
+ADR-0038 makes OpenTatu the security service, with future management/presentation in
+ZaturoBot's existing bot/application. Existing local dashboard/CLI remain operational
+support; no standalone OpenTatu native client is planned. The separate
+[integration boundary](sentinel/ZATUROBOT_INTEGRATION_PLAN.md) must preserve service-owned
+policy/history/budgets/approvals and independently authenticate delegated owner requests.
+Current delivery/transport/remote-identity behavior remains proposed under Q-040.

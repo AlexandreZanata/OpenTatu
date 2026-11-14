@@ -12,6 +12,12 @@ tasks to external coding agents over MCP. Single owner, no SaaS, no multi-user.
 Stack: Rust (edition 2024) + SQLite, **one local binary**, server-rendered dashboard, no
 JavaScript, no Node/Postgres. Priorities: lightweight, fast, local and private.
 
+OpenTatu is the security service. Future owner management and notifications use
+[ZaturoBot and its existing bot/application](docs/sentinel/ZATUROBOT_INTEGRATION_PLAN.md).
+Do not create a standalone OpenTatu mobile/client project. The current local dashboard
+and CLI remain operational support. Service policy, history, budgets and approvals stay
+in OpenTatu; integration transport and delegated owner identity require their own gate.
+
 ## Sources of truth (look here before deciding anything)
 
 | Question | Where |

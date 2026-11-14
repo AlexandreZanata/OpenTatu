@@ -1,15 +1,18 @@
 # OpenTatu Sentinel expansion master plan
 
-Planning baseline: 2026-11-12. Status update (2026-11-13): original Audit phases 0–10 are
+Planning baseline: 2026-11-12. Status update (2026-11-14): original Audit phases 0–10 are
 delivered; the owner requested continuation and approved the narrow [S0.1 contract](S0_1_TELEMETRY_CONTRACT.md)
-in Q-038. Pure telemetry validation is implemented; the remainder is still proposed.
+in Q-038. Pure telemetry validation and Q-039's adapter/scope contracts are implemented;
+S0.3 and later work remain proposed. ADR-0038 records the ZaturoBot service direction.
 Historical observations below describe the dated planning baseline, not current HEAD.
 Planning never authorizes installation, application changes or production access.
 
 OpenTatu will retain its code-audit foundation and add continuous read-only monitoring,
-deterministic incident detection and Android alerts first. Bounded AI investigation,
-adapter development through MCP, security teams, a separate Kotlin Multiplatform client,
-multiple providers and individually approved defensive playbooks follow incrementally.
+deterministic incident detection and a minimal alert handoff to ZaturoBot first. Bounded
+AI investigation, adapter development through MCP, security teams, authenticated service
+management through ZaturoBot's existing bot/application, multiple providers and individually
+approved defensive playbooks follow incrementally. ADR-0038 replaces the standalone
+OpenTatu-client proposal; this repository remains the security service.
 Evidence, permissions and deterministic policy remain authoritative throughout.
 
 ## Reading order and sources of truth
@@ -33,7 +36,8 @@ Read progressively rather than loading every document into every coding-agent ta
 6. [Factory MCP](ADAPTER_FACTORY_MCP.md): development tools, isolation and portability.
 7. [Security teams](SECURITY_AGENT_TEAMS.md): identities, tasks, conversation bus and memory.
 8. [Provider architecture](AI_PROVIDER_ARCHITECTURE.md): model/runtime separation and budgets.
-9. [Mobile plan](MOBILE_KMP_PLAN.md): screens, authentication, sync, alerts and offline use.
+9. [ZaturoBot service integration](ZATUROBOT_INTEGRATION_PLAN.md): inspected baseline,
+   service boundary, authenticated management, projections, delivery and replay.
 
 Each topic has one canonical home above. These documents describe future files; inline
 code paths are proposals, not claims that those files already exist. Add new reusable
@@ -42,10 +46,12 @@ components to the catalog when implemented, not as if they exist today.
 ## Owner choices recorded during planning
 
 The owner selected a separate small Sentinel VPS accessed through a VPN; read-only
-monitoring plus Android alerts through an existing transport as the first useful release;
+monitoring plus alerts as the first useful release;
 and a proposed retention split with permanent minimized incident history and expiring raw
-telemetry/sensitive evidence. The custom app comes later. Exact transport, retention
-periods, VPS sizing and policies still need review before their implementation.
+telemetry/sensitive evidence. On 2026-11-14 the owner removed the standalone OpenTatu
+app: future management/presentation belongs to ZaturoBot and its existing bot/application.
+S3 targets minimal alert handoff; S7 targets full authenticated management. Exact transport,
+delegated owner identity, retention periods, VPS sizing and policies still need review.
 
 These choices authorize this plan's direction. Proposed ADR-0026–0029 document the design
 consequences; they do not relax current guards or grant production access. Remaining
@@ -85,7 +91,7 @@ Present and reusable, with tests in source:
 - Existing LLM router/client/fake, privacy allowlist, usage port, strict prompt rendering,
   fencing and validated role output. Reuse all of them for runtime investigations.
 - Existing Askama pages/macros and CSS tokens. Retain the JavaScript-free administrative
-  dashboard; a native Android client does not change that constraint.
+  dashboard; external ZaturoBot clients do not change that constraint.
 - Working-tree phase 4 investigation, evidence, findings, dedup, comparison, reports and
   per-audit guard in `crates/worker`, `services`, `memory`, `reports` and core. Existing
   tests include `r05_r14_r18_full_investigation_produces_findings_report_and_coverage`
@@ -163,27 +169,27 @@ triggers do not provide root-compromise protection.
 
 ## Sequencing and release definitions
 
-The conservative interpretation of “initial phases” is complete, owner-approved Audit
-phases 0–7. This plan does not declare that gate met or start phase 5. Original phases
-8–10 retain their explicit-request rule. Sentinel S phases refine the future monitoring
-and defense scope without marking original phase 10 implemented or enabling dynamic/host
-inspection. Resolve the exact mapping at the S0 kickoff gate.
+Original phases 0–10 are delivered and the owner approved Sentinel kickoff in Q-017.
+S0.1 is implemented; Q-039 authorizes S0.2's pure adapter/scope contracts. S0.3–S0.4 and
+later S phases remain separately gated. Original optional-phase authorization is not
+reused as permission for Sentinel collection, integration deployment or broader response.
 
 - **S0:** contracts, deployment/data budgets, decisions and threat model.
 - **S1:** read-only Abastevo collector/bridge, authenticated ingestion, spool and retention.
 - **S2:** deterministic detection, incidents, visibility state and dashboard projections.
-- **S3:** durable notifications and tested Android delivery; first monitoring MVP.
+- **S3:** durable notifications and a tested ZaturoBot alert handoff; first monitoring MVP.
 - **S4:** bounded Factory MCP and synthetic second-adapter portability proof.
 - **S5:** scoped Investigation MCP plus one Investigator, gated by data/provider policy.
 - **S6:** bounded coordinator/Investigator/Skeptic team and persistent conversation views.
-- **S7:** separate Android KMP client, authentication, resumable sync and offline reading.
+- **S7:** authenticated ZaturoBot service management, scoped projections and resumable sync.
 - **S8:** second approved provider, capability routing and shared budget/fallback proof.
 - **S9:** typed defensive proposals, authenticated approval and simulation only.
 - **S10:** one explicitly approved reversible playbook, measured in a lab before any canary.
 - **S11:** second real owner-authorized app integrated through Factory without engine edits.
 
 S0 establishes authentication/credential-policy prerequisites and S1 authenticates ingestion;
-S3 does not wait for mobile authentication UX or a model. S5 enforces shared reservations
+S3 requires its narrow authenticated delivery contract, not S7's complete management UI
+or a model. S5 enforces shared reservations
 before first AI use; S8 broadens providers rather than postponing cost guards. S4 proves
 synthetic portability early; S11 proves real-world portability. Initial incident detection
 may describe aggregate signals with limited confidence until typed security emitters exist.
@@ -193,11 +199,13 @@ when another authorized app is available; no response capability needs to be ena
 
 MVP acceptance is one authorized read-only integration in a disposable lab demonstrating
 bounded ingest, deterministic incidents, replay/restart safety, loss-of-visibility alerts
-and Android delivery while all AI providers are off. A production canary requires a
+and ZaturoBot alert delivery while all AI providers are off. A production canary requires a
 separate reviewable installation package and approval. A lab-ready release does not itself
 authorize deploying to Abastevo.
 
-Deferred: simultaneous iOS delivery; complex team editing; autonomous defense; irreversible
+Removed from OpenTatu scope: standalone KMP/Android/iOS applications and their build,
+branding, distribution or platform-push implementation. Those client concerns belong to
+ZaturoBot. Deferred: complex team editing; autonomous defense; irreversible
 credential revocation; broad host inspection; generic network scanning; every sensor type;
 CLI agent runtimes; public remote MCP; multi-user/SaaS/billing; heavy distributed services.
 
@@ -208,7 +216,7 @@ The VPS size and actual event rate are unknown. Propose a benchmark profile of 2
 and 1,000/second overload rejection. Proposed acceptance hypotheses for the steady profile:
 Sentinel RSS at most 256 MiB excluding audit scanners/builds/local models; average CPU at
 most 25% of one core; p95 receipt-to-incident at most 2 seconds; durable notification intent
-within 5 seconds. Provider/mobile-network delivery latency is measured separately, with
+within 5 seconds. Integration/app-network delivery latency is measured separately, with
 unknown delivery represented explicitly. None is a measured capability today.
 
 At 10 events/second and 1 KiB normalized payload, payload alone is about 0.86 GB/day
@@ -339,35 +347,40 @@ mentioning it in this plan does not mean it has been implemented.
 
 - **SREQ-055** · §9 · Next: formal action lifecycle includes proposed/evaluating/awaiting approval/approved/rejected/executing/executed/verifying/verified/failed/rolled back/expired with explicit legal transitions; acceptance: execution cannot skip policy/authorization and retry cannot reuse authorization.
 - **SREQ-056** · §9 · MVP/Next: MVP is read-only plus simulation or separately approved exact changes; acceptance: no production-mutating tool is available merely because a model proposed it.
-- **SREQ-057** · §§9,17,18 · Next: mobile approval binds authenticated owner/device/session, exact action digest, app/target, parameter set, policy version, preconditions, expiry and one-time nonce; acceptance: altered/expired/replayed/cross-app/offline-stale approvals are rejected atomically.
+- **SREQ-057** · §§9,17,18 · Next: approval through ZaturoBot binds a separately authenticated owner, integration principal and session/device context, exact action digest, app/target, parameters, policy version, preconditions, expiry and one-use nonce; acceptance: OpenTatu atomically rejects altered/expired/replayed/cross-app/offline-stale approvals; bot/model text is not authorization.
 - **SREQ-058** · §9 · Later: optional preauthorized automation is narrowly allowlisted, reversible, capped, timed and revocable; acceptance: runtime recomputes policy at execution and emergency stop/TTL/rollback protects administrative access and availability.
 - **SREQ-059** · §§9,18 · Later: deterministic Response Executor owns typed allowlisted operations, preflight/simulation, idempotency, effect recording, verification and compensating rollback; acceptance: unknown outcome after timeout is reconciled before retry; no arbitrary production shell.
 - **SREQ-060** · §9 · Later: candidate playbooks include temporary rate limits/origin blocks/integration suspension and existing proxy/WAF controls; credential revocation needs separate irreversible-operation policy; acceptance: each shipped playbook proves safe rollback and owner access preservation in a lab.
 - **SREQ-061** · §§9,18 · Later: protect against false-positive defense causing denial of service; acceptance: allowlisted admin paths/subjects, health guards, blast-radius limits, circuit breaker and expiry are tested under attack and error conditions.
 
-### Mobile application and conversation API
+### ZaturoBot service management and conversation projections
 
-- **SREQ-062** · §10 · Next: independent OpenTatu KMP application, Android first, iOS-compatible shared domain/network/persistence; acceptance: no security features added to Abastevo Android and platform-specific services are abstracted.
-- **SREQ-063** · §10 · Next: evaluate Compose Multiplatform, modular architecture, local cache/degraded offline, secure auth, accessibility and internationalization; acceptance: Android acceptance build and architecture record explain platform/library choice without claiming simultaneous iOS delivery.
-- **SREQ-064** · §10 · Next: visual system reuses available OpenTatu assets; navy/teal, contrast, minimal armadillo, clear professional UI; acceptance: no fabricated existing assets or literal WhatsApp copy; accessibility labels/type scaling/contrast tested.
-- **SREQ-065** · §10A · Next: conversation list shows avatar/name/last message/time/status/unread/priority; acceptance: ordering, unread cursors and reconnect are deterministic and scoped.
-- **SREQ-066** · §§10B–C · Next: general team room and individual agent conversations support owner questions and relevant bounded answers; acceptance: only assigned relevant agents respond and ordinary chat does not create action authority.
-- **SREQ-067** · §10D · Next: incident rooms show structured cards, timeline, hypotheses, evidence, conclusions, proposals, approvals and results; acceptance: cards use server records rather than parsing agent prose.
-- **SREQ-068** · §10E · Next: applications view shows monitoring/heartbeat, alerts/incidents, adapters, team, history, collector state, latest Audit and known findings; acceptance: freshness and coverage gaps are visible.
-- **SREQ-069** · §10F · Next: approval center displays exact action/app/requester/evidence/risk/impact/duration/reversibility/false-positive risk/expiry; acceptance: approve, reject and request-information paths require authenticated fresh state and satisfy SREQ-057.
-- **SREQ-070** · §10G–H · Next/Later: team/provider screens initially view status and configure only authorized providers/models; complex role/permission customization is deferred; acceptance: phone never stores provider/infrastructure secrets in shared plain storage.
-- **SREQ-071** · §17 · Next: model Message, Command, Event, Task, Incident, Evidence, Approval, ToolResult and Notification separately; acceptance: conversations project these models and cannot replace task/policy authority.
-- **SREQ-072** · §17 · Next: authenticated REST handles queries/commands and SSE or WebSocket handles active updates; acceptance: choose transport by ADR and support history replay/resume cursor, state updates, messages, investigation, task follow-up, approval, cancellation and auditing.
-- **SREQ-073** · §§11,15M,17 · Next: persistent sync survives disconnect, bounded replay, pagination, deduplication, expired cursors and server reset; acceptance: reconnect neither duplicates messages/approvals/notifications nor authorizes stale offline actions.
-- **SREQ-074** · §§10,17,18 · Gate/Next: remote API authentication, device enrollment/revocation, secure session/token storage, TLS and authorization precede remote exposure; acceptance: current loopback dashboard is not publicly exposed by default, and phone cannot directly administer production.
+SREQ-062–074 retain their IDs for traceability. ADR-0038 supersedes their former
+standalone KMP-client ownership; service contracts belong here and client changes belong
+to a later authorized ZaturoBot task. The presentation/identity/privacy/replay guarantees
+remain requirements rather than disappearing with the removed application scaffold.
+
+- **SREQ-062** · §10; ADR-0038 · Next: OpenTatu is a service managed through ZaturoBot and its existing bot/application; acceptance: no standalone OpenTatu mobile project is created, no Abastevo client is changed, and the future integration has an explicit versioned service contract.
+- **SREQ-063** · §10; ADR-0038 · Next: reuse ZaturoBot-owned client architecture/tooling for authenticated projections, bounded cache, degraded offline state and accessibility; acceptance: current compatible revisions and cross-repository checks are documented without introducing KMP/Gradle/iOS delivery into OpenTatu.
+- **SREQ-064** · §10; ADR-0038 · Next: service views use ZaturoBot-owned components, branding, localization and accessibility, with clear OpenTatu attribution; acceptance: no separate OpenTatu app asset/build pipeline or unverified palette is required, and external UI changes receive their own authorized tests.
+- **SREQ-065** · §10A · Next: OpenTatu supplies scoped conversation identity/name/last-event/time/status/unread/priority projections for ZaturoBot; acceptance: ordering, unread cursors and reconnect are deterministic, and external clients label stale data.
+- **SREQ-066** · §§10B–C · Next: team/agent room projections support owner questions and relevant bounded answers through ZaturoBot; acceptance: only assigned agents respond, ordinary chat cannot create authority, and OpenTatu owns task/policy admission.
+- **SREQ-067** · §10D · Next: incident projections supply structured timeline, hypotheses, evidence references, conclusions, proposals, approvals and results to ZaturoBot; acceptance: client cards use service records rather than parsing agent prose and enforce disclosure scope.
+- **SREQ-068** · §10E · Next: application projections expose monitoring/heartbeat, incidents, adapters, team/history/collector state, latest Audit and known findings; acceptance: ZaturoBot views preserve freshness/coverage gaps without receiving production credentials.
+- **SREQ-069** · §10F · Next: ZaturoBot presents exact action/app/requester/evidence/risk/impact/duration/reversibility/false-positive risk/expiry from OpenTatu; acceptance: approve/reject/request-information use fresh authenticated owner context and SREQ-057, with decisions enforced by OpenTatu.
+- **SREQ-070** · §10G–H · Next/Later: scoped team/provider projections expose status and only authorized configuration through ZaturoBot; acceptance: provider/production secrets remain in OpenTatu and unavailable controls are disabled; complex role/permission editing remains deferred.
+- **SREQ-071** · §17 · Next: Message, Command, Event, Task, Incident, Evidence, Approval, ToolResult and Notification remain distinct service records; acceptance: ZaturoBot conversations project these records without replacing task/policy authority or creating a second incident truth.
+- **SREQ-072** · §17 · Next: versioned typed service queries/commands and bounded update/replay transport connect OpenTatu to ZaturoBot; acceptance: Q-040 and an ADR select transport/direction/authentication, with idempotent operation IDs, history cursors, investigation/cancellation and auditing; no endpoint or MCP profile is assumed implemented.
+- **SREQ-073** · §§11,15M,17 · Next: service integration survives disconnect, bounded replay, pagination, deduplication, expired cursors and service reset; acceptance: reconnect duplicates neither notices nor approvals, and stale offline intent is revalidated by OpenTatu.
+- **SREQ-074** · §§10,17,18 · Gate/Next: integration authentication, distinct owner attribution, rotation/revocation, secure client sessions, private transport and recovery precede exposure; acceptance: current loopback guards remain and ZaturoBot/app credentials alone cannot administer OpenTatu or production.
 
 ### Notifications
 
 - **SREQ-075** · §11 · MVP: persistent notification outbox supports critical incidents, major anomalies, app outages, collector/delivery failures, completed investigations, pending approvals, execution/failure and incident closure; acceptance: each domain transition creates deduplicated attributable notification intent.
 - **SREQ-076** · §11 · MVP: priority, rate limiting, grouping, retries, quiet mode for informational events and redundant critical channel; acceptance: quiet mode never suppresses agreed critical signals and retries are bounded and observable.
-- **SREQ-077** · §§11,16S3 · MVP/Next: start with simple verifiable Android notification transport and later native push; acceptance: current provider capabilities/limits/privacy/hosting requirements are researched, with iOS transport abstraction for future APNs.
-- **SREQ-078** · §11 · Next: push carries opaque routing references, not sensitive incident text/credentials; acceptance: tapping opens authenticated app and loads current conversation/incident from server, not unauthenticated inline approval.
-- **SREQ-079** · §11 · MVP/Next: distinguish queued, provider accepted, device synced and owner acknowledged; acceptance: provider acceptance is never represented as device delivery; stale synchronization and unknown delivery are visible within provider limits.
+- **SREQ-077** · §§11,16S3; ADR-0038 · MVP/Next: implement a minimal authenticated notification handoff to ZaturoBot using its reviewed service/client facilities; acceptance: current transport/privacy/delivery/hosting semantics are verified through Q-019/Q-040, with no OpenTatu-owned FCM/APNs client or guessed provider.
+- **SREQ-078** · §11 · Next: handoff/wake messages carry only approved routing references and safe summaries; acceptance: ZaturoBot fetches current authorized details from OpenTatu, and a notification tap or conversational yes cannot approve an action.
+- **SREQ-079** · §11 · MVP/Next: distinguish OpenTatu queued, ZaturoBot accepted, client synchronized and owner acknowledged; acceptance: task/service acceptance never implies app delivery or owner reading, and unknown/stale delivery remains explicit.
 - **SREQ-080** · §§11,18 · MVP: external watchdog detects the monitored VPS's own outage; acceptance: failure of the VPS cannot be the only mechanism responsible for notifying about that outage.
 
 ### Model providers and runtime boundaries
@@ -392,9 +405,9 @@ mentioning it in this plan does not mean it has been implemented.
 
 ### Threat model and verification
 
-- **SREQ-095** · §18 · Gate: threat model adapters, Factory/Investigation/fixing MCP, LLMs, bus, mobile, approvals, providers, telemetry, storage, credentials, response and VPS; acceptance: assets/actors/boundaries/entry points/threats/mitigations/residual risk each have test/owner mapping.
+- **SREQ-095** · §18 · Gate: threat-model adapters, Factory/Investigation/fixing MCP, LLMs, bus, ZaturoBot integration/clients, approvals, providers, telemetry, storage, credentials, response and VPS; acceptance: every boundary has tests/owner gates, including a compromised bot/integration principal.
 - **SREQ-096** · §18 · Gate/Next: cover injection/tool-output injection, exfiltration, event/agent forgery, privilege escalation, message/approval replay and out-of-order events; acceptance: adversarial fixtures fail closed without losing monitoring.
-- **SREQ-097** · §18 · MVP/Next: cover DoS/cost explosion/lost logs/adapter compromise/phone compromise/provider failure/false blocks/VPS compromise; acceptance: bounded resources, revocation, backups/recovery, external visibility and residual single-host compromise limits are explicit.
+- **SREQ-097** · §18 · MVP/Next: cover DoS/cost explosion/lost logs/adapter compromise/ZaturoBot or device compromise/provider failure/false blocks/VPS compromise; acceptance: bounds, independent revocation, backups/recovery, external visibility and shared-failure-domain limits are explicit.
 - **SREQ-098** · §18 · Gate/Next: separate data plane from control plane and trace every executed action; acceptance: model conclusions never equal administrative permission and critical actions require rollback plus outcome verification.
 - **SREQ-099** · §§15A–N,19 · All: reproduce all mandatory scenario tests below with fixtures, expected outcomes, executable commands and responsible phase; acceptance: none are merely claimed passed by this plan.
 
@@ -407,11 +420,11 @@ mentioning it in this plan does not mean it has been implemented.
 - **E — Scanner/collector down** → SREQ-013: visibility gap detected and reported, never safe/zero-threat claim.
 - **F — All AI unavailable** → SREQ-009/087: deterministic ingest/detect/incident/notify continue and investigation marks degraded.
 - **G — Cooperation** → SREQ-046–054: synthetic incident uses coordinator, Investigator and Skeptic with causal messages and bounded calls.
-- **H — Mobile approval** → SREQ-055–061/069: authenticated exact approval accepted once; expired/replayed/modified approvals rejected; initial effect simulated.
+- **H — Delegated owner approval** → SREQ-055–061/069: authenticated exact approval accepted once; expired/replayed/modified approvals rejected; initial effect simulated.
 - **I — Factory adapter** → SREQ-027–034: generated adapter validates and runs without engine changes.
 - **J — Provider swap** → SREQ-046/081–087: identity/history/permissions preserved through provider switch/failure/fallback.
 - **K — Prompt injection** → SREQ-038/096: malicious synthetic log content cannot become privileged instructions.
 - **L — Compromised agent** → SREQ-037/055–061/098: forged/escalated tool/action requests remain blocked deterministically.
-- **M — Mobile reconnect** → SREQ-073/079: disconnect/replay/restart gives ordered deduplicated projections and no duplicate authorization.
+- **M — Integration reconnect** → SREQ-073/079: disconnect/replay/restart gives ordered deduplicated projections and no duplicate authorization.
 - **N — Constrained resources** → SREQ-010–014: controlled load measures RAM/CPU/disk/network/tokens/latency against proposed hypotheses.
 

@@ -1,7 +1,7 @@
 # Sentinel implementation roadmap
 
-Status (2026-11-13): S0 is in progress; its first narrow task S0.1 is implemented under
-Q-017/Q-038 and ADR-0037. S0.2–S11 remain planned. The owner reviews one phase at a time
+Status (2026-11-14): S0 is in progress; S0.1 and S0.2 are implemented under
+Q-017/Q-038/Q-039 and ADR-0037/0039. S0.3–S11 remain planned. The owner reviews one phase at a time
 under [the existing workflow](../WORKFLOW.md). An implementation request never implies
 installation, remote exposure or production changes.
 
@@ -17,9 +17,12 @@ decisions and deployment gates remain open.
 
 The owner has selected a separate small Sentinel VPS accessed through a VPN, an immutable
 minimized incident ledger with expiring raw telemetry/evidence subject to an ADR, and a
-read-only monitoring MVP with alerts to an existing Android transport. The transport,
-retention durations, VPS capacity, deployment details and resource limits remain open.
-These choices do not authorize changing the owner's infrastructure during this planning task.
+read-only monitoring MVP. The owner's 2026-11-14 addendum (ADR-0038) selects ZaturoBot's
+existing bot/app to manage OpenTatu as a service; no standalone OpenTatu client is planned.
+S3 adds a minimal alert handoff and S7 fuller authenticated management/projections under
+the [integration plan](ZATUROBOT_INTEGRATION_PLAN.md). Q-019/Q-040 keep delivery, delegation,
+transport and ACK/replay decisions explicit. Retention, capacity and deployment gates
+remain open; the addendum authorizes no infrastructure or external-repository change.
 
 Execution order:
 
@@ -30,20 +33,20 @@ Execution order:
 5. **S4:** isolated Adapter Factory and synthetic second-adapter portability proof.
 6. **S5:** bounded read-only incident investigation and Investigation MCP.
 7. **S6:** persistent tasks, bounded teams and conversation projections.
-8. **S7:** independent KMP Android application and authenticated synchronization.
+8. **S7:** authenticated ZaturoBot service management and canonical projections.
 9. **S8:** multiprovider expansion with common safety and accounting.
 10. **S9:** defensive proposals, authenticated approvals and simulated execution.
 11. **S10:** explicitly approved reversible real response, tested only in a lab first.
 12. **S11:** second real application integration through Factory.
 
-S1–S3 do not require any LLM, custom mobile application, multiagent team, generic plugin
+S1–S3 do not require any LLM, full S7 management, multiagent team, generic plugin
 execution, real response tool, or Factory. Existing LLM ports are reused at S5; support
 for additional providers is deferred to S8. Security/identity/policy primitives necessary
 for a phase precede that phase even when the richer management UI comes later. S11's real
 application rollout is later, but S4 already proves an adapter can work without Abastevo.
 
 Technical dependencies are narrower than the numbered presentation order: S0 -> S1 ->
-S2 -> S3 -> S4; S5 -> S6 -> S7 extends the investigative/conversational path after S4;
+S2 -> S3 -> S4; S5 -> S6 -> S7 extends the investigative/service-integration path after S4;
 S8 extends providers after that path; S9 -> S10 is the separately gated response path.
 S11 needs S3 and S4 plus second-app authorization, and can be scheduled after S4 without
 implementing or enabling S9/S10. Prefer proving a second real app early when one is
@@ -73,10 +76,11 @@ a test passed when its filter matched zero tests. Full phase acceptance includes
 review specified in [finish-phase](../recipes/finish-phase.md).
 
 **Command status:** `cargo xtask check`, `cargo xtask docs`, `cargo xtask arch`,
-`cargo xtask glossary` and existing crate test commands are available now. The named
-`telemetry`, `sentinel`, Factory, provider-policy and mobile test modules/targets below
-are intended future test locations; they must be implemented by the relevant task before
-those commands constitute validation. No future command is reported as executed here.
+`cargo xtask glossary` and existing crate test commands are available now. Existing
+telemetry tests are available. Other `sentinel`, Factory, provider-policy and
+ZaturoBot integration targets below are intended future locations until implemented by
+their relevant tasks; absent or zero-match commands are not validation. No future command
+is reported as executed here.
 All fixtures are synthetic; real integrations are opt-in and lab-only. No model spend,
 production attacks, production SQL queries or production response operations are tests.
 
@@ -98,7 +102,10 @@ blocking pure S0.1. A question cannot be silently answered by a default in code.
 S0.1 evidence (2026-11-13): approved contract and bounds in Q-038, pure types in
 `crates/core/src/telemetry.rs`, eight nonzero tests and a generated schema fixture.
 `TelemetryEvent` construction is validated and Clock-stamped; it is not an authenticated
-or durable ingest receipt. S0.2–S0.4 remain `PENDING(phase-S0)`; this is not full S0 acceptance.
+or durable ingest receipt. S0.2 evidence (2026-11-14): ten adapter tests exercise typed
+manifests, exact source/event bindings, requested/approved/enabled intersections, Clock
+validity, changed approvals, privacy and second-app portability. S0.1's eight tests and
+wire schema remain unchanged. S0.3–S0.4 are `PENDING(phase-S0)`; S0 is not fully accepted.
 
 **Components and files:** reuse core identifiers/time/errors/masking; proposed
 `crates/core/src/telemetry.rs`, `adapter.rs`, `incident.rs`; core `lib.rs`; linked contracts
@@ -253,64 +260,80 @@ logic change; missing fields generate separate proposed minimal patches. **Resou
 bounded local counters/windows and indexed SQLite reads/writes, zero tokens. **Blocks:**
 unbounded grouping/cardinality, unexplainable severity or false compromise assertions.
 
-## S3 — Alerts and the read-only monitoring MVP
+## S3 — ZaturoBot alert handoff and the read-only monitoring MVP
 
-**Objective and rationale:** give the owner useful Android alerts without waiting for KMP
-or teams, and expose failure of the monitor itself. Requirements: SREQ-009–014, 075–080,
-097–099; scenarios C–F, M delivery replay, N.
+**Objective and rationale:** give the owner useful read-only alerts through the existing
+ZaturoBot bot/app, without waiting for full S7 management, teams or a model. Expose failure
+of OpenTatu and its alert route. Requirements: SREQ-009–014, 075–080, 097–099; scenarios C–F,
+M handoff replay, N. Canonical boundary: [ZaturoBot integration](ZATUROBOT_INTEGRATION_PLAN.md).
 
-**Dependencies:** S2 accepted; select an existing Android notification transport and its
-critical fallback; choose external watchdog failure domain; approve metadata privacy and
-notification policies. None is selected merely by this plan.
-If notification links expose incident details on the VPS, Q-005 owner authentication
-(password/TOTP/short sessions) must be implemented and tested before remote dashboard
-access. Otherwise detailed review stays on the existing loopback-only dashboard through
-an owner-controlled local connection/tunnel; S3 phone alerts contain no private details.
-S7 adds native device enrollment, not permission to defer this earlier exposure gate.
+**Dependencies:** S2 accepted; Q-019/Q-040 select the narrow authenticated delivery,
+durable acknowledgment/replay, approved fallback and independent watchdog contract.
+Approve field minimization, disclosure, retention and Q-020 workload limits. Selecting
+ZaturoBot does not select a transport, endpoint, operation verb or existing capability.
+This minimal handoff does not require full S7 management or external client UI work.
 
-**Components/files:** notification domain in core, proposed `crates/db/src/notifications.rs`,
-`crates/services/src/notifications.rs`, `crates/worker/src/sentinel/notifications.rs`;
-approved notification infrastructure port/implementation; binary configuration;
-existing dashboard status/notification history and operational runbook.
+The integration principal needs its own audience/app/operation scope. If remote incident
+details are accessible, Q-005/Q-021 owner authentication and trusted owner attribution
+must pass before access; VPN membership and bot login alone are insufficient. Otherwise
+details stay on the existing loopback-only dashboard/CLI via owner-controlled access,
+and the handoff carries only approved generic text and opaque references. No existing
+dashboard route is rebound or its Host/Origin guard removed to enable this phase.
 
-**Database/contracts:** durable outbox, unique event/channel dedup key, attempts, retry
-schedule, priority, provider acceptance and available acknowledgment states. Delivery
-contract uses opaque incident routing IDs and safe generic text; provider acceptance
-never means owner/device receipt. External watchdog has no production-admin credential.
+**Components/files:** notification domain in core; proposed
+`crates/db/src/notifications.rs`, `crates/services/src/notifications.rs`,
+`crates/worker/src/sentinel/notifications.rs`; the approved narrow integration IO port,
+binary composition, existing local dashboard delivery history and operational runbook.
+The ZaturoBot consumer/conformance change is a separate authorized repository task.
+
+**Database/contracts:** durable OpenTatu outbox, unique scoped event/handoff identity,
+attempts, retry schedule, priority and explicit acceptance/uncertainty states. Define
+when ZaturoBot ACK follows durable storage, identical/conflicting replay handling and
+bounded reconnect. Distinguish OpenTatu queued/attempted, ZaturoBot durably accepted,
+observable client synchronization and owner acknowledgment; no state proves another.
+OpenTatu Clock times remain authoritative; Q-040 defines any cross-project time conversion.
+The external watchdog has no production-admin credential and is outside a failure domain
+that could silence both OpenTatu and ZaturoBot.
 
 **Atomic tasks:**
-- **S3.1 — Notification outbox.** Transactionally create a single notification intent
-  from a meaningful incident/visibility transition with priority and suppression reason.
-- **S3.2 — Android transport.** Add one selected transport adapter with local fake
-  provider tests, bounded retries/backoff/rate limits and no sensitive notification body.
-- **S3.3 — Delivery and fallback.** Distinguish queued/provider-accepted/synced/acknowledged
-  or unknown as supported; critical fallback, quiet informational mode and stale delivery
-  warnings. Predecessors S3.1–S3.2.
-- **S3.4 — Watchdog and MVP acceptance.** Document separately approved VPN deployment,
-  backup/recovery, external uptime check and kill switch; run synthetic end-to-end replay
-  with every LLM unavailable and stopped collector/monitor in an isolated environment.
-  Split into S3.4a owner-auth/remote-guard tests if remote detail viewing is included,
-  S3.4b isolated watchdog/restore checks, and S3.4c the reviewable MVP acceptance packet.
+- **S3.1 — Notification outbox.** Commit one deduplicated notification intent with a
+  meaningful incident/visibility transition, priority and suppression reason.
+- **S3.2 — Minimal ZaturoBot handoff.** Implement only the approved delivery contract and
+  scoped integration identity, with local fake/conformance fixtures, bounded retries/
+  backoff/rate limits and sanitized fields. Keep data outside ordinary bot model/tool
+  routing; a public-coding credential is not an incident-data or control grant.
+- **S3.3 — Delivery and fallback.** Observe durable ACK, reconnect/replay, client/owner
+  receipt where supported and explicit unknown states. Add the approved independent
+  critical fallback, quiet informational mode and stale-route warnings.
+  Predecessors: S3.1–S3.2.
+- **S3.4 — Watchdog and MVP acceptance.** Present separately approved VPN deployment,
+  backup/recovery and route-disable artifacts; replay synthetic incidents with all models
+  unavailable and stopped source/OpenTatu/ZaturoBot in an isolated environment. Split
+  S3.4a owner-auth/remote-detail guards if included, S3.4b independent watchdog/restore,
+  and S3.4c the reviewable MVP packet.
 
-**Tests:** outbox idempotency/retry schedule/priority unit tests; integration provider
-failure/restart/replay/fallback; security redacted payload, credential leakage, fake
-callbacks and cross-app routing; performance notification storm vs critical-priority
-latency. Watchdog outage test uses a lab instance, never production.
+**Tests:** outbox idempotency, retry/priority and durable-ACK crash windows; integration
+handoff failure, identical/conflicting replay, restart and approved fallback; security
+secret canaries, wrong-audience/revoked credentials, forged callbacks, cross-app routing
+and ordinary bot model-path exclusion. Measure bounded alert-storm behavior against
+approved critical-priority targets. Watchdog tests stop lab instances only.
 
 **Validation:** future `cargo test -p opentatu-db notifications`,
-`cargo test -p opentatu-services notifications`, `cargo test -p opentatu-worker sentinel_notifications`;
-selected transport fixture tests; `cargo xtask check`; an explicitly opt-in lab acceptance
-run documented after the implementation exists.
+`cargo test -p opentatu-services notifications`,
+`cargo test -p opentatu-worker sentinel_notifications`; approved connector and ZaturoBot
+consumer conformance tests; `cargo xtask check`. Document exact cross-repository checks
+only after the selected implementation exists. No app build or test is claimed here.
 
-**Done:** the owner can receive a meaningful read-only Abastevo alert on an existing
-Android transport, see the corresponding durable incident and loss-of-visibility state,
-and observe continued protection without AI; delivery uncertainty and monitor outage are
-observable. This is the first monitoring MVP. **Risk/rollback:** provider outage or alert
-fatigue; pause a transport without deleting its outbox/history, keep local monitoring and
-approved independent critical fallback. **Abastevo impact:** none beyond S1 sources.
-**Resources:** bounded outbound traffic and outbox, zero model calls. **Blocks:** no
-working Android route, sensitive push content, misleading delivery guarantee, no external
-monitor-outage signal or unbounded retry growth.
+**Done:** the owner receives a meaningful read-only Abastevo alert through the authorized
+ZaturoBot route, can inspect its durable incident through approved access, and sees
+source/monitor/handoff visibility loss while every model is unavailable. Delivery
+uncertainty and independent outage reporting are visible. This is the first monitoring
+MVP, not full S7 control. **Risk/rollback:** a failed or noisy integration; pause/revoke
+its route without deleting outbox/history, preserve local monitoring and approved
+independent fallback. **Abastevo impact:** none beyond S1 sources. **Resources:** bounded
+outbound work/outbox, zero model calls. **Blocks:** unapproved Q-019/Q-040 contract, no
+proven ACK/replay, sensitive disclosure, misleading delivery status, shared-only watchdog
+or unbounded retries.
 
 ## S4 — Adapter Factory and portability proof
 
@@ -460,76 +483,99 @@ none. **Resources:** capped concurrent LLM tasks with one incident-wide budget; 
 message history. **Blocks:** message authority confusion, absent aggregate cost cap,
 unbounded loops or unverifiable agent attribution.
 
-## S7 — Independent KMP Android application
+## S7 — Authenticated ZaturoBot service management and projections
 
-**Objective and rationale:** give the owner conversational incident access and explicit
-control from an independent Android app, while preserving the existing dashboard.
-Requirements: SREQ-062–080, 095–099; scenario M; H UI rejection prerequisites only.
+**Objective and rationale:** manage OpenTatu as a service through ZaturoBot's existing
+bot/app, with verified owner attribution and canonical conversation/incident/task views.
+ADR-0038 replaces the standalone-client plan. Preserve OpenTatu's local dashboard/CLI
+and service-owned policy, history, budgets, approvals and execution. Requirements:
+SREQ-062–080, 095–099; scenario M integration reconnect and H authorization prerequisites.
 
-**Dependencies:** S6 accepted; VPN connectivity and secure enrollment/session/token/TLS
-policy approved; mobile API/auth ADR; Android/device assumptions and assets identified.
-No remote endpoint binds publicly by default and current loopback guards remain intact.
+**Dependencies:** S6 accepted; the smaller S3 handoff is already proven and does not wait
+for this phase. Q-021/Q-040 select versioned service scope, integration principal,
+trusted owner delegation/reauthentication, revocation/recovery, compatibility and replay
+semantics. Q-005 remote-owner requirements remain unless explicitly superseded by an
+accepted decision. A VPN, existing bot login or self-asserted actor/session field is not
+enough. External repository work requires a separately authorized task at a refreshed
+pinned ZaturoBot revision; no current generic bot credential gains OpenTatu authority.
 
-**Components/files:** proposed `mobile/` KMP project with shared domain/data/sync,
-Android application, platform push/secure storage modules and future iOS interfaces;
-versioned HTTP API in an approved interface module sharing existing services; binary
-composition and dashboard UI tokens/assets. KMP build tooling is a separate development
-artifact, not a Node or JVM runtime dependency of the Rust server.
+**Components/files:** typed service requests/projections in core, any required state in
+db repositories, authorization/admission in services, and a thin approved integration
+facade with binary composition. Placement and transport follow Q-023/Q-040, not guessed
+REST/MCP routes. Reuse existing local dashboard components for operational support.
+ZaturoBot owns its connector/presentation, native clients, platform cache/secure storage,
+accessibility and release tooling. No OpenTatu mobile, KMP, Gradle or iOS project is added.
 
-**Database/contracts:** devices/revocations, sessions or token metadata, sync cursors,
-notification routes and per-device acknowledgment. Mobile local cache is encrypted as
-required by threat model and contains no provider/infra keys. REST commands/queries plus
-selected SSE/WS transport use stable records/cursors and idempotent command IDs.
+**Database/contracts:** scoped integration identity/grants/revocation, verified owner
+provenance, stable record revisions, bounded cursors/pages, idempotent request identity
+and observable delivery state. OpenTatu keeps canonical domain history and Clock times;
+the bot feed/cache stores authorized projections and trace links, not a duplicate policy,
+incident or approval authority. Define timestamp units/conversion, compatibility overlap,
+expired/reset cursor handling, partial results, cancellation and unknown outcomes.
+Client privacy, session/device revocation and offline-copy risks remain acceptance
+requirements owned by the external client; no provider/production/executor key is exported.
 
 **Atomic tasks:**
-- **S7.1 — Authenticated API and enrollment.** Device enrollment/revocation, scoped
-  sessions, rate limits and minimal app/incident/history queries behind VPN/TLS.
-- **S7.2 — KMP shell and read-only screens.** Conversations, incident cards and timeline,
-  apps/freshness, team status and settings using shared domain/network/storage. Initial UI
-  language pt-BR; English code/docs; accessible labels/type scaling/contrast.
-- **S7.3 — Durable synchronization.** Cursor replay/pagination/reconnect/cache and
-  idempotent outgoing messages or investigation requests; explicitly disable sensitive
-  offline actions. Predecessors S7.1–S7.2.
-- **S7.4 — Native notifications and contextual navigation.** Integrate selected Android
-  push as opaque wake/deep link, fetch authenticated current details, expose delivery
-  uncertainty. Existing S3 transport can remain fallback.
-- **S7.5 — Owner acceptance.** Validate general/team/agent/incident conversation flows,
-  apps, approval view, teams and provider settings with unavailable functions honestly
-  disabled; production-changing approvals are not activated in S7.
+- **S7.1 — Service contract and authenticated identities.** Review and implement the
+  selected typed scope/version and purpose-specific principal, trusted owner mapping,
+  expiry/revocation and fresh authentication checks. Enumerate allowed management
+  operations before implementation; no generic service command or shell dispatch.
+- **S7.2 — Authorized canonical projections.** Expose bounded application/freshness,
+  incident/evidence availability, conversation/task/history and approved team/provider
+  status. Reuse existing service/domain records; distinguish stale, partial, expired and
+  unknown. Sensitive evidence and unapproved settings remain inaccessible.
+- **S7.3 — Durable integration synchronization.** Implement cursor replay/pagination,
+  reset/reconnect, deduplication, expected revisions and idempotent permitted requests.
+  Preserve source/server time distinctions. Sensitive offline approvals remain disabled.
+  Predecessors: S7.1–S7.2.
+- **S7.4 — ZaturoBot presentation and alert context.** In its separately authorized
+  repository change, connect the existing bot/app to the selected contract and S3
+  references. Reuse its UI/localization/accessibility and secure storage patterns.
+  Keep incident/management data outside ordinary model/tool routing by default;
+  runtime data-sharing/provider/budget approval is a separate gate.
+- **S7.5 — Conformance and owner acceptance.** Prove cross-repository canonical views,
+  scoped requests, reconnect, revocation, recovery and visible unavailable features.
+  The existing bot/app presents conversations, incidents, application state and approved
+  settings without granting production-changing approval/execution in S7.
 
-**Tests:** shared domain/sync unit tests, local fake API/push integration, Android UI and
-accessibility checks; security compromised token/device revocation, replay, cross-app routes,
-notification deep-link spoofing and stale offline intent; performance cache/pagination/
-reconnect/network/battery measurements on documented device profiles.
+**Tests:** pure contract/version/scope tests; local fake service/consumer integration and
+durable replay/restart; cross-app access, wrong-audience or generic credentials, forged
+owner/session/strength, revoked integration/client access, navigation-reference spoofing,
+stale state and offline intent. Test bot/OpenTatu outages independently. Measure bounded
+pages/connections/cache and reconnect costs against approved profiles. External UI/
+accessibility/cache tests run in ZaturoBot's authorized change, not a new OpenTatu app.
 
-**Validation:** future mobile `./gradlew :shared:allTests :androidApp:testDebugUnitTest
-:androidApp:assembleDebug` or the exact module names adopted by S7.2 (not available today);
-Android instrumented tests in emulator; future Rust API test target; `cargo xtask check`.
-No test or artifact is claimed to exist before those modules land.
+**Validation:** future `cargo test -p opentatu-services sentinel_integration` and
+`cargo test -p opentatu-worker sentinel_integration`, implemented contract fixtures and
+`cargo xtask check`. Select ZaturoBot checks from its actual approved tooling/revision;
+do not invent commands or claim acceptance of absent consumers.
 
-**Done:** authenticated owner can view conversations, real incident cards, app freshness,
-notifications and resumed history on Android; revoked devices lose access; no provider or
-production credential reaches the phone. **Risk/rollback:** auth/sync bugs; revoke mobile
-credentials and disable API mode while retaining S3 alerts/dashboard; uninstall local app
-without touching incident ledger. **Abastevo impact:** none, including its Android app.
-**Resources:** bounded sync pages/connections/local cache; push is distinct from active
-sync. **Blocks:** unapproved auth/enrollment, unsafe remote bind, unclear local secret
-storage, duplicate commands or inaccessible UI.
+**Done:** the verified owner can view canonical conversations, incidents/evidence states,
+task progress, app freshness and approved settings through ZaturoBot, resume bounded
+history and observe integration revocation/recovery. No ordinary chat/model output can
+grant authority, and no OpenTatu key reaches the client. **Risk/rollback:** disclosure or
+auth/sync defects; revoke/disable the integration, preserve S3/local access and the ledger,
+and reconcile already accepted work by identity. **Abastevo impact:** none, including
+its app. **Resources:** bounded service projections/sync and external client cache.
+**Blocks:** unapproved identity/delegation, unsafe exposure, unknown privacy/ACK behavior,
+duplicate commands, unsupported client capability or duplicated domain authority.
 
 ## S8 — Multiprovider architecture
 
 **Objective and rationale:** expand choice without coupling identity, permission, history
 or policy to provider transport. Requirements: SREQ-046, 070, 081–087, 099; scenario J.
 
-**Dependencies:** S7 accepted; current provider capability/terms/privacy/cost research per
-candidate; owner scope/budget decisions. Respect existing Audit accounting/budget policy,
+**Dependencies:** S7 service contract accepted; current provider capability/terms/privacy/
+cost research per candidate; owner scope/budget decisions. Respect Audit accounting/budget policy,
 the shared reservations implemented at S5 and reverification priority. External CLI
 runtimes require their own later approval.
 
 **Components/files:** reuse `crates/llm/src/client.rs`, `router.rs`, `config.rs`, `retry.rs`,
 `usage.rs` and fake client; proposed provider adapters only inside approved infrastructure
 boundary; core provider capability/binding policy; services accounting/authorization;
-binary config and provider research record; mobile authorized provider settings.
+binary config and provider research record; authorized settings/status projections
+through the accepted ZaturoBot integration. Coding-provider consent in either project
+does not authorize runtime incident disclosure to ordinary bot model/tool routing.
 
 **Database/contracts:** provider bindings, capability/privacy consent versions and usage
 reservations/attempt accounting; credentials stay in protected server configuration.
@@ -573,17 +619,19 @@ changing protected production systems. Requirements: SREQ-055–061, 069, 071, 0
 scenarios H/K/L/M.
 
 **Dependencies:** S8 accepted; action schema/state machine, exact approval binding,
-reauthentication/recovery policy, simulation semantics and first candidate playbook approved.
-A model recommendation never grants execution authority.
+Q-021/Q-025/Q-040 owner reauthentication/delegation/recovery policy, simulation semantics
+and first candidate playbook approved. S7 read/management access is not a decision grant;
+S9 admits simulated decisions only, and a model recommendation never grants authority.
 
 **Components/files:** proposed core action/proposal/approval types, db action and one-time
 approval repository, services deterministic policy and preview/approve/cancel use cases,
-worker simulation executor; mobile approval center; existing event audit and masking.
+worker simulation executor; scoped ZaturoBot decision projection; existing audit/masking.
 No generic production command runtime is introduced.
 
 **Database/contracts:** immutable proposal digest, target/app/parameters/policy/version,
-preconditions, evidence, expiry, authenticated owner/device context, one-use nonce and
-atomic approval consumption; action attempts/outcomes. Exact action API rejects stale,
+preconditions, evidence, server expiry, verified owner and integration/session provenance
+(device provenance only where verified), one-use nonce and atomic approval consumption;
+action attempts/outcomes. The selected action contract rejects stale,
 changed, expired, replayed and wrong-app authorizations and provides idempotent results.
 
 **Atomic tasks:**
@@ -591,23 +639,26 @@ changed, expired, replayed and wrong-app authorizations and provides idempotent 
   execution-verification transitions with no response IO; prohibited operations fail closed.
 - **S9.2 — Atomic approval repository.** Store immutable proposal and consume exact scoped
   approval once in transaction; evaluate current policy at admission and simulated execution.
-- **S9.3 — Mobile decision card.** Evidence/risk/impact/duration/reversibility/uncertainty/
-  expiry plus approve/reject/request-information with authenticated fresh state.
+- **S9.3 — ZaturoBot decision interaction.** Project exact evidence/risk/impact/duration/
+  reversibility/uncertainty/expiry and permitted decision requests. OpenTatu verifies
+  fresh owner authority, proposal digest, current policy and one-use consumption;
+  a bot reply, acknowledgment, notification tap or model sentence is not approval.
 - **S9.4 — Simulation and audit.** Fake executor records intended effect and verification/
   rollback outcome; exercise cancellation, disconnect/replay and unknown-outcome recovery.
   Human-readable UI clearly says simulated and no protected system changes.
 
-**Tests:** exhaustive state/expiry/digest/nonce unit tests; H end-to-end simulated mobile
-approval; integration duplicate commands/cancel/restart races; security model-forged approval,
-notification tap bypass, policy version change, cross-app target and revoked device;
-performance concurrent approve/reject race and bounded executor dispatch.
+**Tests:** exhaustive state/expiry/digest/nonce tests; H end-to-end simulated delegated
+owner approval; duplicate request/cancel/restart races; forged owner context or model
+approval, wrong-audience credential, notification bypass, policy change, cross-app target
+and revoked integration/client authority; performance concurrent approve/reject race and
+bounded executor dispatch.
 
 **Validation:** future `cargo test -p opentatu-core action`,
 `cargo test -p opentatu-db approvals`, `cargo test -p opentatu-services response_policy`,
-`cargo test -p opentatu-worker sentinel_simulation`; mobile approval unit/UI tests;
+`cargo test -p opentatu-worker sentinel_simulation`; delegated-approval conformance tests;
 `cargo xtask check`.
 
-**Done:** owner can approve/reject one exact simulated action through Android, audit its
+**Done:** verified owner can decide one exact simulated action through ZaturoBot, audit its
 outcome and see replay/stale authorization rejected; no production-mutating capability
 exists. **Risk/rollback:** simulation confused with reality; disable approvals/proposals
 and expire pending requests, preserve ledger and read-only monitoring. **Abastevo impact:**
@@ -628,9 +679,11 @@ unapproved production deployment or live response follows from passing tests.
 
 **Components/files:** typed response domain and services policy from S9; approved
 infrastructure playbook executor and narrow capability adapter; worker reconciliation,
-verification and expiry; mobile execution/results cards; playbook runbooks. Do not give
-LLMs process/network/filesystem privileges or repurpose scanner isolation to administer
-production. Credentials are unavailable to investigator, Factory and mobile processes.
+verification/expiry; authorized ZaturoBot execution/result projections and playbook runbooks.
+Do not give LLMs process/network/filesystem privileges or repurpose scanner isolation to administer
+production. OpenTatu provider/production/executor credentials are unavailable to
+investigator/Factory consumers and the ZaturoBot bot/app. External presentation or task
+completion cannot authorize execution or establish successful verification.
 
 **Database/contracts:** playbook capability/version, immutable execution plan/digest,
 preflight snapshots, attempts, idempotency/reconciliation key, effect/rollback references,
@@ -719,10 +772,10 @@ name/stack, insufficient permissions/privacy review, failure isolation or unfair
 ## Test coverage and stop conditions
 
 A/B detection → S2; C/D backend/dependency failures → S1–S3; E visibility loss → S1–S3;
-F no AI → S2/S3/S5/S8; G teams → S6; H mobile approval replay → S9 and S10;
+F no AI → S2/S3/S5/S8; G teams → S6; H delegated owner approval replay → S9 and S10;
 I adapter portability → S4 synthetic and S11 real; J provider swap → S8;
 K injection → S1/S2/S4/S5/S6/S9; L compromised agent → S5/S6/S9/S10;
-M reconnect → S1/S3/S7/S9; N resources → each relevant phase with S3 baseline.
+M source/integration reconnect → S1/S3/S7/S9; N resources → each relevant phase with S3 baseline.
 
 Stop before the next phase when its objective evidence is absent, the owner has not
 accepted the preceding phase, a prerequisite decision is open, a guardrail fails, or a
@@ -730,13 +783,16 @@ proposed change expands privileges/layers/production scope beyond approval. Do n
 blocked implementation decision into a guessed requirement. Produce the completed phase
 packet and a precise question in [OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md).
 
-## Exact first implementation step after approval
+## Current implementation handoff
 
-Execute **S0.1 only**, once original phases 0–7 and the minimal event contract are accepted.
-Read `crates/core/AGENTS.md`, inspect `ids.rs`, `time.rs`, `error.rs`, `lib.rs` and the
-component catalog, then add pure telemetry validation and the Clock test described above.
-Run the new nonzero telemetry tests and `cargo xtask check`; present the small diff and
-contract/catalog updates. Rollback is reverting those unpersisted changes. Do not add an
-ingest endpoint, migration, collector, model call, mobile module or production setting in
-that first change. Continue within approved S0 only after its task evidence is reviewable;
-end-of-phase approval remains mandatory before S1.
+S0.1 and S0.2 are complete, with their owner-approved contracts and executable evidence.
+Do not recreate their validators or treat them as authenticated ingestion. Review
+[telemetry](S0_1_TELEMETRY_CONTRACT.md), [adapter scope](S0_2_ADAPTER_CONTRACT.md), core
+AGENTS and the component catalog before the next change.
+
+The next candidate is **S0.3**, pure incident/evidence contracts with explicit unknown/
+stale states and no Audit finding closure. Resolve any missing classification/evidence
+meaning under Q-026 before encoding it. S0.4 presents the remaining decision/threat packet;
+it must not silently answer retention, source authentication, resources or IO-boundary
+questions. No ingest endpoint, migration, collector, model call, ZaturoBot code change or
+production setting follows from these pure tasks. End-of-S0 approval is required before S1.

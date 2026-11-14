@@ -1,7 +1,8 @@
 # Security teams and conversation runtime plan
 
-Status: proposed for S5–S6; advanced role customization follows the initial Android
-client. Requirement scope: SREQ-035–054 and SREQ-071–074 in the
+Status: proposed for S5–S6; advanced role customization remains separately gated.
+The owner's 2026-11-14 direction presents OpenTatu through ZaturoBot's existing bot/app,
+not a standalone OpenTatu client (ADR-0038). Requirement scope: SREQ-035–054 and SREQ-071–074 in the
 [master plan](SENTINEL_MASTER_PLAN.md). Runtime implementation must reuse existing role
 execution and accounting rather than introduce another path to a model.
 
@@ -44,6 +45,25 @@ verified source material. `Approval` authorizes one exact proposal. `ToolResult`
 bounded execution outcome. `Notification` is a delivery intent. Each is typed in core,
 persisted through db/services, and referenced from conversation cards. Do not create a
 single JSON blob table that treats all nine as interchangeable messages.
+
+ZaturoBot's feed and bot/app views consume these canonical records through the future
+[service integration](ZATUROBOT_INTEGRATION_PLAN.md). They do not create a second incident
+history, investigation scheduler, budget ledger or approval authority. Its hub/worker
+task identity may be linked for delivery and tracing only under the chosen Q-040 contract;
+completion of an external task is not evidence that OpenTatu verified a security outcome.
+
+Owner questions arriving through chat are untrusted intents until the integration
+principal, app scope and delegated owner context pass service admission. They may request
+bounded analysis or a proposal, never assign new agent grants or consume an approval by
+prose. Preserve typed evidence, chronology, cursor replay, stale/unknown display and
+privacy in external projections. Cross-repository UI work requires its own authorization;
+S5–S6 do not depend on building a mobile application.
+
+Service projections are confidential integration output, not input to ZaturoBot's
+ordinary public-coding model/tool path. Keep that routing disabled unless a separate
+runtime data-sharing and budget policy authorizes it. OpenTatu's authenticated actor,
+Clock timestamps and exact task/incident records remain authoritative; Q-040 defines
+cross-project attribution and timestamp conversion without trusting conversation text.
 
 Synthetic message proposal:
 

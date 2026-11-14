@@ -3,7 +3,7 @@
 Original roadmap phase 10, owner-authorized in Q-036/Q-037; design in ADR-0036.
 One OpenTatu binary and SQLite database, explicit local configuration, no model calls,
 external notifications, production installation or automatic new responses. Sentinel
-S0–S11 and its deployment/retention/mobile gates remain separate.
+S0–S11 and its deployment/retention/ZaturoBot-integration gates remain separate.
 
 ## Provisioning and trust
 

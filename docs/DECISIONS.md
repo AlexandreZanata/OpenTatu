@@ -484,6 +484,9 @@ Template:
 
 ## ADR-0026 — Sentinel expansion after the Audit foundation
 - **Date:** 2026-11-12 · **Status:** proposed
+- **Partial supersession (2026-11-14):** accepted ADR-0038 replaces this draft's custom
+  KMP-client direction with OpenTatu-as-service integration into ZaturoBot. The remaining
+  phase/privacy/deployment proposals keep their original status.
 - **Context:** the owner requested a complete future expansion plan based on the supplied
   Sentinel/Abastevo brief, while the current working tree is in Audit phase 4.
 - **Decision proposed:** retain the original phase gates and plan S0–S11 after owner
@@ -858,3 +861,75 @@ Template:
   Complete workspace checks remain mandatory. Revert unpersisted core/schema/docs to
   roll back. R04 and proposed ADR-0027 retention stay unchanged; S0.2–S0.4 and all later
   phase gates remain pending.
+
+## ADR-0038 — OpenTatu service managed through ZaturoBot
+- **Date:** 2026-11-14 · **Status:** accepted (explicit owner addendum)
+- **Decision:** OpenTatu remains the security service: one Rust binary, SQLite, existing
+  local operational dashboard/CLI. The owner will manage it later through ZaturoBot and
+  that project's existing bot/application. Remove the standalone OpenTatu KMP/Android/iOS
+  project, client build/distribution and native-push implementation from this roadmap.
+  This supersedes the custom-client direction in proposed ADR-0026/Q-016/Q-027, not the
+  completed Audit phases or other Sentinel security/deployment gates.
+- **Evidence:** read-only review of ZaturoBot main at
+  `2d34f73f50915f9ff71723744dc9554b96ca3469` found hub/worker tasks/feed, scoped application
+  credentials, existing Linux/Android clients and fixed YoutubeBot/Android service
+  operations. Its ServiceRequest enum and worker dispatch contain no OpenTatu operation.
+  Pin sources and distinguish evidence from proposals in the
+  [integration plan](sentinel/ZATUROBOT_INTEGRATION_PLAN.md). No external repository or
+  production system is modified by adopting this direction.
+- **Phases:** retain S identifiers and requirement IDs. S3 plans the smallest authenticated
+  alert handoff/outbox/ACK/fallback/watchdog contract; S7 plans full authenticated service
+  management and projections through the existing clients. S7 client work belongs to a
+  separately authorized ZaturoBot change. S8 settings, S9 delegated exact-action simulation
+  and S10 real reversible response use that boundary without acquiring authority from it.
+- **Trust:** OpenTatu owns policy, evidence/history, budgets, task/action admission, exact
+  owner approval, execution, expiry/rollback and verification. ZaturoBot owns presentation
+  and its client lifecycle. Source, integration, owner, device, fixing/Investigation MCP
+  and executor identities remain distinct. Bot/model text, an app token, notification tap
+  or upstream task completion cannot grant OpenTatu authority or close a Finding.
+- **Confidentiality:** the bot/hub/app is an additional data boundary. Permit only approved
+  sanitized projections/references; no provider/executor/production credentials or raw
+  evidence in generic feeds. Neither project's coding-model consent authorizes runtime
+  incident data in ZaturoBot's model path. OpenTatu Clock remains authoritative for its
+  receipt/decision/approval times. Independent outage detection must survive monitor and
+  bot-hub/shared-infrastructure failure.
+- **Open gates:** Q-040 selects transport/direction/verbs, compatibility, operation IDs,
+  cursor/ACK/replay, delegated owner attribution, unit conversion and deployment. Q-021
+  retains authentication/revocation/recovery and Q-019 retains fallback/watchdog choices.
+  No REST/MCP/CLI route, credential, remote bind or service installation is inferred here.
+- **Validation/rollback:** documentation/link/vocabulary checks and a repo-wide review of
+  active standalone-client requirements. Historical choices are explicitly superseded;
+  the old mobile-plan path becomes a link stub. Implementation acceptance later uses
+  pinned synthetic cross-project fixtures and each repository's own checks. A future
+  connector can be revoked without removing the security service or rewriting history.
+
+## ADR-0039 — Pure adapter declarations and scoped capability preflight
+- **Date:** 2026-11-14 · **Status:** accepted (next-task request; Q-039)
+- **Decision:** implement S0.2 in core with typed in-memory declarations and configured
+  bindings/grants only. Reuse S0.1 reference/label validation and protocol 1.0, Slug,
+  CommitHash, Fingerprint, existing content hashing and injected Clock/Timestamp. No new
+  dependency, crate, architecture edge, manifest loader or service integration runtime.
+- **Declarations:** distinguish portable package identity from installation identity.
+  Package version is an exact opaque reference, not a SemVer range. Artifact/source
+  provenance is syntactically typed, not proof of verified bytes. Declare exact sources
+  and source/event-type/category tuples. Capabilities are the closed telemetry.emit and
+  health.read vocabulary; no action/wildcard/command/credential capability is implemented.
+- **Scope:** explicit app/adapter/source/stream bindings are trusted caller configuration,
+  never producer claims. Requested, approved and runtime-enabled permissions remain
+  separate; effective permission is their intersection. Every check reevaluates the
+  supplied current grant, binding, manifest and Clock. Changed artifact, package version,
+  source/event declarations or requested permissions invalidates approval through the
+  complete validated manifest digest. Declaration and installation never imply activation.
+- **Time:** issue/revocation comes from Clock; expiry is an explicit future caller choice.
+  Reject revoked, expired and pre-issue checks; source time cannot extend a grant. No
+  operational lifetime maximum/default is invented. Later services must authenticate the
+  principal and load current registry/revocation state at operation admission.
+- **Limits:** reuse only approved field grammar/limits. Trusted in-memory sets are not a
+  raw manifest parser or production capacity claim. Q-020 and later loader work must
+  define byte/cardinality/admission bounds before untrusted package loading. Retention,
+  endpoints, configuration schemas and registry state remain deferred.
+- **Evidence/rollback:** nonzero pure adapter/telemetry tests cover version/declaration/
+  capability/tuple mismatches, intersections, changed approvals, time/revocation, safe
+  diagnostics and reuse by a second synthetic app. Full workspace checks remain required.
+  Revert unpersisted contracts/docs to roll back. S0.3–S0.4 and S1 stay pending; ZaturoBot
+  is a future control-plane client, not an implicit telemetry source or grant issuer.

@@ -2,6 +2,9 @@
 
 Status: S0.1 implements the owner-approved [minimal contract](S0_1_TELEMETRY_CONTRACT.md)
 under Q-038/ADR-0037. The broader event/manifest/ingestion contract below remains proposed.
+S0.2 also implements the approved [typed manifest/scope subset](S0_2_ADAPTER_CONTRACT.md)
+under Q-039/ADR-0039. It has no JSON loader or authenticated registry; the full manifest
+example below is not a current loading/activation contract.
 No universal ingestion endpoint or adapter described here exists yet; phase-10 CrowdSec
 uses its separate native port. Canonical scope and requirement IDs: [master plan](SENTINEL_MASTER_PLAN.md).
 Implementation order: [roadmap](SENTINEL_IMPLEMENTATION_ROADMAP.md).
@@ -181,6 +184,10 @@ same credentials and rate limits but a reserved small capacity so an event flood
 hide loss of visibility. No heartbeat means `STALE`/`UNKNOWN`, never “secure”.
 
 ## Declarative installation manifest
+
+The example below remains a future package/loading proposal. S0.2's typed in-memory
+identity, source/event tuples, read capabilities and exact configured grants are narrower;
+retention-policy/configuration-schema/endpoint fields are not fabricated by its validators.
 
 ```json
 {

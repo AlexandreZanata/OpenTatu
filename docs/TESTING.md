@@ -187,3 +187,18 @@ producer declaration; never edit its facts independently. There is no endpoint, 
 collector, authenticated source, runtime model call or production effect in this slice.
 Run `cargo xtask check` for the complete existing suite; synthetic loopback HTTP fixtures
 retain their existing socket-permission requirement. [Contract](sentinel/S0_1_TELEMETRY_CONTRACT.md).
+
+## Sentinel S0.2 verification
+
+`cargo test -p opentatu-core adapter` runs ten pure tests. They cover typed identity/
+protocol/declaration validation and duplicates, exact source/event/category triples,
+requested/approved/runtime intersections, manifest/artifact/source/version mutation,
+app/adapter/source/stream mismatches, issue/expiry/revocation/clock rollback, source-time
+spoofing, runtime policy shrinkage, a second app and safe diagnostics/Debug. The enum
+privacy canaries also verify unchanged default behavior for existing enums.
+
+The eight telemetry tests, including the generated schema snapshot, remain unchanged.
+`cargo xtask check` verifies the full workspace. These tests exercise pure current-state
+preflight, never live authentication, loading, registration or an operation side effect.
+ZaturoBot documentation acceptance checks active phase/requirement ownership and pinned
+source references; it does not claim an implemented connector or external client test.

@@ -6,6 +6,9 @@ use crate::finding_state::FindingState;
 /// Validation errors of the domain (`opentatu-core`).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
+    /// Invalid adapter declaration or supplied scope; never embeds rejected input.
+    #[error("invalid adapter contract or scope: {0}")]
+    InvalidAdapter(&'static str),
     /// Rejected untrusted telemetry; the diagnostic never embeds producer data.
     #[error("invalid telemetry: {0}")]
     InvalidTelemetry(&'static str),

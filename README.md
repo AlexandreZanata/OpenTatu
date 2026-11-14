@@ -6,6 +6,12 @@ vulnerabilities with evidence, keeps an append-only, dated history of every audi
 verified fix tasks to AI coding agents (Claude Code, OpenCode, Codex, Cursor) through the
 Model Context Protocol (MCP). One Rust binary, one SQLite file, private by design.
 
+OpenTatu is the security service. Its future owner-facing management and notifications
+will be integrated into [ZaturoBot](https://github.com/AlexandreZanata/ZaturoBot) and that
+project's existing bot/application; there is no separate OpenTatu mobile app to build.
+The current local dashboard and CLI remain operational interfaces. Integration is planned,
+not implemented: see the [service integration plan](docs/sentinel/ZATUROBOT_INTEGRATION_PLAN.md).
+
 [![CI](https://github.com/AlexandreZanata/OpenTatu/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexandreZanata/OpenTatu/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Rust](https://img.shields.io/badge/rust-1.99-orange.svg)

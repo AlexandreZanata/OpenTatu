@@ -146,3 +146,21 @@ Keep minimized history permanently under R04, including necessary action IPs; ra
 headers, bodies, query values and sensor dates never enter persisted results. No production
 tests/installations, raw evidence archive or Sentinel expansion is included. Provisioning,
 rotation, propagation limits and actual disposable acceptance: [MONITORING.md](MONITORING.md).
+
+## Pure Sentinel preflight and future ZaturoBot boundary
+
+S0.1–S0.2 validate structure and exact caller-supplied configuration, not network identity
+or globally current revocation. Source claims/time cannot expand manifest/grant scope.
+Later authenticated services must load current trusted registry/grant state and apply
+resource bounds before operation admission. No production credential or IO executor is
+created by these contracts.
+
+ADR-0038 assigns future bot/client presentation to ZaturoBot while OpenTatu retains policy,
+history, budgets, exact approvals and effects. The external bot/app adds a confidentiality
+and delegation boundary. Use approved sanitized projections, separate scoped integration
+credentials and authenticated owner attribution; ordinary chat, client claims, task
+completion or a model response cannot authorize effects. Runtime incident data must not
+enter either project's model path merely because existing coding consent exists. Keep
+loopback/Host/Origin guards until Q-021/Q-040 remote controls are implemented and tested.
+No integration or deployment is enabled here; see the
+[service plan](sentinel/ZATUROBOT_INTEGRATION_PLAN.md).

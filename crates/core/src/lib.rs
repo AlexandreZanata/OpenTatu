@@ -10,6 +10,8 @@
 
 mod macros;
 
+pub mod adapter;
+mod adapter_scope;
 pub mod agent;
 pub mod app;
 pub mod asvs;
@@ -41,6 +43,8 @@ pub mod telemetry;
 pub mod time;
 pub mod usage;
 
+pub use adapter::{AdapterCapability, AdapterEventType, AdapterIdentity, AdapterManifest};
+pub use adapter_scope::{AdapterBinding, AdapterGrant};
 pub use agent::{Agent, AgentToken};
 pub use app::{App, NewApp};
 pub use asvs::{APPLICABLE_LEVEL, ASVS_VERSION, AsvsCatalog, AsvsLevel, AsvsRequirement};

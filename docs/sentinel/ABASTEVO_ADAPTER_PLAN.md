@@ -66,9 +66,11 @@ MVP capabilities are read-only: event delivery, aggregate metrics, approved
 health checks, sanitized deploy metadata, connection status and loss counters.
 No shell, Docker socket, kubeconfig, DB credentials, root privileges, admin
 session, write-capable API token, automatic firewall control or production
-mutations are required. Android alerts use the selected approach of integrating
-an existing notification transport; the specific service remains an open owner
-decision. A custom Kotlin Multiplatform app belongs to a later Sentinel phase.
+mutations are required. The owner's 2026-11-14 direction uses ZaturoBot's existing
+bot/app to manage OpenTatu as a service (ADR-0038). S3 plans a minimal durable
+alert handoff; S7 plans fuller authenticated projections/management. Transport,
+owner attribution and ACK/replay remain Q-040 decisions in the canonical
+[integration plan](ZATUROBOT_INTEGRATION_PLAN.md). No separate OpenTatu app is planned.
 
 ## 3. Source-to-contract mapping
 
@@ -231,8 +233,9 @@ do not copy unverified production traffic or invent throughput guarantees.
 
 Active response, automatic IP blocks, admin write tools, full Docker/k3s
 discovery, arbitrary SQL, broad audit export, photos/location ingestion,
-network attribution, public metrics exposure and custom mobile app delivery
-are outside this read-only first-adapter scope. Any future defense action
+network attribution and public metrics exposure are outside this read-only
+first-adapter scope. ZaturoBot client changes belong to a separately authorized
+integration task; there is no standalone OpenTatu mobile delivery. Any future defense action
 requires the separate Sentinel response policy and a purpose-built narrow
 executor; it must not reuse a general Abastevo operator credential.
 

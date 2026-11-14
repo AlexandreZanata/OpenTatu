@@ -14,7 +14,8 @@ this contract, protocol status, component catalog and crate agent documentation.
 Reuse `Slug`, `Timestamp`, injected `Clock`/`FixedClock`, existing `Severity` and content
 hashing where needed. No new crate, architecture edge, migration or production setting.
 
-S0.2 will provide configured adapter/scope/capability invariants. S0.1 proves structural
+S0.2 now provides [pure configured adapter/scope/capability checks](S0_2_ADAPTER_CONTRACT.md).
+S0.1 proves structural
 validity only: a payload cannot authenticate its application, adapter or source stream.
 App registration, credential verification, source truth and permission remain later
 service-boundary obligations. A validated event is not an accepted durable receipt.
