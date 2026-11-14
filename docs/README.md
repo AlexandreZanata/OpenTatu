@@ -21,6 +21,8 @@ when each document matters.
 | [opencode-go.md](opencode-go.md) | You work on the LLM provider client (phase 0 research record) |
 | [Sentinel expansion plan](sentinel/SENTINEL_MASTER_PLAN.md) | You review the post-foundation service expansion: adapter contracts, monitoring, MCP, teams, ZaturoBot integration and response gates |
 | [ZaturoBot integration plan](sentinel/ZATUROBOT_INTEGRATION_PLAN.md) | You work on the future service-to-bot/application contract; OpenTatu has no standalone mobile client |
+| [S0.4 decision packet](sentinel/S0_4_DECISION_PACKET.md) | You review accepted directions, proposed ADRs, unresolved owner choices and exact S1 entry gates |
+| [S0.4 threat review](sentinel/S0_4_THREAT_MODEL.md) | You implement or review a boundary and need current/planned controls, TH-01–TH-13 acceptance cases and residual risks |
 
 - [LAB.md](LAB.md): offline dynamic evidence and QEMU setup.
 - [HOST_INSPECTION.md](HOST_INSPECTION.md): explicit restricted SSH inventory, provisioning,

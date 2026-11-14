@@ -8,6 +8,11 @@ S7's fuller integration are planned; no standalone OpenTatu app is built. Exact 
 principal/owner attribution and ACK semantics remain Q-040. See the canonical
 [integration plan](ZATUROBOT_INTEGRATION_PLAN.md).
 
+S0.4's [threat review](S0_4_THREAT_MODEL.md) maps the canonical TH-01–TH-13 register below
+to implemented versus planned controls and synthetic acceptance evidence. Its
+[decision packet](S0_4_DECISION_PACKET.md) links unresolved owner gates and proposed ADRs.
+Neither publication accepts those drafts, supplies source authentication or enables IO.
+
 ## Assets, actors and boundaries
 
 Protect provider, adapter and integration credentials, incident history, private source

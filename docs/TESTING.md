@@ -220,3 +220,22 @@ Run unchanged adapter/telemetry tests and final `cargo xtask check` on the commi
 [Contract](sentinel/S0_3_INCIDENT_CONTRACT.md); Q-026 remains open for operational standards.
 Verified 2026-11-14: ten incident tests plus one R06 compile-fail rustdoc; full
 `cargo xtask check` passes 366 tests, zero failures and six existing opt-in tests ignored.
+
+## Sentinel S0.4 verification
+
+S0.4 is documentation-only: [decision packet](sentinel/S0_4_DECISION_PACKET.md), proposed
+ADRs and [threat acceptance mapping](sentinel/S0_4_THREAT_MODEL.md). Review all canonical
+TH-01–TH-13 boundaries for current versus planned controls, fault/refusal cases, residual
+risks and owner gates. Confirm each S1 task has explicit decisions and that no proposed
+numeric hypothesis, protocol example, identity, retention or IO boundary became a default.
+The packets link the accepted S0.1–S0.3 contracts without changing their executable tests.
+
+Run `cargo xtask docs`, `cargo xtask arch`, `cargo xtask glossary` and the required full
+`cargo xtask check` on the committed clean tree. No new behavioral tests or measured
+benchmark results are claimed for the packet. The synthetic adversarial and capacity
+cases are planned acceptance for their implementing phases; six existing real-infrastructure
+tests retain their opt-in status. No production, real provider or external client is used.
+Verified 2026-11-14: complete 13-threat mapping, independent decision/threat reviews,
+documentation/architecture/glossary checks and full `cargo xtask check` pass; 366 existing
+tests pass with zero failures and six opt-in tests ignored. Final acceptance repeats the
+required full check on the committed clean tree and verifies the published commit/CI.

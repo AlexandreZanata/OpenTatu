@@ -35,6 +35,11 @@ Domain entities, typed IDs, states and deterministic rules belong in `opentatu-c
 
 ## Proposed code map and ownership
 
+S0.4 links this map to proposed ADR-0041 and the [entry-gate packet](S0_4_DECISION_PACKET.md).
+No candidate crate or checked edge is added by that review; Q-023 still selects the
+smallest IO owner before implementation. The [threat review](S0_4_THREAT_MODEL.md) records
+the boundary tests required for each selected slice.
+
 This is the recommended placement map; `[extend]` means existing crate, `[new proposal]`
 means a future crate/layout requiring Q-023 and an accepted ADR. It creates no directory
 or dependency in this planning change. Per-phase paths in the roadmap refine this map.

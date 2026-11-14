@@ -302,9 +302,21 @@ capabilities and Clock; no loader, authenticated registry, durable receipt, migr
 new runtime dependency or IO edge is introduced. See ADR-0037/0039 and the
 [adapter contract](sentinel/S0_2_ADAPTER_CONTRACT.md).
 
+S0.3 adds descriptive incident vocabulary and structural requirements plus immutable
+scoped evidence declarations/observations (ADR-0040). Declaration receipt is not source
+collection time; availability/freshness and structural edges establish no conclusion or
+Finding closure. It adds no aggregate, persistence or IO owner. Reuse the
+[incident/evidence contract](sentinel/S0_3_INCIDENT_CONTRACT.md).
+
 ADR-0038 makes OpenTatu the security service, with future management/presentation in
 ZaturoBot's existing bot/application. Existing local dashboard/CLI remain operational
 support; no standalone OpenTatu native client is planned. The separate
 [integration boundary](sentinel/ZATUROBOT_INTEGRATION_PLAN.md) must preserve service-owned
 policy/history/budgets/approvals and independently authenticate delegated owner requests.
 Current delivery/transport/remote-identity behavior remains proposed under Q-040.
+
+S0.4's [decision packet](sentinel/S0_4_DECISION_PACKET.md) and
+[threat review](sentinel/S0_4_THREAT_MODEL.md) make S0 acceptance/S1 prerequisites reviewable.
+Proposed ADR-0041/0042/0043 cover staged deployment/IO ownership, identity/integrity and
+resource acceptance. They do not change architecture.toml, current ownership or runtime.
+Q-023 must approve a selected owner and edges before adding any candidate infrastructure.

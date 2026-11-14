@@ -966,3 +966,108 @@ Template:
 - **Validation/rollback:** pure exhaustive edge/gate, scoped evidence, Clock, unavailable/
   stale/unknown, privacy and R06 type-boundary tests; final full workspace checks. Revert
   unpersisted contracts/docs for rollback. S0.4 and the end-of-S0 owner gate remain pending.
+
+## ADR-0041 — Separate Sentinel deployment and staged infrastructure ownership
+- **Date:** 2026-11-14 · **Status:** proposed (S0.4 review draft)
+- **Context:** Q-014 selects a small separate VPN-accessed Sentinel VPS; it does not
+  authorize installation or size it. Q-023 leaves new IO owners and checked dependency
+  edges open. The [S0.4 packet](sentinel/S0_4_DECISION_PACKET.md) separates these choices.
+- **Decision proposed:** preserve the one-binary modular monolith and SQLite, hosted
+  separately from protected production applications. Plan an unprivileged service
+  identity, restricted VPN endpoints, independent recovery/backup custody and only the
+  selected source/integration credentials. VPN membership does not authorize a request.
+  Keep current loopback dashboard behavior until Q-005/Q-021 controls are implemented;
+  a future service facade does not rebind existing dashboard routes.
+- **Placement proposed:** core owns domain; db alone owns SQL/migrations; services owns
+  authorization, current grants, budgets and durable intent/outcome; worker orchestrates
+  typed ports; the binary composes them. Reuse the candidate map in
+  [Sentinel architecture](sentinel/SENTINEL_ARCHITECTURE.md#proposed-code-map-and-ownership).
+  For S1, review the candidate collector library with only core dependencies and narrow
+  configured file/HTTP reads. Propose worker-to-collector and binary-to-collector edges
+  only if selected; infrastructure never imports services/worker. Notification, response,
+  Factory sandbox and integration facade placement are later slice-specific choices.
+- **Alternatives:** extend an existing infrastructure owner only where responsibility
+  matches; cohost on a protected application host (shared compromise/resource boundary);
+  create all candidate crates immediately (unneeded scope); put IO in pure/services or
+  interface code (violates layering). Prefer the smallest justified approved slice.
+- **Consequences:** Q-023 must accept exact owners/operations/edges before code or
+  architecture.toml changes. No new process exception follows: scanners/snapshots keep
+  current process/git ownership; Factory execution needs its own accepted sandbox gate.
+  No root, generic shell, Docker socket, production DB or kubeconfig grant is proposed
+  for the source reader. Remote exposure/installation requires its own concrete package.
+- **Acceptance/rollback:** layer checks, fake-port tests, path/origin confinement,
+  least-privilege startup and disposable recovery/load demonstrations after hardware/
+  source approval. Preserve monitoring when a collector is disabled. This draft changes
+  no crate, listener, service unit, credential, firewall or architecture edge; rollback
+  removes the unconsumed proposal. Q-014/Q-020/Q-021/Q-023/Q-029 remain their own gates.
+
+## ADR-0042 — Source identity, durable-ingest integrity and delegated-owner separation
+- **Date:** 2026-11-14 · **Status:** proposed (S0.4 review draft)
+- **Context:** pure grants validate supplied state, not authenticated peers or current
+  revocation. The full adapter batch/ACK protocol is still proposed. ZaturoBot ownership
+  under ADR-0038 does not supply the Q-021/Q-040 identity/delegation contract.
+- **Decision proposed:** separate source, local/remote owner, integration, fixing,
+  Factory, Investigation, provider and executor identities/audiences. Source registration
+  binds exact app/install/source/stream and manifest identity; services loads current
+  trusted grants at admission. Reject spoofed app/actor/session/strength fields and
+  invalid or revoked credentials before costly processing. Scope verification material
+  and rotation/recovery independently; no shared provider/executor credential enters
+  the bot, client, adapter package or model tool context.
+- **Transport alternatives:** scoped revocable source credentials over VPN/TLS or an
+  explicitly reviewed certificate-based equivalent; no choice is accepted here.
+  Select authenticated peer/origin handling and bootstrap under Q-021. Direct transport
+  and signed buffered messages solve different problems: use an established canonical
+  signature scheme only if the relay threat requires it, with explicit keys/replay
+  rules. Never invent cryptography or interpret attribution as source truth.
+- **Ingest contract proposed:** explicitly adopt or revise the bounded batch/receipt,
+  canonical producer-payload digest, scoped uniqueness and ACK/checkpoint semantics in
+  [ADAPTER_PROTOCOL.md](sentinel/ADAPTER_PROTOCOL.md) under Q-042 before S1.1/S1.2.
+  Identical replay must not duplicate effects; conflicting identity must not overwrite
+  accepted content. Model/producer timestamps never set trusted receipts or expiry.
+  Replay limits, stream reset/rotation and tombstone expiry must agree with Q-018/Q-020.
+  No exactly-once delivery or unqualified hardware-failure durability claim is proposed.
+- **Owner integration proposed:** Q-040 selects transport/verbs and verified owner
+  attribution separately from the integration principal. Q-005 remains mandatory for
+  non-loopback dashboard access unless explicitly superseded by an accepted ADR.
+  Bot acceptance, client synchronization, notification ACK and task completion grant no
+  approval/execution/Finding-close authority. Q-025 retains exact-action/recovery gates.
+- **Acceptance/rollback:** synthetic wrong-audience/app/source, revocation/rotation races,
+  altered replay, mixed batches, crash/lost-ACK, peer/redirect escape, stolen-device and
+  revoked-integration tests; prove current policy is reloaded. Future recovery revokes
+  the compromised scope and preserves auditable history without broadening capabilities.
+  This draft selects no token/certificate format, URL, port, remote route, integration
+  operation, signing library or credential, and enables no ingestion or deployment.
+
+## ADR-0043 — Bounded resource admission and reproducible Sentinel acceptance
+- **Date:** 2026-11-14 · **Status:** proposed (S0.4 review draft)
+- **Context:** Q-020 lacks actual hardware, traffic, disk/queue bounds and latency targets;
+  Q-028 lacks shared runtime AI reservations. The
+  [capacity profile](sentinel/SENTINEL_MASTER_PLAN.md#capacity-hypotheses-and-measurement)
+  is a hypothesis, not measured production capacity. ADR-0029 already proposes a
+  deterministic, model-independent MVP; this draft defines its resource review evidence.
+- **Decision proposed:** approve a versioned synthetic hardware/workload profile and
+  explicit acceptance thresholds before performance or capacity claims. Enforce selected
+  ingress/cardinality/batch, per-app queue/concurrency, spool/quarantine/disk/WAL,
+  timeouts/retries and visibility limits. Keep resource reservations for monitoring and
+  approved cleanup; a protected app cannot wait on Sentinel network/spool completion.
+  Overload must produce approved bounded backpressure/drop/gap accounting, not silent
+  loss, unlimited queues or permanent raw rejection payloads that evade privacy/R04.
+- **Measurement proposed:** fixed seed, exact build/commit and hardware/storage metadata;
+  steady load, reconnect burst, invalid-input/cardinality/oversize flood, prolonged
+  disconnection, low disk, restart and noisy-neighbor Audit/scanner load. Report accepted/
+  duplicate/rejected/dropped/unaccounted totals, queue lag, CPU/RSS, disk/index/WAL growth,
+  source overhead, bandwidth and p50/p95/p99 latency. Separate durable alert intent,
+  integration acceptance, app synchronization and owner acknowledgment. Run models-off
+  MVP scenarios; later AI scenarios separately measure reserved calls/tokens/cost.
+- **AI boundary:** reuse ADR-0029 and Q-022/Q-028; preserve the existing shared plan-share
+  rule and Audit priorities unless explicitly revised. Require durable pre-dispatch
+  incident/app/month reservation and reconciliation across retries/fallbacks before S5/S8;
+  existing per-audit counters do not establish concurrent team caps.
+- **Alternatives:** retain every request forever, tune from live production traffic,
+  use uncontrolled agent loops or advertise peak throughput without refusal/lag evidence.
+  None supplies a bounded private small-VPS acceptance claim.
+- **Consequences/acceptance:** Q-020 must select numeric caps, failure policy and workload;
+  this draft adds no defaults, benchmark code or measurements. Use disposable synthetic
+  fixtures first and publish honest degraded/unknown outcomes on saturation. Q-019/Q-040
+  retain independent outage/delivery requirements; passing a local benchmark cannot prove
+  external delivery. Rollback removes this unconsumed proposal, not any runtime guard.

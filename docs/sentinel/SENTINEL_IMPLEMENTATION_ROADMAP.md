@@ -1,7 +1,9 @@
 # Sentinel implementation roadmap
 
 Status (2026-11-14): S0 is in progress; S0.1–S0.3 are implemented under
-Q-017/Q-038/Q-039/Q-041 and ADR-0037/0039/0040. S0.4–S11 remain planned. The owner reviews one phase at a time
+Q-017/Q-038/Q-039/Q-041 and ADR-0037/0039/0040. S0.4's decision/threat packet is delivered;
+S0 acceptance and S1 entry decisions remain pending. S1–S11 remain planned.
+The owner reviews one phase at a time
 under [the existing workflow](../WORKFLOW.md). An implementation request never implies
 installation, remote exposure or production changes.
 
@@ -108,8 +110,13 @@ validity, changed approvals, privacy and second-app portability. S0.1's eight te
 wire schema remain unchanged. S0.3 evidence (2026-11-14): Q-041's structural vocabulary,
 explicit transition requirements and immutable scoped evidence declarations/observations
 are implemented in core, with no operational determination or finding closure. Clock
-receipt is distinct from source-content freshness. S0.4 is `PENDING(phase-S0)`;
-S0 is not fully accepted and Q-026 still blocks operational evidence policy.
+receipt is distinct from source-content freshness. S0.4 evidence (2026-11-14): the
+[decision packet](S0_4_DECISION_PACKET.md) maps accepted directions, proposed ADRs,
+Q-018/Q-020/Q-021/Q-023/Q-029/Q-042 and exact S1 dependencies; the
+[threat packet](S0_4_THREAT_MODEL.md) maps TH-01–TH-13 to current/planned controls,
+synthetic acceptance and residual risks. ADR-0041–0043 remain proposed, reusing
+ADR-0027–0029. S0 tasks are complete; owner acceptance/entry decisions remain pending.
+Q-026 still blocks operational evidence policy.
 
 **Components and files:** reuse core identifiers/time/errors/masking; proposed
 `crates/core/src/telemetry.rs`, `adapter.rs`, `incident.rs`; core `lib.rs`; linked contracts
@@ -141,7 +148,9 @@ R04's permanent event ledger before any retention code.
 - **S0.4 — Decision and threat packet.** Present ADR drafts for separate VPN VPS,
   retention/ledger split, infrastructure/module boundaries, trust model, remote identity,
   source integrity, budgets and benchmark hypotheses. Link unresolved owner decisions to
-  their blocked tasks; record decisions only when owner answers.
+  their blocked tasks; record decisions only when owner answers. Delivered as the
+  [decision](S0_4_DECISION_PACKET.md) and [threat](S0_4_THREAT_MODEL.md) packets;
+  publication accepts no draft or operational policy.
 
 **Tests:** unit valid/invalid/version/scope cases; `r03_telemetry_receipt_uses_clock` and
 `r06_incident_cannot_close_a_finding` where behavior exists; integration is limited to
@@ -168,6 +177,10 @@ Requirements: SREQ-010–026, 088–094, 097–098.
 **Dependencies:** S0 accepted; current Abastevo source inspection refreshed; approved
 read-only log/metric/health source selection; owner-selected source authentication and
 retention; VPN/restricted deployment plan. No AI dependency.
+The [S0.4 entry checklist](S0_4_DECISION_PACKET.md#s1-dependency-and-entry-checklist)
+maps decisions to atomic tasks. In particular S1.1 requires Q-018/Q-020/Q-042 before a
+persistent schema is chosen; Q-042 covers the broader batch/receipt/replay contract,
+which the pure telemetry validator does not implement.
 
 **Components/files:** reuse core/db/services/worker and binary composition. Proposed
 `crates/db/src/telemetry.rs`, `adapters.rs`; `crates/services/src/telemetry.rs`;
@@ -187,7 +200,8 @@ API; read-only source scopes and retry semantics from [ADAPTER_PROTOCOL.md](ADAP
   identity, duplicate replay, conflicting duplicate and atomic accepted receipt.
 - **S1.2 — Ingest use case.** Validate manifest binding, quotas and origin before storing;
   return per-event deterministic ACK/rejection; a malformed member cannot abort unrelated
-  valid members under documented batch semantics. Predecessor S1.1.
+  valid members under the currently proposed batch semantics, subject to the exact
+  Q-042 contract selected before implementation. Predecessor S1.1.
 - **S1.3 — Minimal Abastevo adapter.** Add only the inspected, approved read-only source
   readers and parsers with synthetic real-shape fixtures; map health and deploy signals
   if present. No Docker socket, production DB, log-IP enrichment or arbitrary webhook.
@@ -797,10 +811,16 @@ Do not recreate their validators or treat them as authenticated ingestion. Revie
 [incident/evidence](S0_3_INCIDENT_CONTRACT.md), core
 AGENTS and the component catalog before the next change.
 
-The next candidate is **S0.4**, the remaining decision/threat packet. S0.3 provides
-descriptive vocabularies and structural requirements, not an operational incident machine
-or evidence-sufficiency policy. Keep Q-026 open until the owner selects those standards;
-do not turn enum parsing or AVAILABLE/FRESH declarations into verified conclusions.
-S0.4 must not silently answer retention, source authentication, resources or IO-boundary
-questions. No ingest endpoint, migration, collector, model call, ZaturoBot code change or
-production setting follows from these pure tasks. End-of-S0 approval is required before S1.
+S0.4 is delivered as a [decision/entry packet](S0_4_DECISION_PACKET.md) and
+[TH-01–TH-13 acceptance review](S0_4_THREAT_MODEL.md). The proposed ADRs are review drafts,
+not owner answers or implemented controls. All S0 tasks are complete; S0 acceptance and
+dependent implementation decisions remain pending.
+
+The next implementation candidate is **S1.1 only after owner S0 acceptance and the
+Q-018/Q-020/Q-042 schema/storage/receipt choices**. S1.2 additionally needs Q-021 identity;
+S1.3 needs Q-023 IO ownership and Q-029 refreshed source permission. Follow the packet's
+full checklist for later S1 slices. Do not infer approval from this handoff or encode a
+working default under an unanswered policy. Keep Q-026 open for actual evidence standards;
+descriptive vocabulary and AVAILABLE/FRESH declarations establish no conclusion.
+No endpoint, migration, collector, model call, ZaturoBot change or production setting
+follows from S0.4. Future installation and activation require their own concrete review.

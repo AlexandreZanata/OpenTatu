@@ -24,6 +24,11 @@ Q-030 (phase 5) and Q-031 (phase 6) were answered the same day.
 Sentinel planning adds Q-014 onward below. Answers selecting a planning direction do not
 authorize implementation, deployment or a production action.
 
+S0.4's [decision packet](sentinel/S0_4_DECISION_PACKET.md) maps these answers and open
+choices to exact blocked S1 tasks and later gates. Its publication does not answer them,
+accept proposed ADRs or approve S1. Q-042 makes the remaining durable-ingest contract
+choice explicit rather than treating the broader protocol examples as accepted code.
+
 ---
 
 ## Q-001 — Which timestamp stamps the audit ID?
@@ -451,3 +456,23 @@ authorize implementation, deployment or a production action.
   Declaration receipt uses `recorded_at`, distinct from actual source collection time.
   This answer neither supplies nor authorizes an operational evidence/reviewer policy.
   See ADR-0040; Q-018/Q-020/Q-021/Q-026 and ZaturoBot integration gates remain open.
+
+## Q-042 — Durable ingestion, acknowledgment and replay contract
+- **Status:** open · **Blocks:** Sentinel S1.1 receipt schema, S1.2 ingest and S1.4 replay
+- **Context:** Q-038 accepts individual structural telemetry, not the broader proposed
+  batch/ACK/durability/idempotency protocol. S1 must not invent permanent receipt identity
+  or replay behavior by copying illustrative JSON. See proposed ADR-0042 and
+  [ADAPTER_PROTOCOL.md](sentinel/ADAPTER_PROTOCOL.md).
+- **Required decisions:** exact batch/receipt version and bounds; canonical producer
+  digest; uniqueness by app/installation/stream/event; identical versus conflicting
+  duplicate handling; per-member/whole-batch failures; terminal/retryable outcomes;
+  atomic durable acceptance/checkpoint and durability claim; registered stream reset,
+  log rotation/truncation, late/historical replay and expired tombstone behavior.
+  Replay horizons and retained identity fields must agree with Q-018/Q-020/Q-021.
+- **Options:** adopt the protocol's bounded per-member acceptance, identical-duplicate
+  ACK and conflict refusal after explicitly defining its canonical digest/transaction/
+  replay contract; or approve a revised contract before repository/API implementation.
+- **Working interpretation:** examples remain proposals; no receipt migration, endpoint,
+  success ACK, replay horizon or exactly-once claim is implemented by S0.4. Synthetic
+  acceptance must cover lost ACK, crash boundaries, changed replay, mixed batches and
+  revoked-source reconnect before any activation.

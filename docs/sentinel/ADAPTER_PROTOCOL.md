@@ -9,6 +9,10 @@ No universal ingestion endpoint or adapter described here exists yet; phase-10 C
 uses its separate native port. Canonical scope and requirement IDs: [master plan](SENTINEL_MASTER_PLAN.md).
 Implementation order: [roadmap](SENTINEL_IMPLEMENTATION_ROADMAP.md).
 
+S0.4 records the remaining batch/receipt/digest/replay choice in Q-042 and proposed
+ADR-0042. The [decision packet](S0_4_DECISION_PACKET.md) maps it to S1.1/S1.2/S1.4;
+example ACKs and uniqueness rules below remain proposals until that contract is adopted.
+
 ## Responsibility and trust
 
 An adapter translates an authorized source into a common telemetry contract. It does not

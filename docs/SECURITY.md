@@ -149,11 +149,16 @@ rotation, propagation limits and actual disposable acceptance: [MONITORING.md](M
 
 ## Pure Sentinel preflight and future ZaturoBot boundary
 
-S0.1–S0.2 validate structure and exact caller-supplied configuration, not network identity
+S0.1–S0.3 validate structure and exact caller-supplied configuration, not network identity
 or globally current revocation. Source claims/time cannot expand manifest/grant scope.
 Later authenticated services must load current trusted registry/grant state and apply
 resource bounds before operation admission. No production credential or IO executor is
 created by these contracts.
+
+S0.3 evidence references are scoped declarations, not authenticated collections or
+storage checks. Clock-stamped `recorded_at` is receipt, never source content age.
+Availability/freshness and descriptive incident states cannot establish compromise or
+close an Audit finding. Q-026's operational evidence/reviewer policy remains open.
 
 ADR-0038 assigns future bot/client presentation to ZaturoBot while OpenTatu retains policy,
 history, budgets, exact approvals and effects. The external bot/app adds a confidentiality
@@ -164,3 +169,9 @@ enter either project's model path merely because existing coding consent exists.
 loopback/Host/Origin guards until Q-021/Q-040 remote controls are implemented and tested.
 No integration or deployment is enabled here; see the
 [service plan](sentinel/ZATUROBOT_INTEGRATION_PLAN.md).
+
+S0.4 adds a [boundary/threat acceptance review](sentinel/S0_4_THREAT_MODEL.md) and
+[decision/entry packet](sentinel/S0_4_DECISION_PACKET.md), reusing the canonical Sentinel
+threat register. Proposed ADRs and Q-042's durable-ingest contract remain unapproved.
+No security control, source credential, retention schedule, remote listener or
+architecture edge is enabled by that documentation-only review.

@@ -25,8 +25,11 @@ typed portable adapter declarations, exact source/event scopes and current capab
 preflight. Q-041 approved S0.3's [incident/evidence contract](sentinel/S0_3_INCIDENT_CONTRACT.md):
 descriptive states, structural lifecycle gates and scoped immutable evidence declarations/
 observations. These contracts do not establish operational conclusions or close findings.
-`PENDING(phase-S0): S0.4 decision and threat packet`; Q-026 still gates operational evidence
-policy. S0 remains in progress until that packet and the end-of-S0 owner gate are complete.
+S0.4's [decision packet](sentinel/S0_4_DECISION_PACKET.md) and
+[threat review](sentinel/S0_4_THREAT_MODEL.md) are delivered, with proposed ADR-0041–0043
+and explicit Q-042 ingest semantics. S0 implementation tasks are complete; S0 remains 🟡
+pending owner acceptance and the decisions required for S1. Q-018/Q-020/Q-021/Q-023/
+Q-029/Q-042 block dependent S1 work; Q-026 still gates operational incident evidence.
 S1 and later phases remain separately gated. Current status does not authorize deployment.
 
 | Phase | Status | Scope | Done when |

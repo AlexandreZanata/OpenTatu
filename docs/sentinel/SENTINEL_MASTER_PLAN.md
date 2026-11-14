@@ -3,7 +3,9 @@
 Planning baseline: 2026-11-12. Status update (2026-11-14): original Audit phases 0–10 are
 delivered; the owner requested continuation and approved the narrow [S0.1 contract](S0_1_TELEMETRY_CONTRACT.md)
 in Q-038. Pure telemetry validation, Q-039's adapter/scope contracts and Q-041's structural
-incident/evidence contracts are implemented. S0.4 and later work remain proposed.
+incident/evidence contracts are implemented. S0.4's [decision packet](S0_4_DECISION_PACKET.md)
+and [threat review](S0_4_THREAT_MODEL.md) are delivered; their drafts, S0 acceptance and
+S1 entry choices remain pending. S1 and later implementation is not authorized here.
 ADR-0038 records the ZaturoBot service direction; ADR-0040 limits S0.3 to declarations.
 Historical observations below describe the dated planning baseline, not current HEAD.
 Planning never authorizes installation, application changes or production access.
@@ -173,7 +175,8 @@ triggers do not provide root-compromise protection.
 Original phases 0–10 are delivered and the owner approved Sentinel kickoff in Q-017.
 S0.1–S0.3 are implemented under Q-038/Q-039/Q-041. S0.3 validates only incident vocabulary,
 structural gates and evidence declarations; Q-026 still gates actual conclusions.
-S0.4 and later S phases remain separately gated. Original optional-phase authorization is not
+S0.4's review packet is delivered; owner S0 acceptance and required S1 decisions remain
+pending. S1 and later S phases remain separately gated. Original optional-phase authorization is not
 reused as permission for Sentinel collection, integration deployment or broader response.
 
 - **S0:** contracts, deployment/data budgets, decisions and threat model.
@@ -221,7 +224,7 @@ most 25% of one core; p95 receipt-to-incident at most 2 seconds; durable notific
 within 5 seconds. Integration/app-network delivery latency is measured separately, with
 unknown delivery represented explicitly. None is a measured capability today.
 
-At 10 events/second and 1 KiB normalized payload, payload alone is about 0.86 GB/day
+At 10 events/second and 1 KiB normalized payload, payload alone is about 0.885 GB/day
 (decimal), before SQLite/index/WAL overhead. Persist selected normalized signals, aggregate
 routine observations, bound high-cardinality keys and measure encoded size before selecting
 retention. A small VPS cannot retain every request forever. Raw logs remain source-side

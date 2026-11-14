@@ -492,3 +492,14 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
   unavailable/stale/unknown information. R06 type-boundary rustdoc complements existing
   finding lifecycle tests. [Contract](sentinel/S0_3_INCIDENT_CONTRACT.md), ADR-0040/Q-041;
   Q-026's actual evidence/reviewer policy remains open for S2/S5.
+
+## Sentinel S0.4 review artifacts
+
+- [Decision packet](sentinel/S0_4_DECISION_PACKET.md): approved foundation/directions,
+  proposed ADR-0027–0029/0041–0043, owner choices and exact S1 entry dependencies.
+- [Threat review](sentinel/S0_4_THREAT_MODEL.md): current/planned boundary controls,
+  synthetic TH-01–TH-13 acceptance evidence and residual risks, reusing the canonical
+  Sentinel security-model register. Future implementations reuse these acceptance cases.
+- No reusable runtime component, dependency, IO port or schema is introduced. S0.4
+  delivers review documents; owner acceptance and unresolved Q-018/Q-020/Q-021/Q-023/
+  Q-029/Q-042 still gate dependent S1 work. Later provider/integration/action gates remain.
