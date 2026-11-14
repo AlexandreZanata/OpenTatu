@@ -199,16 +199,9 @@ fn parse_response(body: &[u8], duration_ms: u64) -> Result<ModelResponse, Error>
         .next()
         .ok_or_else(|| Error::Provider("response has no choices".into()))?;
     let finish_reason = choice.finish_reason;
-    let content = choice
-        .message
-        .content
-        .filter(|text| !text.trim().is_empty())
-        .ok_or_else(|| {
-            Error::Provider(format!(
-                "empty answer (finish_reason: {})",
-                finish_reason.as_deref().unwrap_or("unknown")
-            ))
-        })?;
+    // Empty/truncated content is a completed, billable provider response. Preserve its
+    // metadata for accounting; the caller owns JSON/role validation and bounded retries.
+    let content = choice.message.content.unwrap_or_default();
     let usage = parsed.usage.unwrap_or_default();
     Ok(ModelResponse {
         content,
@@ -305,14 +298,33 @@ mod tests {
     }
 
     #[test]
-    fn empty_content_is_an_error() {
-        let body =
-            r#"{"model":"m","choices":[{"finish_reason":"length","message":{"content":null}}]}"#;
-        let error = parse_response(body.as_bytes(), 1).unwrap_err();
-        assert!(
-            error.to_string().contains("finish_reason: length"),
-            "{error}"
-        );
+    fn r13_empty_content_preserves_known_billing_and_finish_metadata() {
+        for content in [serde_json::Value::Null, "".into(), " \n\t".into()] {
+            let mut body: serde_json::Value = serde_json::from_str(DEEPSEEK_ANSWER).unwrap();
+            body["choices"][0]["message"]["content"] = content.clone();
+            body["choices"][0]["finish_reason"] = "length".into();
+            let response = parse_response(&serde_json::to_vec(&body).unwrap(), 123).unwrap();
+            assert_eq!(response.content, content.as_str().unwrap_or_default());
+            assert_eq!(response.model, "deepseek-v4.1-flash");
+            assert_eq!((response.input_tokens, response.output_tokens), (45, 31));
+            assert_eq!(response.reasoning_tokens, 23);
+            assert_eq!(response.cost_usd, Some(3.042e-05));
+            assert_eq!(response.finish_reason.as_deref(), Some("length"));
+            assert_eq!(response.duration_ms, 123);
+        }
+        let mut missing: serde_json::Value = serde_json::from_str(DEEPSEEK_ANSWER).unwrap();
+        missing["choices"][0]["message"]
+            .as_object_mut()
+            .unwrap()
+            .remove("content");
+        let response = parse_response(&serde_json::to_vec(&missing).unwrap(), 1).unwrap();
+        assert!(response.content.is_empty());
+        assert_eq!(response.output_tokens, 31);
+    }
+
+    #[test]
+    fn absent_choice_is_still_a_provider_error() {
+        assert!(parse_response(br#"{"model":"m","choices":[]}"#, 1).is_err());
     }
 
     #[test]
@@ -388,6 +400,76 @@ mod tests {
                 .unwrap()
                 .starts_with("OpenTatu/")
         );
+    }
+
+    #[tokio::test]
+    async fn r13_http_empty_truncation_records_usage_and_settles_its_known_charge() {
+        use crate::router::tests::MemoryRecorder;
+        use crate::{CallContext, CampaignBudget, Llm, ModelsConfig, RetryPolicy};
+        use opentatu_core::{AiRole, Timestamp};
+
+        let mut body: serde_json::Value = serde_json::from_str(DEEPSEEK_ANSWER).unwrap();
+        body["choices"][0]["message"]["content"] = serde_json::Value::Null;
+        body["choices"][0]["finish_reason"] = "length".into();
+        let app = Router::new().route(
+            "/v1/chat/completions",
+            post(move || {
+                let body = body.clone();
+                async move { axum::Json(body) }
+            }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let config = ModelsConfig::from_toml(include_str!("../../../config/models.toml")).unwrap();
+        let mut provider = config.provider.clone();
+        provider.base_url = format!("http://{address}/v1");
+        let client = OpenCodeGoClient::new(&provider, Secret::new("oc_sk_test")).unwrap();
+        let recorder = Arc::new(MemoryRecorder::default());
+        let ledger = crate::campaign::tests::Ledger::new();
+        let campaign = Arc::new(CampaignBudget::open(ledger.path(), 20.0, &config).unwrap());
+        let llm = Llm::new(Arc::new(client), config)
+            .with_recorder(recorder.clone())
+            .with_campaign_budget(campaign.clone())
+            .with_retry_policy(RetryPolicy::none());
+        let at: Timestamp = "2026-11-14T10:00:00-03:00".parse().unwrap();
+        let response = llm
+            .generate(
+                &CallContext::diagnostic("empty-http", &at),
+                AiRole::Verifier,
+                vec![Message::user("fixture")],
+                Some(serde_json::json!({"type":"object"})),
+            )
+            .await
+            .unwrap();
+        assert!(
+            response.content.is_empty(),
+            "transport preserves metadata for role validation"
+        );
+        assert_eq!(response.finish_reason.as_deref(), Some("length"));
+        let recorded = recorder.0.lock().unwrap();
+        assert_eq!(recorded.len(), 1);
+        assert_eq!(
+            (
+                recorded[0].input_tokens,
+                recorded[0].output_tokens,
+                recorded[0].reasoning_tokens
+            ),
+            (45, 31, 23)
+        );
+        assert_eq!(recorded[0].cost_usd, Some(3.042e-05));
+        drop(recorded);
+        let lines: Vec<serde_json::Value> = std::fs::read_to_string(ledger.path())
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(lines.len(), 3, "policy, reservation and known settlement");
+        assert_eq!(lines[2]["event"], "settled");
+        assert_eq!(lines[2]["charged_micro_usd"], 31);
+        assert_eq!(campaign.committed_usd(), 0.000031);
+        drop(llm);
+        drop(campaign);
     }
 
     #[tokio::test]

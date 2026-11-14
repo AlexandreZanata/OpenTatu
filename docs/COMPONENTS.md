@@ -222,9 +222,10 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `CallContext::{for_audit, diagnostic}` | Audit + provider session id of a call |
 | `RetryPolicy` | Capped exponential backoff for rate limits and transport failures (`Error::Transport`; timeouts are not retried) |
 | `UsageRecorder` (trait) | Where every call is recorded (implemented in the binary over services) |
-| `OpenCodeGoClient` | OpenCode Go Chat Completions client (auth, User-Agent, `x-opencode-session`) |
+| `OpenCodeGoClient` | OpenCode Go Chat Completions client (auth, User-Agent, `x-opencode-session`); preserves metered empty content for downstream validation |
 | `LlmClient` (trait) | Provider port (OpenCode Go today; a local model later) |
 | `FakeClient` | The only LLM test double: scripted answers, recorded requests |
+| `campaign::tests::Ledger` (test-only) | Reused private `TempDir` ledger fixture for accounting, HTTP and diagnostic tests; automatic cleanup |
 | `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` | Chat and accounting types |
 | `ModelsConfig::{load, from_toml, validate, role_models, set_role_model, set_audit_budget}`, `ProviderConfig::{is_allowed, trains_on_prompts}` | Typed `config/models.toml` with allowlist and training guard; per-run overrides |
 

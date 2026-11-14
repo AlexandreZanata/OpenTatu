@@ -55,6 +55,7 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | A task (db, reports) | `opentatu_db::tasks::tests::sample_task`, `opentatu_reports` `manifest::tests::task` |
 | A benchmark app, known flaws, a scored finding | `opentatu_benchmark` `app::tests::APP`, `score::tests::{expected, finding}` |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
+| Private campaign ledger (LLM tests) | `campaign::tests::Ledger::{new, path}` over workspace `tempfile::TempDir`; shared by admission, provider and diagnostic tests |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |
 | Scanners | `opentatu_scanners::testing::FakeSuite::clean().with(kind, FakeOutcome::...)` (feature `test-support`) |

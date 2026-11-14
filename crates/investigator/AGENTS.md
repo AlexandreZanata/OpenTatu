@@ -56,3 +56,8 @@ approval/configuration; a descriptive app URL never grants network access.
 Audit refinement: hunter 2.3.0, verifier 1.4.0 and skeptic 2.1.0 add source-to-sink,
 upstream/shared-defense and attacker-capability guidance without changing output schemas.
 Static reasoning remains distinct from a system-recorded dynamic execution.
+
+Empty metered replies are invalid role outputs and follow the same bounded retry path.
+Do not send a blank assistant turn back to the provider; keep validation feedback and
+retain nonempty rejected replies as before. Billing is recorded by `Llm` before this
+validation, including when every attempt is rejected.

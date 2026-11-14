@@ -85,7 +85,11 @@ pub async fn run_role<T: RoleOutput>(
             Err(why) => {
                 tracing::warn!(%role, attempt, problem = %why, "invalid role answer");
                 problem = why;
-                messages.push(Message::assistant(response.content));
+                // Empty completions still count for billing, but an empty assistant
+                // turn can be rejected by a gateway before the corrected reply runs.
+                if !response.content.trim().is_empty() {
+                    messages.push(Message::assistant(response.content));
+                }
                 messages.push(Message::user(format!(
                     "Your previous answer was rejected: {problem}. Answer again with the \
                      complete JSON object only, exactly in the output format of your role."
@@ -131,7 +135,7 @@ fn strip_code_fence(content: &str) -> &str {
 pub(crate) mod tests {
     use std::sync::Arc;
 
-    use opentatu_llm::{FakeClient, ModelsConfig, RetryPolicy};
+    use opentatu_llm::{CampaignBudget, FakeClient, ModelsConfig, RetryPolicy};
     use serde::Deserialize;
 
     use super::*;
@@ -248,5 +252,105 @@ pub(crate) mod tests {
             "{error}"
         );
         assert_eq!(fake.requests().len(), 3);
+    }
+
+    #[tokio::test]
+    async fn r13_empty_truncated_answers_are_metered_then_recovered_or_rejected_boundedly() {
+        for recover in [true, false] {
+            let fake = Arc::new(FakeClient::new());
+            let audit: AuditId = "AUD-DEMO-20261112-0900".parse().unwrap();
+            let llm = llm(&fake);
+            let directory = tempfile::tempdir().unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt as _;
+                std::fs::set_permissions(directory.path(), std::fs::Permissions::from_mode(0o700))
+                    .unwrap();
+            }
+            let ledger = directory.path().join("campaign.jsonl");
+            let campaign = Arc::new(CampaignBudget::open(&ledger, 20.0, llm.config()).unwrap());
+            let response = |content: String, finish: &str| ModelResponse {
+                content,
+                model: llm.config().roles[&AiRole::Planner].model.clone(),
+                input_tokens: 100,
+                output_tokens: 64,
+                reasoning_tokens: 60,
+                cost_usd: Some(0.00002),
+                finish_reason: Some(finish.into()),
+                duration_ms: 5,
+            };
+            fake.push_response(response(String::new(), "length"));
+            if recover {
+                fake.push_response(response(
+                    answer("planner", audit.as_str(), r#", "answer": 42"#),
+                    "stop",
+                ));
+            } else {
+                fake.push_response(response(" \n\t".into(), "stop"));
+                fake.push_response(response(String::new(), "length"));
+            }
+            let llm = llm.with_campaign_budget(campaign.clone());
+            let variables = variables();
+            let call = RoleCall {
+                audit_id: &audit,
+                variables: &variables,
+                inputs: vec![],
+                conversation: 1,
+            };
+            let result = run_role::<Probe>(&llm, call).await;
+            let expected_calls = if recover { 2 } else { MAX_RETRIES + 1 };
+            if recover {
+                let result = result.unwrap();
+                assert_eq!(result.output.answer, 42);
+                assert_eq!(result.attempts, 2);
+            } else {
+                assert!(
+                    matches!(result, Err(Error::InvalidOutput { attempts, .. }) if attempts == MAX_RETRIES + 1)
+                );
+            }
+            assert_eq!(fake.requests().len(), expected_calls as usize);
+            assert!(
+                fake.requests()[1]
+                    .messages
+                    .last()
+                    .unwrap()
+                    .content
+                    .contains("output token limit")
+            );
+            assert!(
+                fake.requests()
+                    .iter()
+                    .flat_map(|request| &request.messages)
+                    .all(
+                        |message| message.role != opentatu_llm::MessageRole::Assistant
+                            || !message.content.trim().is_empty()
+                    ),
+                "empty or whitespace-only completions never become assistant turns"
+            );
+            let records: Vec<serde_json::Value> = std::fs::read_to_string(&ledger)
+                .unwrap()
+                .lines()
+                .map(|line| serde_json::from_str(line).unwrap())
+                .collect();
+            let settled: Vec<_> = records
+                .iter()
+                .filter(|record| record["event"] == "settled")
+                .collect();
+            assert_eq!(
+                settled.len(),
+                expected_calls as usize,
+                "every invalid response still has known usage"
+            );
+            assert!(settled.iter().all(|record| record["input_tokens"] == 100
+                && record["output_tokens"] == 64
+                && record["charged_micro_usd"] == 20));
+            assert_eq!(
+                records.len(),
+                1 + 2 * expected_calls as usize,
+                "no extra reservations or unmetered retries"
+            );
+            drop(llm);
+            drop(campaign);
+        }
     }
 }

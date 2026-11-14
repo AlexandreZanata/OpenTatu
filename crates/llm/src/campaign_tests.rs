@@ -1,44 +1,39 @@
 //! Offline campaign admission, durability, concurrency and provider-failure tests.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 use opentatu_core::{AiRole, Timestamp};
 
 use super::*;
 use crate::{FakeClient, Llm, Message, RetryPolicy};
 
-static NEXT_FILE: AtomicU64 = AtomicU64::new(0);
-
-struct Ledger(PathBuf);
+pub(crate) struct Ledger {
+    path: PathBuf,
+    _directory: tempfile::TempDir,
+}
 
 impl Ledger {
-    fn new() -> Self {
-        let directory = std::env::temp_dir().join(format!(
-            "opentatu-campaign-{}-{}.jsonl",
-            std::process::id(),
-            NEXT_FILE.fetch_add(1, Ordering::Relaxed)
-        ));
-        let mut builder = std::fs::DirBuilder::new();
+    pub(crate) fn new() -> Self {
+        let directory = tempfile::tempdir().unwrap();
         #[cfg(unix)]
         {
-            use std::os::unix::fs::DirBuilderExt as _;
-            builder.mode(0o700);
+            use std::os::unix::fs::PermissionsExt as _;
+            std::fs::set_permissions(directory.path(), std::fs::Permissions::from_mode(0o700))
+                .unwrap();
         }
-        builder.create(&directory).unwrap();
-        Self(directory.join("campaign.jsonl"))
+        Self {
+            path: directory.path().join("campaign.jsonl"),
+            _directory: directory,
+        }
+    }
+
+    pub(crate) fn path(&self) -> &Path {
+        &self.path
     }
 
     fn open(&self, cap: f64) -> CampaignBudget {
-        CampaignBudget::open(&self.0, cap, &config()).unwrap()
-    }
-}
-
-impl Drop for Ledger {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.0);
-        let _ = std::fs::remove_dir(self.0.parent().unwrap());
+        CampaignBudget::open(self.path(), cap, &config()).unwrap()
     }
 }
 
@@ -83,7 +78,7 @@ fn r13_unresolved_reservations_survive_reopen_and_exclude_other_processes() {
     let file = Ledger::new();
     let campaign = file.open(0.5);
     campaign.reserve(&context(), None).unwrap();
-    assert!(CampaignBudget::open(&file.0, 0.5, &config()).is_err());
+    assert!(CampaignBudget::open(file.path(), 0.5, &config()).is_err());
     drop(campaign);
     let campaign = file.open(0.5);
     assert_eq!(campaign.committed_usd(), 0.339322);
@@ -94,17 +89,17 @@ fn r13_unresolved_reservations_survive_reopen_and_exclude_other_processes() {
 fn r13_cap_pricing_and_endpoint_cannot_change_on_reopen() {
     let file = Ledger::new();
     drop(file.open(20.0));
-    assert!(CampaignBudget::open(&file.0, 21.0, &config()).is_err());
+    assert!(CampaignBudget::open(file.path(), 21.0, &config()).is_err());
     let mut changed = config();
     changed
         .campaign
         .as_mut()
         .unwrap()
         .input_micro_usd_per_million = 1;
-    assert!(CampaignBudget::open(&file.0, 20.0, &changed).is_err());
+    assert!(CampaignBudget::open(file.path(), 20.0, &changed).is_err());
     let mut changed = config();
     changed.provider.base_url.push_str("/other");
-    assert!(CampaignBudget::open(&file.0, 20.0, &changed).is_err());
+    assert!(CampaignBudget::open(file.path(), 20.0, &changed).is_err());
 }
 
 #[test]
@@ -185,25 +180,25 @@ fn private_ledger_rejects_broad_permissions_and_symlinks() {
     use std::os::unix::fs::{PermissionsExt as _, symlink};
     let file = Ledger::new();
     drop(file.open(20.0));
-    std::fs::set_permissions(&file.0, std::fs::Permissions::from_mode(0o644)).unwrap();
-    assert!(CampaignBudget::open(&file.0, 20.0, &config()).is_err());
-    std::fs::set_permissions(&file.0, std::fs::Permissions::from_mode(0o600)).unwrap();
-    let link = file.0.with_extension("link");
-    symlink(&file.0, &link).unwrap();
+    std::fs::set_permissions(file.path(), std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(CampaignBudget::open(file.path(), 20.0, &config()).is_err());
+    std::fs::set_permissions(file.path(), std::fs::Permissions::from_mode(0o600)).unwrap();
+    let link = file.path().with_extension("link");
+    symlink(file.path(), &link).unwrap();
     assert!(CampaignBudget::open(&link, 20.0, &config()).is_err());
     std::fs::remove_file(link).unwrap();
-    let parent = file.0.parent().unwrap();
+    let parent = file.path().parent().unwrap();
     std::fs::set_permissions(parent, std::fs::Permissions::from_mode(0o755)).unwrap();
-    assert!(CampaignBudget::open(&file.0, 20.0, &config()).is_err());
+    assert!(CampaignBudget::open(file.path(), 20.0, &config()).is_err());
 }
 
 #[test]
 fn r13_torn_ledger_is_never_silently_reset() {
     let file = Ledger::new();
     drop(file.open(20.0));
-    let mut output = OpenOptions::new().append(true).open(&file.0).unwrap();
+    let mut output = OpenOptions::new().append(true).open(file.path()).unwrap();
     output.write_all(b"{\"event\":\"reserved\"").unwrap();
-    assert!(CampaignBudget::open(&file.0, 20.0, &config()).is_err());
+    assert!(CampaignBudget::open(file.path(), 20.0, &config()).is_err());
 }
 
 fn raised_config() -> ModelsConfig {
@@ -220,9 +215,9 @@ fn r13_output_raise_preserves_settled_and_unknown_history_under_same_cap() {
     old.settle(settled, &response(Some(0.001))).unwrap();
     old.reserve(&context(), None).unwrap();
     drop(old);
-    let original_history = std::fs::read(&file.0).unwrap();
+    let original_history = std::fs::read(file.path()).unwrap();
 
-    let raised = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    let raised = CampaignBudget::open(file.path(), 20.0, &raised_config()).unwrap();
     assert_eq!(raised.committed_usd(), 0.340322);
     let mut request = ModelRequest {
         model: raised_config().campaign.unwrap().model,
@@ -236,14 +231,14 @@ fn r13_output_raise_preserves_settled_and_unknown_history_under_same_cap() {
     assert_eq!(request.max_output_tokens, Some(131_072));
     raised.reserve(&context(), None).unwrap();
     assert_eq!(raised.committed_usd(), 0.797609);
-    let updated_history = std::fs::read(&file.0).unwrap();
+    let updated_history = std::fs::read(file.path()).unwrap();
     assert!(
         updated_history.starts_with(&original_history),
         "original history was never rewritten"
     );
     drop(raised);
 
-    let reopened = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    let reopened = CampaignBudget::open(file.path(), 20.0, &raised_config()).unwrap();
     assert_eq!(reopened.committed_usd(), 0.797609);
     let mut new_admissions = 1;
     while reopened.reserve(&context(), None).is_ok() {
@@ -253,18 +248,18 @@ fn r13_output_raise_preserves_settled_and_unknown_history_under_same_cap() {
     assert!(reopened.committed_usd() <= 20.0);
     drop(reopened);
     assert_eq!(
-        std::fs::read_to_string(&file.0)
+        std::fs::read_to_string(file.path())
             .unwrap()
             .matches("output_limit_raised")
             .count(),
         1
     );
     assert!(
-        CampaignBudget::open(&file.0, 20.0, &config()).is_err(),
+        CampaignBudget::open(file.path(), 20.0, &config()).is_err(),
         "output decreases fail closed"
     );
     assert!(
-        CampaignBudget::open(&file.0, 21.0, &raised_config()).is_err(),
+        CampaignBudget::open(file.path(), 21.0, &raised_config()).is_err(),
         "cap cannot increase"
     );
 }
@@ -275,7 +270,7 @@ fn r13_old_reservation_keeps_its_original_output_bound_after_raise() {
     let old = file.open(20.0);
     let pending = old.reserve(&context(), None).unwrap();
     drop(old);
-    let raised = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    let raised = CampaignBudget::open(file.path(), 20.0, &raised_config()).unwrap();
     let mut oversized_old_response = response(Some(0.001));
     oversized_old_response.output_tokens = 40_000;
     assert!(raised.settle(pending, &oversized_old_response).is_err());
@@ -293,12 +288,12 @@ fn r13_old_settlement_after_raise_replays_against_original_attempt_bound() {
     let old = file.open(20.0);
     let pending = old.reserve(&context(), None).unwrap();
     drop(old);
-    let raised = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    let raised = CampaignBudget::open(file.path(), 20.0, &raised_config()).unwrap();
     raised.settle(pending, &response(Some(0.001))).unwrap();
     raised.reserve(&context(), None).unwrap();
     assert_eq!(raised.committed_usd(), 0.458287);
     drop(raised);
-    let reopened = CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap();
+    let reopened = CampaignBudget::open(file.path(), 20.0, &raised_config()).unwrap();
     assert_eq!(reopened.committed_usd(), 0.458287);
 }
 
@@ -312,9 +307,9 @@ fn r13_corrupt_or_non_increasing_output_transitions_fail_closed() {
     ] {
         let file = Ledger::new();
         drop(file.open(20.0));
-        let mut output = OpenOptions::new().append(true).open(&file.0).unwrap();
+        let mut output = OpenOptions::new().append(true).open(file.path()).unwrap();
         writeln!(output, "{transition}").unwrap();
-        assert!(CampaignBudget::open(&file.0, 20.0, &raised_config()).is_err());
+        assert!(CampaignBudget::open(file.path(), 20.0, &raised_config()).is_err());
     }
 }
 
@@ -329,7 +324,7 @@ fn r13_output_raise_never_allows_price_model_or_input_ceiling_changes() {
     ] {
         let mut changed = raised_config();
         mutate(changed.campaign.as_mut().unwrap());
-        assert!(CampaignBudget::open(&file.0, 20.0, &changed).is_err());
+        assert!(CampaignBudget::open(file.path(), 20.0, &changed).is_err());
     }
 }
 
@@ -391,7 +386,7 @@ async fn r13_campaign_clamps_role_output_cap_without_reducing_reservation() {
         .get_mut(&AiRole::Hunter)
         .unwrap()
         .max_output_tokens = Some(200_000);
-    let campaign = Arc::new(CampaignBudget::open(&file.0, 20.0, &config).unwrap());
+    let campaign = Arc::new(CampaignBudget::open(file.path(), 20.0, &config).unwrap());
     let fake = Arc::new(FakeClient::new());
     fake.push_error(Error::Provider("unknown billing outcome".into()));
     let llm = Llm::new(fake.clone(), config).with_campaign_budget(campaign.clone());
@@ -407,7 +402,7 @@ async fn r13_campaign_clamps_role_output_cap_without_reducing_reservation() {
 #[tokio::test]
 async fn r13_campaign_rejects_zero_output_cap_before_reservation_or_transport() {
     let file = Ledger::new();
-    let campaign = Arc::new(CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap());
+    let campaign = Arc::new(CampaignBudget::open(file.path(), 20.0, &raised_config()).unwrap());
     let mut invalid = raised_config();
     invalid
         .roles

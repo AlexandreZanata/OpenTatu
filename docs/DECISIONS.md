@@ -1115,6 +1115,14 @@ Template:
   same limits; the failed large-output run remains calibration. No unverified gateway
   reasoning-control field is sent. Truncation/provider failure retains existing validation,
   partial-coverage and uncertain-charge behavior.
+- **Metered empty replies:** an actual truncated empty hunter reply exposed a provider
+  parser boundary that discarded usage before role validation. Preserve valid response
+  metadata even for empty/null/whitespace content, account for it through the single LLM
+  call path, then apply the investigator's existing schema checks and two-retry limit.
+  Skip blank assistant turns while retaining correction feedback. Diagnostic JSON is
+  also checked after accounting. Unmetered/malformed envelopes remain conservative
+  unknowns; historical reservations are unchanged. The paired benchmark stays frozen at
+  its recorded revision; a separately identified acceptance binary exercises this fix.
 - **Evaluation:** freeze the original engine source and the target commit. Compare
   baseline/candidate with the same provider, budgets, scanner configuration and campaign
   gate. Juice Shop keeps marker-derived scoring. Abastevo is a real-source acceptance

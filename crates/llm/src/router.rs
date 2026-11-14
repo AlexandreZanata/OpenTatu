@@ -103,7 +103,15 @@ impl Llm {
             max_output_tokens: Some(PING_MAX_OUTPUT_TOKENS),
             session_id: context.session_id.clone(),
         };
-        self.call(context, None, request).await
+        let response = self.call(context, None, request).await?;
+        if !serde_json::from_str::<serde_json::Value>(&response.content)
+            .is_ok_and(|value| value.is_object())
+        {
+            return Err(Error::Provider(
+                "diagnostic response is not a JSON object".to_owned(),
+            ));
+        }
+        Ok(response)
     }
 
     /// Allowlist check, retries of rate limits and transport failures, then accounting of
@@ -166,7 +174,7 @@ impl Llm {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use std::sync::Mutex;
 
     use opentatu_core::Timestamp;
@@ -184,7 +192,7 @@ mod tests {
     }
 
     #[derive(Debug, Default)]
-    struct MemoryRecorder(Mutex<Vec<LlmUsage>>);
+    pub(crate) struct MemoryRecorder(pub(crate) Mutex<Vec<LlmUsage>>);
 
     #[async_trait::async_trait]
     impl UsageRecorder for MemoryRecorder {
@@ -216,6 +224,70 @@ mod tests {
         let recorded = recorder.0.lock().unwrap();
         assert_eq!(recorded.len(), 1);
         assert_eq!(recorded[0].role, Some(AiRole::Verifier));
+    }
+
+    #[tokio::test]
+    async fn r13_invalid_ping_json_is_rejected_only_after_known_usage_and_charge_are_recorded() {
+        let fake = Arc::new(FakeClient::new());
+        let config = config();
+        let model = config.campaign.as_ref().unwrap().model.clone();
+        let contents = ["", " \n\t", "null", "[]", "not json", "{}"];
+        for content in contents {
+            fake.push_response(ModelResponse {
+                content: content.into(),
+                model: model.clone(),
+                input_tokens: 100,
+                output_tokens: 64,
+                reasoning_tokens: 60,
+                cost_usd: Some(0.00002),
+                finish_reason: Some("stop".into()),
+                duration_ms: 5,
+            });
+        }
+        let ledger = crate::campaign::tests::Ledger::new();
+        let campaign = Arc::new(CampaignBudget::open(ledger.path(), 20.0, &config).unwrap());
+        let recorder = Arc::new(MemoryRecorder::default());
+        let llm = Llm::new(fake.clone(), config)
+            .with_recorder(recorder.clone())
+            .with_campaign_budget(campaign.clone())
+            .with_retry_policy(RetryPolicy::none());
+        for content in contents {
+            let result = llm.ping(&context(), &model).await;
+            if content == "{}" {
+                assert_eq!(result.unwrap().content, "{}");
+            } else {
+                assert!(
+                    matches!(result, Err(Error::Provider(reason)) if reason == "diagnostic response is not a JSON object")
+                );
+            }
+        }
+        let recorded = recorder.0.lock().unwrap();
+        assert_eq!(recorded.len(), contents.len());
+        assert!(recorded.iter().all(|usage| usage.input_tokens == 100
+            && usage.output_tokens == 64
+            && usage.reasoning_tokens == 60
+            && usage.cost_usd == Some(0.00002)));
+        drop(recorded);
+        let records: Vec<serde_json::Value> = std::fs::read_to_string(ledger.path())
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(
+            records
+                .iter()
+                .filter(|record| record["event"] == "settled")
+                .count(),
+            contents.len()
+        );
+        assert_eq!(campaign.committed_usd(), 0.00012);
+        assert_eq!(
+            fake.requests().len(),
+            contents.len(),
+            "JSON rejection does not retry transport"
+        );
+        drop(llm);
+        drop(campaign);
     }
 
     #[tokio::test]

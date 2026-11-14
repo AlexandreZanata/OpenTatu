@@ -447,4 +447,4 @@ fn ceiling(pricing: &CampaignPricing, input: u64, output: u64) -> Result<u64, Er
 
 #[cfg(test)]
 #[path = "campaign_tests.rs"]
-mod tests;
+pub(crate) mod tests;
