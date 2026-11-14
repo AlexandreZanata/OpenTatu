@@ -1,7 +1,7 @@
 # Sentinel implementation roadmap
 
-Status (2026-11-14): S0 is in progress; S0.1 and S0.2 are implemented under
-Q-017/Q-038/Q-039 and ADR-0037/0039. S0.3–S11 remain planned. The owner reviews one phase at a time
+Status (2026-11-14): S0 is in progress; S0.1–S0.3 are implemented under
+Q-017/Q-038/Q-039/Q-041 and ADR-0037/0039/0040. S0.4–S11 remain planned. The owner reviews one phase at a time
 under [the existing workflow](../WORKFLOW.md). An implementation request never implies
 installation, remote exposure or production changes.
 
@@ -105,7 +105,11 @@ S0.1 evidence (2026-11-13): approved contract and bounds in Q-038, pure types in
 or durable ingest receipt. S0.2 evidence (2026-11-14): ten adapter tests exercise typed
 manifests, exact source/event bindings, requested/approved/enabled intersections, Clock
 validity, changed approvals, privacy and second-app portability. S0.1's eight tests and
-wire schema remain unchanged. S0.3–S0.4 are `PENDING(phase-S0)`; S0 is not fully accepted.
+wire schema remain unchanged. S0.3 evidence (2026-11-14): Q-041's structural vocabulary,
+explicit transition requirements and immutable scoped evidence declarations/observations
+are implemented in core, with no operational determination or finding closure. Clock
+receipt is distinct from source-content freshness. S0.4 is `PENDING(phase-S0)`;
+S0 is not fully accepted and Q-026 still blocks operational evidence policy.
 
 **Components and files:** reuse core identifiers/time/errors/masking; proposed
 `crates/core/src/telemetry.rs`, `adapter.rs`, `incident.rs`; core `lib.rs`; linked contracts
@@ -131,7 +135,9 @@ R04's permanent event ledger before any retention code.
   Predecessor S0.1; tests reject app/adapter mismatch and undeclared capabilities.
 - **S0.3 — Incident and evidence contracts.** Add pure classification/lifecycle and
   evidence-reference invariants with stale/unknown states. Predecessor S0.1; distinguish
-  incident closure from the existing finding/reverification machine.
+  incident closure from the existing finding/reverification machine. Delivered as the
+  narrow [Q-041 contract](S0_3_INCIDENT_CONTRACT.md): structural edge requirements and
+  app-scoped evidence declarations/observations, with actual conclusions still gated.
 - **S0.4 — Decision and threat packet.** Present ADR drafts for separate VPN VPS,
   retention/ledger split, infrastructure/module boundaries, trust model, remote identity,
   source integrity, budgets and benchmark hypotheses. Link unresolved owner decisions to
@@ -785,14 +791,16 @@ packet and a precise question in [OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md).
 
 ## Current implementation handoff
 
-S0.1 and S0.2 are complete, with their owner-approved contracts and executable evidence.
+S0.1–S0.3 are complete, with their owner-approved contracts and executable evidence.
 Do not recreate their validators or treat them as authenticated ingestion. Review
-[telemetry](S0_1_TELEMETRY_CONTRACT.md), [adapter scope](S0_2_ADAPTER_CONTRACT.md), core
+[telemetry](S0_1_TELEMETRY_CONTRACT.md), [adapter scope](S0_2_ADAPTER_CONTRACT.md),
+[incident/evidence](S0_3_INCIDENT_CONTRACT.md), core
 AGENTS and the component catalog before the next change.
 
-The next candidate is **S0.3**, pure incident/evidence contracts with explicit unknown/
-stale states and no Audit finding closure. Resolve any missing classification/evidence
-meaning under Q-026 before encoding it. S0.4 presents the remaining decision/threat packet;
-it must not silently answer retention, source authentication, resources or IO-boundary
+The next candidate is **S0.4**, the remaining decision/threat packet. S0.3 provides
+descriptive vocabularies and structural requirements, not an operational incident machine
+or evidence-sufficiency policy. Keep Q-026 open until the owner selects those standards;
+do not turn enum parsing or AVAILABLE/FRESH declarations into verified conclusions.
+S0.4 must not silently answer retention, source authentication, resources or IO-boundary
 questions. No ingest endpoint, migration, collector, model call, ZaturoBot code change or
 production setting follows from these pure tasks. End-of-S0 approval is required before S1.

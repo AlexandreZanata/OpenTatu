@@ -2,8 +2,9 @@
 
 Planning baseline: 2026-11-12. Status update (2026-11-14): original Audit phases 0–10 are
 delivered; the owner requested continuation and approved the narrow [S0.1 contract](S0_1_TELEMETRY_CONTRACT.md)
-in Q-038. Pure telemetry validation and Q-039's adapter/scope contracts are implemented;
-S0.3 and later work remain proposed. ADR-0038 records the ZaturoBot service direction.
+in Q-038. Pure telemetry validation, Q-039's adapter/scope contracts and Q-041's structural
+incident/evidence contracts are implemented. S0.4 and later work remain proposed.
+ADR-0038 records the ZaturoBot service direction; ADR-0040 limits S0.3 to declarations.
 Historical observations below describe the dated planning baseline, not current HEAD.
 Planning never authorizes installation, application changes or production access.
 
@@ -170,8 +171,9 @@ triggers do not provide root-compromise protection.
 ## Sequencing and release definitions
 
 Original phases 0–10 are delivered and the owner approved Sentinel kickoff in Q-017.
-S0.1 is implemented; Q-039 authorizes S0.2's pure adapter/scope contracts. S0.3–S0.4 and
-later S phases remain separately gated. Original optional-phase authorization is not
+S0.1–S0.3 are implemented under Q-038/Q-039/Q-041. S0.3 validates only incident vocabulary,
+structural gates and evidence declarations; Q-026 still gates actual conclusions.
+S0.4 and later S phases remain separately gated. Original optional-phase authorization is not
 reused as permission for Sentinel collection, integration deployment or broader response.
 
 - **S0:** contracts, deployment/data budgets, decisions and threat model.

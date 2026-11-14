@@ -89,6 +89,7 @@ serde types never echo rejected data; other enums preserve their prior behavior.
 Validation: `cargo test -p opentatu-core adapter` runs ten tests;
 `cargo test -p opentatu-core telemetry` retains eight. Core Clippy passes with warnings
 denied; final acceptance additionally requires `cargo xtask check` on the committed tree.
-This is S0.2 only; S0.3–S0.4 and later-phase questions remain pending.
+At S0.2 acceptance, S0.3–S0.4 and later-phase questions remained pending. Current
+implementation progress is maintained in the [roadmap](SENTINEL_IMPLEMENTATION_ROADMAP.md).
 Verified 2026-11-14: ten adapter tests, eight unchanged telemetry tests and full workspace
 `cargo xtask check` pass (355 tests; six existing infrastructure tests remain opt-in).

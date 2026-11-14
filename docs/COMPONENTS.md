@@ -470,3 +470,25 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
   than duplicating textual enum mappings for untrusted values.
 - Ten synthetic adapter tests reuse the existing telemetry fixture/FixedClock; no new
   dependency or loader. [Contract](sentinel/S0_2_ADAPTER_CONTRACT.md), ADR-0039.
+
+## Sentinel S0.3 additions
+
+- Core `IncidentLifecycle`, `IncidentClassification` and `IncidentTransitionRequirement`
+  in `incident.rs`. `transition_requirements` validates the structural edge relation and
+  returns outstanding gates; it neither satisfies them nor executes a transition.
+  No FindingState conversion or incident determination API exists. Later confidence
+  fields reuse `Option<Confidence>` without another enum or changed Audit format.
+- `IncidentEvidenceReference` and `IncidentEvidenceObservation` in `incident_evidence.rs`:
+  private immutable scoped declarations and observations, Serialize only, redacted Debug.
+  Reuse AdapterBinding/AdapterIdentity, Fingerprint, approved opaque-handle validation and
+  Clock. `recorded_at` means declaration receipt, not actual content collection time;
+  observation checks expected app and refuses a time before that receipt.
+- `IncidentEvidencePrivacy` permits PUBLIC/INTERNAL; `EvidenceAvailability` distinguishes
+  AVAILABLE/EXPIRED/MISSING/QUARANTINED independently of `EvidenceFreshness` UNKNOWN/FRESH/
+  STALE. These are caller-supplied declarations, never truth, access or action grants.
+  `InvalidIncident` and new enum diagnostics are static; existing input types keep their
+  prior parsers. No raw evidence/parser/registry, retention, freshness threshold or IO.
+- Pure synthetic `incident_tests.rs` covers edge/gate matrices, scopes, Clock and explicit
+  unavailable/stale/unknown information. R06 type-boundary rustdoc complements existing
+  finding lifecycle tests. [Contract](sentinel/S0_3_INCIDENT_CONTRACT.md), ADR-0040/Q-041;
+  Q-026's actual evidence/reviewer policy remains open for S2/S5.

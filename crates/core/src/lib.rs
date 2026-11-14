@@ -26,6 +26,8 @@ pub mod fingerprint;
 pub mod host;
 pub mod hypothesis;
 pub mod ids;
+pub mod incident;
+mod incident_evidence;
 pub mod lab;
 pub mod layout;
 pub mod lenient;
@@ -67,6 +69,11 @@ pub use hypothesis::{
 };
 pub use ids::{
     AuditId, CommitHash, EventId, EvidenceId, FindingId, HypothesisId, MapId, Slug, TaskId,
+};
+pub use incident::{IncidentClassification, IncidentLifecycle, IncidentTransitionRequirement};
+pub use incident_evidence::{
+    EvidenceAvailability, EvidenceFreshness, IncidentEvidenceObservation, IncidentEvidencePrivacy,
+    IncidentEvidenceReference,
 };
 pub use lab::{LabCase, LabContext, LabExecution, LabObservation, LabOutcome, LabPolicy, LabRun};
 pub use layout::DataLayout;

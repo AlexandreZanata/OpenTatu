@@ -115,3 +115,19 @@ is introduced; the caller must load current trusted grants before every policy c
 for input-safe enum diagnostics. AdapterCapability uses it to sanitize both unknown
 values and serde type errors without duplicating enum mappings. Enums omitting the option
 retain their original UnknownValue and serde diagnostics; regression tests cover both.
+
+Sentinel S0.3 (ADR-0040/Q-041): `src/incident.rs` owns descriptive IncidentLifecycle,
+IncidentClassification and structural IncidentTransitionRequirement. The complete edge
+relation reports outstanding gates; it never executes a transition, establishes a
+conclusion or converts to FindingState. Existing Confidence is reused for later records
+as an optional value; do not create another confidence enum or change Audit formats.
+`src/incident_evidence.rs` owns immutable IncidentEvidenceReference/Observation, closed
+privacy/availability/freshness vocabularies and static diagnostics. Reference constructors
+reuse AdapterBinding/AdapterIdentity, Fingerprint and telemetry's approved opaque grammar.
+Clock-stamped `recorded_at` is declaration receipt, not actual evidence collection; an
+observation checks expected app and rejects pre-receipt time. Explicit freshness is not
+computed from receipt or availability. Records have private fields, Serialize only and
+redacted Debug. Inputs are typed caller declarations, not proof, authenticated sources,
+access grants or current stored evidence. No mutable incident, wire parser, IO, retention,
+operational conclusion or Finding-close path belongs here. `incident_tests.rs` and R06
+compile-fail rustdoc protect these boundaries; Q-026 still gates S2/S5 evidence policy.

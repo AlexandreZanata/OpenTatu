@@ -6,6 +6,9 @@ use crate::finding_state::FindingState;
 /// Validation errors of the domain (`opentatu-core`).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
+    /// Invalid incident structure or evidence scope; never embeds rejected input.
+    #[error("invalid incident contract or evidence scope: {0}")]
+    InvalidIncident(&'static str),
     /// Invalid adapter declaration or supplied scope; never embeds rejected input.
     #[error("invalid adapter contract or scope: {0}")]
     InvalidAdapter(&'static str),

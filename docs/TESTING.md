@@ -202,3 +202,21 @@ The eight telemetry tests, including the generated schema snapshot, remain uncha
 preflight, never live authentication, loading, registration or an operation side effect.
 ZaturoBot documentation acceptance checks active phase/requirement ownership and pinned
 source references; it does not claim an implemented connector or external client test.
+
+## Sentinel S0.3 verification
+
+`cargo test -p opentatu-core incident` exercises pure lifecycle/classification vocabulary,
+the complete edge matrix and exact outstanding gates, scoped opaque evidence references,
+Clock receipt/observation and rollback, independent availability/freshness combinations,
+immutable repeated observations, cross-app refusal and safe new diagnostics/Debug.
+R06 compile-fail rustdoc prevents treating an incident lifecycle as a FindingState;
+existing finding and reverification tests retain their original approval/merge gates.
+
+These are tests of declarations and structural invariants: AVAILABLE/FRESH, a digest or
+a valid edge is not proof, current access, source authentication or a sufficient evidence
+policy. Actual collection age cannot be inferred from declaration receipt. No incident
+engine, retention, database, IO, runtime model or ZaturoBot connector is exercised here.
+Run unchanged adapter/telemetry tests and final `cargo xtask check` on the committed tree.
+[Contract](sentinel/S0_3_INCIDENT_CONTRACT.md); Q-026 remains open for operational standards.
+Verified 2026-11-14: ten incident tests plus one R06 compile-fail rustdoc; full
+`cargo xtask check` passes 366 tests, zero failures and six existing opt-in tests ignored.

@@ -255,6 +255,8 @@ authorize implementation, deployment or a production action.
   separate lifecycle/classification/confidence; require owner confirmation for compromise.
 - **Working interpretation:** preserve suspicious/operational/unknown distinctions; no
   detector is permitted to invent proof or close an Audit finding.
+- **S0.3 boundary:** Q-041 accepts structural vocabulary and scoped evidence declarations
+  only; its approval does not answer this operational evidence/reviewer policy.
 
 ## Q-027 — Android devices, distribution, assets and iOS preparation
 - **Status:** superseded (2026-11-14) · **Blocks:** nothing in OpenTatu
@@ -433,3 +435,19 @@ authorize implementation, deployment or a production action.
   records observed reusable patterns and proposed contracts only. No route, MCP profile,
   credential, chat permission, external repository write or production deployment is
   inferred from selecting the integration project.
+
+## Q-041 — Minimum S0.3 incident and evidence contract
+- **Status:** answered (2026-11-14) · **Blocks:** nothing in S0.3
+- **Context:** the security model's lifecycle/evidence records are still proposals.
+  Q-026 does not yet define operational proof, reviewer standards or freshness thresholds.
+- **Proposal:** [S0.3 contract](sentinel/S0_3_INCIDENT_CONTRACT.md): adopt descriptive
+  lifecycle/classification vocabulary and structural edges with explicit outstanding gates;
+  reuse optional existing Confidence; add scoped opaque evidence declarations and separate
+  Clock-stamped availability/freshness observations. Reuse S0.1 handle limits and permit
+  PUBLIC/INTERNAL only. No operational determination, finding closure, IO, retention or
+  inferred evidence policy. Q-026 remains open for S2/S5.
+- **Answer:** the owner approved the minimal contract. Implement structural vocabularies,
+  required-gate descriptions and evidence declaration/observation invariants only.
+  Declaration receipt uses `recorded_at`, distinct from actual source collection time.
+  This answer neither supplies nor authorizes an operational evidence/reviewer policy.
+  See ADR-0040; Q-018/Q-020/Q-021/Q-026 and ZaturoBot integration gates remain open.

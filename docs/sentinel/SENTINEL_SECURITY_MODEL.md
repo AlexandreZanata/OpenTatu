@@ -191,6 +191,12 @@ These are concrete field-level design proposals for SREQ-041â€“045 and SREQ-055â
 
 ### Incident record
 
+S0.3 accepts only the [Q-041 structural subset](S0_3_INCIDENT_CONTRACT.md), not this full
+record or a remote schema: descriptive vocabulary, lifecycle gate descriptions and
+private scoped evidence declarations/observations. Its `recorded_at` is declaration
+receipt, not source collection time. The full provenance, determinations, transitions,
+persistence, evidence access and compatibility contracts below remain later proposals.
+
 Required fields:
 
 - `schema_version`: semantic contract version string; reject unsupported major versions.

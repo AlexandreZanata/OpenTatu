@@ -933,3 +933,36 @@ Template:
   diagnostics and reuse by a second synthetic app. Full workspace checks remain required.
   Revert unpersisted contracts/docs to roll back. S0.3–S0.4 and S1 stay pending; ZaturoBot
   is a future control-plane client, not an implicit telemetry source or grant issuer.
+
+## ADR-0040 — Pure incident vocabulary and scoped evidence declarations
+- **Date:** 2026-11-14 · **Status:** accepted (next-task request; Q-041)
+- **Decision:** implement only S0.3's approved [structural contract](sentinel/S0_3_INCIDENT_CONTRACT.md)
+  in core. Reuse existing Slug, AdapterBinding/AdapterIdentity, Fingerprint, Clock/Timestamp,
+  S0.1 handle validation and the safe-diagnostic option of text_enum. No dependency,
+  architecture edge, incident aggregate, IO, persistence or operational engine is added.
+- **Meaning:** lifecycle and classification are independent descriptive vocabularies.
+  Reuse optional existing Confidence for later records, preserving its lower-case format.
+  Lifecycle edges report outstanding direct-triage, containment, resolution or reopen
+  requirements; passing a structural check never satisfies these gates. No determination,
+  transition executor or FindingState conversion exists. R06's reverification and approved
+  fix/merge machine remains the sole normal Finding closure path.
+- **Evidence:** immutable private-construction declarations carry an opaque handle, exact
+  app/installation/source/stream binding, declared package identity/digests and PUBLIC or
+  INTERNAL privacy. References and digests are declarations, not source authentication,
+  authorization, collection or content verification. `recorded_at` is Clock-stamped
+  declaration receipt; actual source collection time is deliberately deferred rather than
+  equating receipt time with content freshness.
+- **Observations:** independent immutable snapshots bind the full declaration to explicit
+  AVAILABLE/EXPIRED/MISSING/QUARANTINED availability and UNKNOWN/FRESH/STALE freshness.
+  Check the expected app and reject an observation before declaration receipt. Availability
+  and freshness never imply sufficiency, truth, safety, access permission or a verified fix.
+  There is no inferred freshness threshold, retention schedule or mutable latest projection.
+- **Boundaries:** Serialize supports internal projections, not an accepted remote wire
+  schema; records have no Deserialize or raw loader. Static new diagnostics and redacted
+  Debug avoid echoing handles. Existing typed input parsers retain their original behavior;
+  future untrusted IO must authenticate, bound and sanitize before constructing these types.
+  Q-026 still blocks operational compromise/evidence standards; Q-018/Q-020/Q-021 still gate
+  retention, capacities and identity. ZaturoBot remains a separately gated service client.
+- **Validation/rollback:** pure exhaustive edge/gate, scoped evidence, Clock, unavailable/
+  stale/unknown, privacy and R06 type-boundary tests; final full workspace checks. Revert
+  unpersisted contracts/docs for rollback. S0.4 and the end-of-S0 owner gate remain pending.

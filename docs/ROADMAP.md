@@ -22,7 +22,11 @@ Sentinel update (2026-11-13): after original phase 10, the owner requested conti
 and approved Q-038's [S0.1 contract](sentinel/S0_1_TELEMETRY_CONTRACT.md). S0 is 🟡:
 pure telemetry validation is delivered. On 2026-11-14 Q-039 approved and S0.2 implemented
 typed portable adapter declarations, exact source/event scopes and current capability
-preflight. `PENDING(phase-S0): S0.3–S0.4 incident/evidence contracts and decisions`.
+preflight. Q-041 approved S0.3's [incident/evidence contract](sentinel/S0_3_INCIDENT_CONTRACT.md):
+descriptive states, structural lifecycle gates and scoped immutable evidence declarations/
+observations. These contracts do not establish operational conclusions or close findings.
+`PENDING(phase-S0): S0.4 decision and threat packet`; Q-026 still gates operational evidence
+policy. S0 remains in progress until that packet and the end-of-S0 owner gate are complete.
 S1 and later phases remain separately gated. Current status does not authorize deployment.
 
 | Phase | Status | Scope | Done when |
