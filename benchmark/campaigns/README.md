@@ -9,5 +9,4 @@ DeepSeek allowance-consumption ceiling is US$20, including retained uncertain ch
 Detailed application findings are published only for the explicitly authorized Abastevo
 target. Juice Shop projections contain outside-catalog counts without finding locations.
 
-PENDING(phase-R1): publish the completed baseline/candidate projections and campaign
-accounting after the bounded runs finish.
+- [2026-11-14 ARTEX audit-refinement campaign](20261114-artex.md) — aggregate known-marker evaluation, context calibration and the shared US$20 accounting.

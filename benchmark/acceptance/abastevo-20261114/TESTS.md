@@ -8,6 +8,12 @@ The patch also passed `git apply --check` against the exact extracted source, an
 its added test file passed `gofmt -d` without changes (10 synthetic table cases).
 These artifact checks do not execute the target tests or prove the candidate.
 
+The separate real static engine audit has completed as PARTIAL; its exact
+identity, native results and usage are in [ENGINE_REVIEW.md](ENGINE_REVIEW.md)
+and [engine-acceptance.json](engine-acceptance.json). Running the analysis engine
+and its static scanners does not execute the target application or the attached
+Go regression tests. Their unexecuted status below is unchanged.
+
 **Not executed:** the attached Go tests, Abastevo compilation, dependencies,
 loopback transport tests, production requests, upstream-source requests, or
 dynamic exploitation. No test pass/fail result is claimed for the target.
@@ -43,7 +49,8 @@ patterns appear only as inert strings matching the existing allowlist fixtures.
 4. Implement the bounded correction described in [FIX_TASK.md](FIX_TASK.md).
    Repeat the pure test, the existing source-package tests, and the repository's
    affected format/static checks. Preserve every original control.
-5. Implement UC-04 only in an explicitly authorized disposable local fixture.
+5. Implement UC-04 in a disposable local fixture with fictitious data under the
+   target's `AGENTS.md`.
    Record whether the outbound resource discrepancy is actually reproduced.
 6. Publish actual command results, source/fix commits, and scope limitations.
    Follow the target's protected delivery workflow. Do not deploy the change.

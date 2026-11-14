@@ -78,9 +78,10 @@ The review inspected selected backend authorization and egress paths and relevan
 tests. It did not run Abastevo, install its dependencies, contact production,
 inspect production data, or test an upstream service. It does not cover every
 route, private organization boundary, dependency, deployment, or client.
-Provider-funded OpenTatu acceptance runs, if later added, need separate artifacts
-with their actual model, prompt versions, usage, and outcomes. They must not
-retroactively change the origin of this static candidate.
+The separately recorded real OpenTatu acceptance audit is documented in
+[ENGINE_REVIEW.md](ENGINE_REVIEW.md), with its actual models, prompt versions,
+usage, native outcomes and source follow-up. Its artifacts do not retroactively
+change the origin or proof level of this static candidate.
 
 Abastevo is created by **Alexandre Zanata (@AlexandreZanata)**:
 [creator](https://github.com/AlexandreZanata),

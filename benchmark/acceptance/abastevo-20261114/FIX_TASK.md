@@ -50,11 +50,13 @@ validation. Preserve documented ordinary listing/download URLs.
 
 ## Execution and delivery constraints
 
-Use public source and fictitious data only. Do not contact production, `gov.br`,
-real users, storage, or external providers. Do not run source acquisition,
-imports, migrations, ingestion jobs, deployment scripts, or real credentials.
-Tests requiring local runtime execution need their own explicitly authorized
-disposable environment. Do not weaken a safety check to make the tests pass.
+Use public source and fictitious data in disposable local fixtures under the
+target's `AGENTS.md`. Ordinary code imports, dependency setup and synthetic local
+test preparation are within this handoff. Do not contact production, `gov.br`,
+real users, live storage or external provider APIs. Do not use production data
+or real credentials, run live operational ingestion jobs or production-data
+imports, or perform production migrations or deployments. Do not weaken a
+safety check to make the tests pass.
 
 Read and follow Abastevo's current `AGENTS.md` and delivery policy. The inspected
 policy uses maintained `dev` and a protected `dev` → `main` pull request;

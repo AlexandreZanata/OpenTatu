@@ -44,6 +44,7 @@
     }
   ],
   "files": [
+    "ENGINE_REVIEW.md",
     "FIX_TASK.md",
     "METHOD.md",
     "REPORT.md",
@@ -53,6 +54,8 @@
     "context-comparison-initial.json",
     "context-comparison.json",
     "context-probe.rs.txt",
+    "engine-acceptance.json",
+    "engine-tasks/MANIFEST.json",
     "manifest.json",
     "regression-tests.patch"
   ],
@@ -70,5 +73,43 @@
     "source_code_executed": false,
     "provider_calls": 0,
     "vulnerability_accuracy_measured": false
+  },
+  "engine_acceptance": {
+    "artifact": "engine-acceptance.json",
+    "review": "ENGINE_REVIEW.md",
+    "task_manifest": "engine-tasks/MANIFEST.json",
+    "audit_id": "AUD-ABASTEVO-20261114-1501",
+    "target_commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "engine_source_commit": "7df5899cdb3844ac127e96c3041da66cc8925721",
+    "engine_binary_sha256": "76e8742f210141463265b16ec9b540b0fd48a9c8d13f35d70d9bf8071e274ea0",
+    "status": "PARTIAL",
+    "completed_at": "2026-11-14T18:43:15-03:00",
+    "duration_seconds": 1447,
+    "usage": {
+      "calls": 12,
+      "input_tokens": 971356,
+      "output_tokens": 141826,
+      "cost_usd": 0.12783331
+    },
+    "hypotheses": 7,
+    "confirmed": 0,
+    "dismissed": 1,
+    "inconclusive": 6,
+    "native_findings": 0,
+    "native_fix_tasks": 0,
+    "all_recorded_hypotheses_source_followed_up": true,
+    "predeclared_review_probes": "NOT_EXERCISED",
+    "native_states_and_verdicts_preserved": true,
+    "target_code_executed": false,
+    "target_tests_executed": false,
+    "production_contacted": false,
+    "benchmark_ground_truth": false,
+    "recall_denominator": null,
+    "source_artifact_sha256": {
+      "audit.json": "622b8df85e1327d553553175097bbdc5f76ed038a819c747ee0c20e58b74aedc",
+      "report.md": "35001fe81ba5ff32c96faeba39e97d6e99b827836866bc0457467db94cdea6ed",
+      "hypotheses.json": "de4463078080e2dac7e83f7e424cff47c9dd981d106e4802d8871d6ec52e45da",
+      "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
   }
 }

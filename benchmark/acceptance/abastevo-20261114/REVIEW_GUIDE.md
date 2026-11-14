@@ -6,6 +6,9 @@ that audit. The intended source is Abastevo commit
 [`018f2df18c8b029ec3e665fc98ba7318e6f076bc`](https://github.com/AlexandreZanata/Abastevo/commit/018f2df18c8b029ec3e665fc98ba7318e6f076bc).
 Verify the actual audit/snapshot commit before using these line references.
 If it differs, inspect that exact revision and record the difference.
+Final native outcomes and reconciled source follow-up are now recorded in
+[ENGINE_REVIEW.md](ENGINE_REVIEW.md); this predeclared guide remains the review
+criteria rather than a retrospective ground-truth catalog.
 
 ## Evidence to preserve after execution
 
