@@ -285,6 +285,9 @@ impl CampaignBudget {
         if request.model != self.pricing.model {
             return Err(refused("request model has no campaign price ceiling"));
         }
+        if request.max_output_tokens == Some(0) {
+            return Err(refused("campaign request output cap must be positive"));
+        }
         request.max_output_tokens = Some(
             request
                 .max_output_tokens

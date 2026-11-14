@@ -218,6 +218,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Llm::with_recorder`, `Llm::with_retry_policy` | Usage accounting port; rate-limit backoff |
 | `CampaignBudget::{open, committed_usd}`, `Llm::with_campaign_budget` | Optional shared private durable USD ledger; reserve every HTTP attempt, preserve uncertainty and reconcile authoritative charges |
 | `CampaignPricing` | Researched per-model input/output ceiling and bounded response size; immutable within a campaign |
+| `RoleConfig::max_output_tokens` | Optional positive per-role generation bound, passed through the existing request and clamped by the campaign envelope |
 | `CallContext::{for_audit, diagnostic}` | Audit + provider session id of a call |
 | `RetryPolicy` | Capped exponential backoff for rate limits and transport failures (`Error::Transport`; timeouts are not retried) |
 | `UsageRecorder` (trait) | Where every call is recorded (implemented in the binary over services) |

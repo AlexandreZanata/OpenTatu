@@ -383,6 +383,49 @@ async fn r13_router_bounds_output_and_settles_successful_usage() {
 }
 
 #[tokio::test]
+async fn r13_campaign_clamps_role_output_cap_without_reducing_reservation() {
+    let file = Ledger::new();
+    let mut config = raised_config();
+    config
+        .roles
+        .get_mut(&AiRole::Hunter)
+        .unwrap()
+        .max_output_tokens = Some(200_000);
+    let campaign = Arc::new(CampaignBudget::open(&file.0, 20.0, &config).unwrap());
+    let fake = Arc::new(FakeClient::new());
+    fake.push_error(Error::Provider("unknown billing outcome".into()));
+    let llm = Llm::new(fake.clone(), config).with_campaign_budget(campaign.clone());
+    assert!(
+        llm.generate(&context(), AiRole::Hunter, vec![], None)
+            .await
+            .is_err()
+    );
+    assert_eq!(fake.requests()[0].max_output_tokens, Some(131_072));
+    assert_eq!(campaign.committed_usd(), 0.457287);
+}
+
+#[tokio::test]
+async fn r13_campaign_rejects_zero_output_cap_before_reservation_or_transport() {
+    let file = Ledger::new();
+    let campaign = Arc::new(CampaignBudget::open(&file.0, 20.0, &raised_config()).unwrap());
+    let mut invalid = raised_config();
+    invalid
+        .roles
+        .get_mut(&AiRole::Hunter)
+        .unwrap()
+        .max_output_tokens = Some(0);
+    let fake = Arc::new(FakeClient::new());
+    fake.push_response(response(Some(0.001)));
+    let llm = Llm::new(fake.clone(), invalid).with_campaign_budget(campaign.clone());
+    assert!(matches!(
+        llm.generate(&context(), AiRole::Hunter, vec![], None).await,
+        Err(Error::CampaignBudget(_))
+    ));
+    assert!(fake.requests().is_empty());
+    assert_eq!(campaign.committed_usd(), 0.0);
+}
+
+#[tokio::test]
 async fn r13_malformed_provider_response_retains_reservation() {
     let file = Ledger::new();
     let campaign = Arc::new(file.open(0.5));

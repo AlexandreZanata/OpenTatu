@@ -123,3 +123,14 @@ a durable `output_limit_raised` record; it never rewrites its policy or earlier 
 Replay validates each attempt against its original ceiling. Prior settled costs and
 unresolved reservations still count toward the same US$20 cap. Decreases and changes to
 the fixed billing policy are refused.
+
+The comparison uses explicit experimental output caps per role, including reasoning:
+cartographer 65,536; hunter and planner 32,768; verifier, skeptic and reporter 16,384.
+These are generation settings selected from the observed 54,983-token map and the roles'
+bounded JSON outputs, rather than provider limits. Missing per-role settings remain
+backward-compatible and send no explicit output cap unless the campaign guard applies.
+The effective output cap is the smaller of the role setting and the campaign ceiling.
+Every attempt still reserves the full US$0.457287 financial envelope. Baseline and
+candidate must use identical role caps for comparison. The earlier provider-limited
+PARTIAL run remains calibration history; neither timeout classification nor retry
+behavior changes with this setting.

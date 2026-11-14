@@ -56,6 +56,11 @@ Always reuse the **same absolute ledger path** for every run in a combined budge
 Its cap, provider and researched pricing cannot change on reopen. A larger configured
 output ceiling is recorded as an append-only transition before dispatch; older charges
 and unknown-attempt reservations remain intact. Decreasing the ceiling is refused.
+The optional per-role `max_output_tokens` settings in `config/models.toml` bound actual
+generation inside that financial envelope. A controlled comparison must use the same
+role caps for both engines and record them alongside the model/prompt configuration.
+Smaller caps can still truncate JSON or reasoning; only validated real responses can
+establish whether the chosen policy is useful.
 
 For the owner-authorized 2026-11-14 campaign, every role uses the configured DeepSeek
 model, including per-run `--role-model skeptic=deepseek-v4.1-flash` and

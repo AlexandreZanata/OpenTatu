@@ -44,6 +44,12 @@ settled. An increase appends a synced `output_limit_raised` record; replay valid
 historical reservations against the ceiling active for their own attempt. Decreases and
 all fixed-policy changes fail closed. The aggregate spending cap never changes.
 
+`RoleConfig::max_output_tokens` is optional and includes reasoning. `Llm::generate` uses
+it directly; omitted settings preserve the provider default, and zero is rejected by
+configuration validation. The campaign guard clamps it to its financial ceiling without
+reducing the full per-attempt reservation. These experimental generation settings change
+neither timeout classification nor retries.
+
 ## Local rules
 
 - Model ids, base URL and limits come only from `config/models.toml`, filled from

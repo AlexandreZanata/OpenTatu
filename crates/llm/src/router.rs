@@ -83,7 +83,7 @@ impl Llm {
             temperature: role_config.temperature,
             messages,
             json_schema,
-            max_output_tokens: None,
+            max_output_tokens: role_config.max_output_tokens,
             session_id: context.session_id.clone(),
         };
         self.call(context, Some(role), request).await
@@ -315,5 +315,34 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(error, Error::Provider(_)), "not retried");
+    }
+
+    #[tokio::test]
+    async fn each_role_uses_its_explicit_output_cap() {
+        let config = config();
+        let fake = Arc::new(FakeClient::new());
+        let llm = Llm::new(fake.clone(), config.clone());
+        for role in AiRole::ALL {
+            fake.push_answer("{}");
+            llm.generate(&context(), *role, vec![], None).await.unwrap();
+            assert_eq!(
+                fake.requests().last().unwrap().max_output_tokens,
+                config.roles[role].max_output_tokens
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn missing_role_output_cap_preserves_provider_default() {
+        let text =
+            include_str!("../../../config/models.toml").replace("max_output_tokens = 65_536\n", "");
+        let config = ModelsConfig::from_toml(&text).unwrap();
+        let fake = Arc::new(FakeClient::new());
+        fake.push_answer("{}");
+        Llm::new(fake.clone(), config)
+            .generate(&context(), AiRole::Cartographer, vec![], None)
+            .await
+            .unwrap();
+        assert_eq!(fake.requests()[0].max_output_tokens, None);
     }
 }

@@ -89,6 +89,9 @@ pub struct RoleConfig {
     pub model: String,
     /// Sampling temperature (0.0–2.0).
     pub temperature: f32,
+    /// Optional experimental output cap, including reasoning; `None` keeps provider defaults.
+    #[serde(default)]
+    pub max_output_tokens: Option<u32>,
     /// Owner consent to send this role's prompts to a model that trains on them
     /// (`[provider] models_that_train_on_prompts`). Default `false`: such models are refused.
     #[serde(default)]
@@ -215,6 +218,11 @@ impl ModelsConfig {
             }
             if !(0.0..=2.0).contains(&config.temperature) {
                 problems.push(format!("roles.{role}.temperature must be within 0.0..=2.0"));
+            }
+            if config.max_output_tokens == Some(0) {
+                problems.push(format!(
+                    "roles.{role}.max_output_tokens must be positive when configured"
+                ));
             }
         }
         if !(self.budget.max_plan_share > 0.0 && self.budget.max_plan_share <= 1.0) {
@@ -388,5 +396,25 @@ mod tests {
     fn unknown_keys_are_rejected() {
         let text = COMMITTED.replace("[provider]", "[provider]\nunexpected = 1");
         assert!(ModelsConfig::from_toml(&text).is_err());
+    }
+
+    #[test]
+    fn optional_role_output_caps_reject_zero_and_keep_old_configs_compatible() {
+        let mut config = committed();
+        config
+            .roles
+            .get_mut(&AiRole::Hunter)
+            .unwrap()
+            .max_output_tokens = Some(0);
+        assert!(
+            config
+                .validate()
+                .iter()
+                .any(|problem| problem.contains("roles.hunter.max_output_tokens must be positive"))
+        );
+        let previous = COMMITTED.replace("max_output_tokens = 65_536\n", "");
+        let config = ModelsConfig::from_toml(&previous).unwrap();
+        assert_eq!(config.roles[&AiRole::Cartographer].max_output_tokens, None);
+        assert!(config.validate().is_empty());
     }
 }

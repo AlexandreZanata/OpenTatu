@@ -31,3 +31,8 @@ a campaign ledger and cap; prices are integer micro-USD per million tokens. A le
 endpoint, token prices, input ceiling and aggregate cap cannot change when reopened.
 An output ceiling increase appends a synced transition; historical attempts retain their
 original ceilings and reserved charges. Output decreases are refused.
+
+Role-level `max_output_tokens` is an optional experimental generation cap, including
+reasoning; absent values preserve provider defaults and zero is invalid. The campaign
+guard applies the smaller cap while keeping its conservative billing reservation. Record
+identical role caps for baseline/candidate comparisons; these are not provider limits.

@@ -1106,6 +1106,15 @@ Template:
   cap, endpoint, model, input ceiling and rates cannot change. The campaign cap supplements
   the existing per-audit budgets. No new
   crate, SQL table, process, architecture edge or runtime dependency is introduced.
+- **Generation bounds:** per-role optional `max_output_tokens` is separate from the
+  campaign's financial envelope. A 32,768-token calibration clipped a map; a later
+  131,072-token hunter request reached the 900-second timeout. Trial limits are therefore
+  65,536 for cartography (54,983 output tokens observed), 32,768 for hunting/planning and
+  16,384 for verification/skeptical review/reporting. These are internal trial budgets,
+  not provider limits or a completion guarantee. Frozen baseline and candidate use the
+  same limits; the failed large-output run remains calibration. No unverified gateway
+  reasoning-control field is sent. Truncation/provider failure retains existing validation,
+  partial-coverage and uncertain-charge behavior.
 - **Evaluation:** freeze the original engine source and the target commit. Compare
   baseline/candidate with the same provider, budgets, scanner configuration and campaign
   gate. Juice Shop keeps marker-derived scoring. Abastevo is a real-source acceptance
