@@ -446,3 +446,56 @@ S1 and later phases remain separately gated. Current status does not authorize d
   [MONITORING.md](MONITORING.md), [monitor.example.toml](../config/monitor.example.toml).
   Original phases 0–10 are delivered; Q-032 and Sentinel's separately gated expansion
   remain deferred. Stop here for owner review; do not start S0–S11 automatically.
+
+## Audit refinement R1 — ARTEX-informed analysis (2026-11-14)
+
+Status: ✅ delivered for owner review (OpenTatu PR #1 and Abastevo PR #220).
+This owner-requested Audit refinement is independent of Sentinel S0/S1 gates.
+ADR-0044 and Q-043 define its scope.
+
+- Reused the existing Rust context selector, role pipeline and LLM router: bounded
+  upstream registration/shared-defense excerpts, explicit source-to-sink and attacker
+  capability guidance, preserved review omissions, per-role generation limits and a
+  durable aggregate US$20 campaign gate. No new runtime crate or architecture edge.
+- [Paid paired evaluation](../benchmark/campaigns/20261114-artex.md): frozen baseline
+  analysis `05e8bb3` with shared runtime backports versus candidate `49a14a9`, same
+  prepared Juice Shop snapshot/scanners/models and 6M-token/90-minute limits. Known
+  marker groups found increased from **3/33 to 8/33**; provider-reported usage was
+  US$0.75465748 versus US$0.59713973. Both runs are PARTIAL. Independent maps differ
+  (117 versus 93 entries), as do model-declared examined entries (60 versus 13); the
+  candidate's second hunter round ended on an empty truncated reply. This single pair
+  does not establish general accuracy, identical coverage or an adjudicated false-positive
+  rate. Outside-catalog details and new raw run records remain private.
+- [Pinned Abastevo acceptance](../benchmark/acceptance/abastevo-20261114/ENGINE_REVIEW.md):
+  source `018f2df`, separate latest engine `7df5899` with usage-before-validation fixes;
+  24m07s, 12 recorded calls, 971,356 input + 141,826 output tokens, US$0.12783331.
+  PARTIAL: seven hypotheses, one dismissed, six inconclusive, zero confirmed findings
+  and zero native fixing tasks. Full-source follow-up records controls omitted from
+  the model context without rewriting native outcomes. The four predeclared review
+  cases were not exercised; no recall denominator is invented for this target.
+- The same bundle retains the independent static URL-canonicalization candidate,
+  use cases, proposed ten-case regression patch and external-agent fix handoff.
+  The candidate's operational impact and proposed target tests remain unverified.
+  No target application, target regression test or production service was executed.
+- Deterministic Abastevo context calibration improved six of eight case/budget pairs:
+  thirteen gained selected-line observations and zero selected-anchor losses. The
+  initial unfavorable calibration is retained; the four cases are not held-out
+  vulnerability-accuracy ground truth.
+- All calibration/interrupted calls remain in the combined financial accounting:
+  **US$1.604494 settled + US$1.711183 retained for four uncertain attempts =
+  US$3.315677 conservative final commitment**. Peak commitment was US$5.118478,
+  below US$20. The ledger remains private, closed and unchanged; no unknown charge
+  was refunded. All three controlled run processes exited zero; audit status remains
+  PARTIAL. No paid call is active or planned.
+- The source implementation passed `cargo xtask check`: 410 tests, six existing
+  opt-in infrastructure tests ignored, with format/clippy/architecture/docs/glossary/
+  rustdoc checks green. Subsequent artifact and publication checks are recorded in
+  the delivery PRs.
+
+Delivery: [OpenTatu PR #1](https://github.com/AlexandreZanata/OpenTatu/pull/1) and
+[Abastevo documentation PR #220](https://github.com/AlexandreZanata/Abastevo/pull/220).
+Both deliveries are reviewable pull requests, without merge or deployment. The
+publication retains the existing Abastevo progress history and protected delivery flow.
+Stop R1 here for owner review. Interface/implementation and SQL-defense retrieval
+remain measured opportunities for a later refinement; no Sentinel or further Audit
+phase starts automatically.

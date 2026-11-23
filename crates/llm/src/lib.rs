@@ -15,6 +15,7 @@
 //! from the research in `docs/opencode-go.md`. The API key arrives as an
 //! `opentatu_core::Secret` read by the binary (R16). Tests use [`FakeClient`].
 
+mod campaign;
 mod client;
 mod config;
 mod context;
@@ -25,8 +26,11 @@ mod retry;
 mod router;
 mod usage;
 
+pub use campaign::CampaignBudget;
 pub use client::{LlmClient, Message, MessageRole, ModelRequest, ModelResponse};
-pub use config::{AuditBudget, BudgetConfig, ModelsConfig, ProviderConfig, RoleConfig};
+pub use config::{
+    AuditBudget, BudgetConfig, CampaignPricing, ModelsConfig, ProviderConfig, RoleConfig,
+};
 pub use context::CallContext;
 pub use error::Error;
 pub use fake::FakeClient;

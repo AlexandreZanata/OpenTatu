@@ -22,3 +22,8 @@ One file per prompt: `base.md` (shared, §C.0) and one per `AiRole` (`cartograph
 Phase 8: verifier 1.3.0 selects only approved case IDs; an actual system result returns
 through the fenced lab block. Generated test text is a suggestion, never executed code
 or proof that a test ran. Credentials/build argv remain outside model context.
+
+Audit refinement: hunter 2.3.0, verifier 1.4.0 and skeptic 2.1.0 add forward trace,
+upstream/shared-defense, scope propagation and attacker-capability guidance. Output schemas
+and the static/dynamic evidence distinction remain unchanged. Supplemental code never
+expands an INCREMENTAL audit's affected paths.

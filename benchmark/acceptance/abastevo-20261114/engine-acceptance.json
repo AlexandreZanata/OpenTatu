@@ -1,0 +1,2151 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "curated_engine_acceptance",
+  "target": {
+    "repository": "https://github.com/AlexandreZanata/Abastevo",
+    "commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "audit_id": "AUD-ABASTEVO-20261114-1501"
+  },
+  "engine_revision": "7df5899cdb3844ac127e96c3041da66cc8925721",
+  "engine_binary_sha256": "76e8742f210141463265b16ec9b540b0fd48a9c8d13f35d70d9bf8071e274ea0",
+  "runtime_limits": {
+    "max_cost_usd": 20,
+    "max_tokens": 6000000,
+    "max_minutes": 90
+  },
+  "audit": {
+    "audit_id": "AUD-ABASTEVO-20261114-1501",
+    "app": "abastevo",
+    "kind": "FULL",
+    "status": "PARTIAL",
+    "commit": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "branch": "018f2df18c8b029ec3e665fc98ba7318e6f076bc",
+    "previous_audit_id": null,
+    "created_at": "2026-11-14T15:01:43-03:00",
+    "started_at": "2026-11-14T18:19:08-03:00",
+    "completed_at": "2026-11-14T18:43:15-03:00",
+    "duration_seconds": 1447,
+    "display": "14/11/2026 às 18:19 (horário de Brasília)",
+    "models": {
+      "cartographer": "deepseek-v4.1-flash",
+      "hunter": "deepseek-v4.1-flash",
+      "reporter": "deepseek-v4.1-flash",
+      "verifier": "deepseek-v4.1-flash"
+    },
+    "prompt_versions": {
+      "base": "1.1.0",
+      "cartographer": "2.2.0",
+      "hunter": "2.3.0",
+      "reporter": "2.1.0",
+      "verifier": "1.4.0"
+    },
+    "scanners": {
+      "gitleaks": "8.30.1",
+      "osv-scanner": "2.7.1",
+      "semgrep": "1.184.0",
+      "trivy": "0.76.2"
+    },
+    "usage": {
+      "calls": 12,
+      "input_tokens": 971356,
+      "output_tokens": 141826,
+      "cost_usd": 0.12783331
+    },
+    "results": {
+      "hypotheses": 7,
+      "confirmed": 0,
+      "dismissed": 1,
+      "inconclusive": 6,
+      "new": 0,
+      "persistent": 0,
+      "fixed_since_previous": 0,
+      "regressions": 0,
+      "by_severity": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "INFO": 0,
+        "LOW": 0,
+        "MEDIUM": 0
+      }
+    },
+    "coverage": {
+      "applicable_requirements": 118,
+      "verified": 27,
+      "failed": 0,
+      "not_tested": 91,
+      "percent": 22
+    },
+    "limitations": [
+      "Mapa: Módulos internos do backend cujo código não foi selecionado (official, quality, charging, ranking, forum, mapdata/mapdist, orgmedia, enterpriseportal, contributor público, public station reads, health, entre outros) — fora do material de <code>.",
+      "Mapa: Android (Kotlin) e iOS (Swift) código de UI e rede não foram inspecionados linha a linha, exceto pelos artefatos em <code>.",
+      "Mapa: Workflows CI (.github/workflows/*.yml) e pipelines de release não inspecionados além do que já aparece em config.",
+      "Mapa: Dockerfiles variantes (além de infra/docker/Dockerfile), Kustomize de produção, e o agente de deploy (infra/deploy/agent/*.sh) não inspecionados linha a linha.",
+      "Mapa: Migrações SQL além de 000167 (200 arquivos) não foram lidas; o mapa reflete apenas o que está em <code>.",
+      "Mapa: Star de separação LGPD (privacy/erasure) não detalhada além dos endpoints de account/cloud/ledger/alerts.",
+      "Mapa: Arquivos ou trechos de código não enviados ao cartógrafo por limite de contexto: backend/cmd/station-sync/main.go, backend/internal/modules/account/domain/ports.go, backend/internal/modules/community/application/photo_capture.go, backend/internal/modules/companysession/adapters/store.go, backend/internal/modules/contributor/adapters/http/public.go, backend/internal/modules/evidence/adapters/final_output.go, backend/internal/modules/evidence/adapters/http/upload.go, backend/internal/modules/evidence/application/verify.go, backend/internal/modules/membership/adapters/http/invitations.go, backend/internal/modules/membership/adapters/redemption.go, backend/internal/modules/metrics/adapters/http/http.go, backend/internal/modules/orgevent/adapters/handler.go, backend/internal/modules/privacy/adapters/http/http.go, backend/internal/platform/apicontract/admin_organization.go, backend/cmd/charging-catalog/main.go e mais 70.",
+      "Mapa: Arquivos ou trechos de configuração não enviados ao cartógrafo por limite de contexto: infra/k8s/staging/storage-deployment.yaml, infra/k8s/staging/web-caddy-configmap.yaml, infra/k8s/staging/web-deployment.yaml, maps/engine/build.gradle.kts, .github/workflows/android-release.yml, .github/workflows/backend.yml, .github/workflows/quick.yml, .github/workflows/release-staging.yml, app/build.gradle.kts (trechos omitidos).",
+      "Caçador: Trivy de infraestrutura (KSV-*) ficou sem hipótese porque as localizações exigidas não existem no <code> desta rodada.",
+      "Caçador: Gitleaks em docs/, contracts/testdata e testes ficou sem verificação manual de histórico por orçamento e por não serem artefatos de runtime.",
+      "Caçador: Registro de contribuidores (EP-053), rotação de chave (rotate) e fluxo OIDC completo foram lidos apenas como contexto, sem tracing exaustivo por orçamento.",
+      "Caçador: Rotas de companhia (orgaccess/companysession) e orgsync não foram rastreadas nesta rodada por não integrarem os entry points fornecidos.",
+      "Caçador: CVE do chi (trivy:1) não foi aprofundada por não haver chamada a ClientIPFromXFF no material.",
+      "Arquivos ou trechos de código não enviados ao caçador (rodada 1) por limite de contexto: backend/cmd/api/body_limit.go, backend/cmd/api/company.go, backend/cmd/api/profile_containment.go, backend/cmd/api/quality_auth.go, backend/cmd/api/quality_company_reads.go, backend/internal/modules/account/application/doc.go, backend/internal/modules/account/application/erasure.go, backend/internal/modules/account/domain/doc.go, backend/internal/modules/account/domain/hash.go, backend/internal/modules/account/domain/policy.go, backend/internal/modules/entitlement/domain/grant.go, backend/internal/modules/identity/adapters/auth/doc.go, backend/internal/modules/identity/domain/doc.go, backend/internal/modules/identity/profile/doc.go, backend/internal/modules/payments/adapters/asaas.go e mais 40.",
+      "Caçador: Módulos admin, companysession, orgaccess, enterprisesuite e orgsync não foram incluídos em <code> nesta rodada e ficaram fora da análise, apesar de serem superfícies sensíveis de autorização.",
+      "Caçador: Handlers de forum, alerts, driver, ledger, directory, feedback e cloudsync/application não receberam código nesta rodada e não foram traçados.",
+      "Caçador: Rotas de identidade/registro de dispositivo assinado (identity) e os webhooks de pagamento (Stripe/Asaas) não foram fornecidos, portanto a verificação HMAC dos webhooks não foi reexaminada.",
+      "Caçador: A busca por segredos no histórico do repositório não foi executada além do resultado do gitleaks, por falta de acesso a histórico/diff nesta rodada.",
+      "Caçador: O limite de requisições por IP e a proteção antiabuso em nível de Caddy/API para /v1/accounts/* não puderam ser avaliados por falta da configuração completa de middleware e do Caddyfile.",
+      "Arquivos ou trechos de código não enviados ao caçador (rodada 2) por limite de contexto: backend/internal/modules/cloudsync/adapters/http/restore.go, backend/internal/modules/cloudsync/adapters/http/restore_commit.go, backend/internal/modules/cloudsync/application/ports.go, backend/internal/modules/cloudsync/domain/datasets.go, backend/internal/modules/cloudsync/domain/preferences.go, backend/internal/modules/cloudsync/domain/vehicle_fields.go, backend/internal/modules/community/adapters/http/doc.go, backend/internal/modules/community/adapters/http/helpfulness.go, backend/internal/modules/community/adapters/http/photo_capture.go, backend/internal/modules/community/application/derive.go, backend/internal/modules/community/application/doc.go, backend/internal/modules/community/application/feed.go, backend/internal/modules/community/application/helpfulness.go, backend/internal/modules/community/application/location.go, backend/internal/modules/community/application/location_verify.go e mais 27.",
+      "Entradas não analisadas pelo caçador (71 de 111): EP-002, EP-005, EP-006, EP-008, EP-010, EP-026, EP-027, EP-032, EP-034, EP-046, EP-047, EP-048, EP-049, EP-050, EP-051, EP-054, EP-055, EP-056, EP-057, EP-058 e mais 51.",
+      "Verificador: A janela TOCTOU entre a primeira transação (lock/validação) e a segunda (gravação) não foi aprofundada por não fazer parte desta hipótese; ela exigiria analisar se ClaimOpen e o escopo do store são revalidados na segunda transação.",
+      "Verificador: O comportamento de Store.LockClaim no caso de claimID inexistente (qual erro retorna) não foi analisado, pois não afeta o veredito de controle de acesso.",
+      "Verificador: A camada HTTP claimProof (contributor/adapters/http/user.go:85-105) citada na hipótese não está presente em <code>, então a extração de claimID via chi.URLParam e o mapeamento de erros foram considerados apenas conforme descritos na hipótese.",
+      "Verificador: Não foi fornecido o SQL de LockClaim/SetClaimProof em backend/db/queries, impedindo verificar se a escrita também restringe por account_id no banco.",
+      "Verificador: Não há lab disponível (available=false), portanto a verificação dinâmica da hipótese não pôde ser executada.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/main.go, backend/internal/modules/contributor/adapters/http/admin.go, backend/internal/modules/contributor/adapters/http/public.go, backend/internal/modules/contributor/adapters/http/user.go, backend/internal/modules/account/adapters/oidc/oidc.go (trechos omitidos), backend/internal/modules/account/adapters/pgstore.go (trechos omitidos), backend/internal/modules/account/application/accounts.go (trechos omitidos), backend/internal/modules/account/application/memstore.go (trechos omitidos), backend/internal/modules/evidence/application/verify.go (trechos omitidos), backend/internal/modules/identity/adapters/auth/auth.go (trechos omitidos), backend/internal/modules/mapdist/distribution.go (trechos omitidos).",
+      "Verificador: Não foi analisada a lógica de resolvedor de dispositivo em RegisterDevice/RevokeDevice (checagem de posse) por ausência do código do adapters.Store no <code>.",
+      "Verificador: Não foi analisado o comportamento dinâmico (conta A enviando device_id da conta B) porque o lab não está disponível.",
+      "Verificador: A implementação de cloudadapters.NewStore (adapters/Store) que satisfaz app.BatchStore/DeviceStore/PullStore/SnapshotStore/BackupStore não está no material fornecido.",
+      "Verificador: As queries SQL de dispositivo/dispositivo em batch/pull/snapshot/manifest/revoke não estão no material fornecido, impossibilitando verificar se elas filtram por account_id.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/main.go (trechos omitidos).",
+      "Verificador: A composição de cabeçalhos/envelope no adaptador SMTP não foi analisada por ausência do arquivo no material fornecido.",
+      "Verificador: O comportamento do cliente de e-mail de produção em relação a endereços com múltiplos '@' ou controles além de CR/LF não foi avaliado, por falta de código.",
+      "Verificador: Não houve fase dinâmica: o lab está indisponível e nenhum caso aprovado foi definido.",
+      "Verificador: O arquivo do adaptador de e-mail (backend/internal/modules/account/adapters/mail/memory.go) não foi fornecido, impedindo verificar se há sanitização ou rejeição de CR/LF antes da composição da mensagem.",
+      "Verificador: Não há evidência do wiring de produção (backend/cmd/api) que indique se o envio de e-mail está habilitado (MailEnabled) e qual implementação de MailSender é injetada no commit analisado.",
+      "Verificador: Não foi apresentado qualquer middleware global que rejeite caracteres de controle no corpo JSON, nem confirmação de sua inexistência fora dos trechos exibidos.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/admin.go, backend/cmd/api/main.go, backend/cmd/worker/main.go, backend/internal/modules/account/adapters/pgstore.go, backend/internal/modules/admin/adapters/store.go, backend/internal/modules/companysession/adapters/account.go, backend/internal/modules/contributor/adapters/http/user.go, backend/internal/modules/evidence/adapters/store.go, backend/internal/modules/forum/adapters/stream/listener.go, backend/internal/modules/identity/adapters/registration.go, backend/internal/modules/kernel/cnpj.go, backend/internal/modules/kernel/condition.go, backend/internal/modules/kernel/enterprise_access.go, backend/internal/modules/kernel/org_scope.go, backend/internal/modules/kernel/price.go e mais 12.",
+      "Verificador: Teste dinâmico não executado porque o lab está indisponível.",
+      "Verificador: Migrações e índices que poderiam confirmar a contagem agregada não foram analisados por não estarem no material.",
+      "Verificador: A implementação Postgres de TryIssueCode e TryCreateKeyAccount não foi fornecida, impedindo confirmar a contagem agregada e o insert na mesma transação.",
+      "Verificador: Os handlers HTTP das rotas /v1/accounts/email/codes e /v1/accounts/keys não foram fornecidos, impedindo confirmar exposição anônima e respostas.",
+      "Verificador: Não foram fornecidos middlewares de rate limit por IP/cliente aplicados às rotas de admissão de contas.",
+      "Verificador: O laboratório dinâmico não está disponível (available=false), então não há teste executado.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/company.go, backend/cmd/api/main.go, backend/cmd/worker/main.go, backend/internal/modules/account/adapters/http/http.go, backend/internal/modules/account/adapters/pgstore.go, backend/internal/modules/account/application/memstore.go, backend/internal/modules/companysession/adapters/account.go, backend/internal/modules/membership/adapters/http/devices.go, backend/internal/modules/orgaccess/adapters/http/account.go, backend/internal/modules/organization/adapters/ownership_transfer_store.go, backend/internal/modules/orgsync/adapters/http/http.go, backend/internal/modules/orgsync/adapters/http/review_results.go, backend/internal/platform/enterprisesuite/routes.go, backend/internal/modules/account/application/accounts.go (trechos omitidos), backend/internal/modules/companysession/application/service.go (trechos omitidos) e mais 3.",
+      "Verificador: Persistência e possíveis limites/truncamentos no store administrativo não analisados por ausência do arquivo backend/internal/modules/admin/adapters/store.go no material.",
+      "Verificador: Renderização de trace_id no painel admin não analisada por ausência do código de admin-web.",
+      "Verificador: Configuração de limites de cabeçalho do servidor HTTP não analisada por ausência de main.go/httpserver no material.",
+      "Verificador: Fase dinâmica não executada porque o laboratório está indisponível (approved=false).",
+      "Verificador: Não foi fornecido o arquivo backend/internal/modules/admin/adapters/store.go, onde ocorre a persistência do request_id e da trilha de auditoria.",
+      "Verificador: Não há no material nenhuma instrução de logging que grave X-Request-ID, impedindo demonstrar o sumidouro clássico de CWE-117.",
+      "Verificador: Não foi fornecido o código de admin-web (ex.: admin-web/src/app.ts) para verificar se trace_id é renderizado com textContent ou innerHTML.",
+      "Verificador: Não foi apresentada a configuração de MaxHeaderBytes do servidor HTTP (backend/cmd/api/main.go ou pacote httpserver), necessária para avaliar o limite real de tamanho do cabeçalho.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/main.go, backend/internal/modules/contributor/adapters/http/admin.go, backend/internal/modules/forum/adapters/http/admin.go, backend/internal/modules/organization/adapters/http/suspension_admin.go, backend/internal/modules/organization/application/suspension.go, backend/internal/modules/staff/adapters/http/admin.go, backend/internal/platform/enterprisesuite/admin.go, backend/internal/modules/account/application/accounts.go (trechos omitidos), backend/internal/modules/contributor/application/claims.go (trechos omitidos).",
+      "Verificador: infra/k8s/staging/services.yaml e arquivos compose não incluídos em <code>, impedindo verificar alcance direto do listener.",
+      "Verificador: backend/cmd/api/main.go e middlewares globais não incluídos em <code>, impedindo verificar saneamento de X-Forwarded-Proto.",
+      "Verificador: Teste dinâmico não executado porque o lab está indisponível.",
+      "Verificador: Não foi fornecido o conteúdo dos manifests de infraestrutura que definem a exposição da porta 8080.",
+      "Verificador: Não foi fornecida a cadeia de middlewares do roteador principal da API.",
+      "Verificador: Não foi fornecida a configuração efetiva do Caddy para X-Forwarded-Proto.",
+      "Verificador: O lab está indisponível, então não houve teste dinâmico do cenário.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/admin.go, backend/cmd/api/body_limit.go, backend/cmd/api/company.go, backend/cmd/api/main.go, backend/cmd/api/profile_containment.go, backend/cmd/api/quality_auth.go, backend/cmd/api/quality_company_reads.go, backend/cmd/migrate/main.go, backend/cmd/ops/main.go, backend/cmd/station-locate/main.go, backend/cmd/station-review/main.go, backend/cmd/worker/dispatchers.go, backend/cmd/worker/evidence_schedule.go, backend/cmd/worker/main.go, backend/cmd/worker/payments.go e mais 298.",
+      "Verificador: A fase dinâmica não foi executada porque não há lab disponível (approved=false, available=false).",
+      "Verificador: Os arquivos de contexto fornecidos em <code> (oidc.go, stub.go, verify.go, auth.go, registration.go, distribution.go, respond.go, cursor.go, decode.go) não participam do caminho do proxy de storage e não foram analisados em profundidade.",
+      "Verificador: O tipo e a implementação do roteador usado pela API não estão no material; a hipótese depende de saber se ele normaliza o caminho antes do handler.",
+      "Verificador: O código e a versão do MinIO (imagem bitnamilegacy/minio) não estão no material; o comportamento de normalização de \"..\" e a validação de nome de objeto não puderam ser verificados.",
+      "Verificador: O Caddyfile não está no material; segundo o mapa só /v1/* e /health/* são proxiados, o que pode tornar /abastevo-dev-photos/* inalcançável externamente.",
+      "Verificador: Não foi demonstrado que exista outro bucket no storage de desenvolvimento nem que credenciais válidas para ele estejam disponíveis ao atacante.",
+      "Verificador: Não há laboratório disponível (lab available=false), então nenhuma execução dinâmica foi realizada.",
+      "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/internal/modules/account/adapters/oidc/oidc.go (trechos omitidos), backend/internal/modules/evidence/application/verify.go (trechos omitidos), backend/internal/modules/identity/adapters/auth/auth.go (trechos omitidos), backend/internal/modules/identity/adapters/registration.go (trechos omitidos), backend/internal/modules/mapdist/distribution.go (trechos omitidos), backend/cmd/api/main.go (trechos omitidos).",
+      "Testes dinâmicos não executados (sem laboratório)."
+    ]
+  },
+  "provenance": {
+    "method": "native_static_audit_artifact_projection_and_independent_source_review",
+    "source_code_executed": false,
+    "target_tests_executed": false,
+    "production_contacted": false,
+    "benchmark_ground_truth": false,
+    "recall_denominator": null,
+    "private_app_configuration_included": false,
+    "raw_provider_prompts_logs_or_ledger_included": false
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-001",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:8b9a1e9e52e6592a9dbf23f732cd0cb69f20227038867be819b6fb75babdc842",
+      "state": "INCONCLUSIVE",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:35:52-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "ValidEmail aceita caracteres de controle (CR/LF) e o endereço bruto segue para o remetente de e-mail",
+      "category": "Injection / injeção de cabeçalho de e-mail",
+      "cwe": "CWE-93",
+      "asvs": [
+        "V2.2.1",
+        "V6.3.8"
+      ],
+      "entry_point": "EP-011",
+      "location": {
+        "file": "backend/internal/modules/account/domain/account.go",
+        "lines": "140-147",
+        "symbol": "ValidEmail"
+      },
+      "reasoning": "ValidEmail só rejeita vazio, >254 bytes, ausência de '@' e presença do caractere espaço; não rejeita CR, LF, TAB nem outros controles, e não limita a quantidade de '@'. O mesmo predicado é usado no handler (account/adapters/http/http.go:202) e no serviço (account/application/accounts.go:147), e o endereço — apenas trim/lowercase em NormalizeAddress — é repassado cru a s.Mail.SendCode(ctx, address, code) em accounts.go:180. Um valor como a@b\\r\\nBcc:x@y.test não contém espaço e atravessa toda a validação até o remetente.",
+      "impact_scenario": "Com entrega de e-mail habilitada, um chamador anônimo insere cabeçalhos adicionais no e-mail de código de verificação enviado pela aplicação, gerando mensagens em nome do domínio confiável para destinatários arbitrários (spam/phishing com a reputação do domínio) ou alterando destinatário/assunto dentro do teto de admissão por IP e agregado.",
+      "required_conditions": [
+        "MailSender de produção (SMTP real) compondo To/From/Subject a partir do endereço sem sanitização própria",
+        "Adaptador de e-mail não revalidar caracteres de controle antes do envio",
+        "Cotas por endereço/IP não bloquearem a variante (cada string alterada é um novo hash de endereço)"
+      ],
+      "how_to_verify": "1) Ler backend/internal/modules/account/adapters/mail (outbox/SMTP) e verificar se o endereço entra em cabeçalhos ou envelope sem rejeitar CR/LF. 2) Teste com sender fake capturando bytes: chamar Service.RequestCode com \"a@b\\r\\nBcc:x@y.test\" e MailEnabled=true, comprovando que o cabeçalho injetado aparece na mensagem montada. 3) Confirmar ausência de middleware que rejeite caracteres de controle.",
+      "potential_severity": "MEDIUM",
+      "confidence": "medium",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "inconclusive",
+        "justification": "Análise estática. A lacuna de validação descrita na hipótese existe: ValidEmail (backend/internal/modules/account/domain/account.go:140-147) só recusa vazio, tamanho >254 bytes, ausência de '@' e presença do caractere espaço — CR (\\r), LF (\\n) e TAB não são rejeitados, e o número de '@' não é limitado (IndexByte pega apenas o primeiro). O handler requestCode (backend/internal/modules/account/adapters/http/http.go:198-205) valida com esse mesmo predicado e repassa dto.Email cru; DecodeJSON (backend/internal/platform/httpapi/decode.go:31-47) materializa sequências JSON escapadas como \\r\\n sem qualquer filtro de caracteres de controle; o serviço revalida com o mesmo predicado (application/accounts.go:147) e chama s.Mail.SendCode(ctx, address, code) com o endereço bruto (application/accounts.go:180). O elo final, porém, não está no material: o adaptador de e-mail (backend/internal/modules/account/adapters/mail/memory.go, citado pelo mapa como 'SMTP (e-mail de códigos) — atualmente off/memory') e a composição de produção em cmd/api não foram fornecidos. Sem ver o código que monta To/From/Subject/envelope e sem saber se o envio real está habilitado no commit 018f2df18c8b, não é possível provar que o endereço entra em cabeçalho sem sanitização. A hipótese permanece plausível, mas não confirmável no padrão exigido; nenhuma etapa de sink pode ser citada.",
+        "mitigations_found": [
+          "MailEnabled=false faz RequestCode retornar nil antes de qualquer escrita ou envio (backend/internal/modules/account/application/accounts.go:143-145), de modo que, se a entrega estiver desligada no commit, não há mensagem a injetar.",
+          "Teto agregado de 20 códigos por hora (domain/policy.go:33; memstore.go:200-208) e cota de 5 por endereço (domain/policy.go:13) limitam o volume, embora não a forma do endereço.",
+          "Corpo limitado a 8 KiB (httpapi.ReadBody em decode.go:15-27, chamado com 8<<10 em http.go:91) restringe o tamanho do valor, não os caracteres de controle.",
+          "NormalizeAddress (domain/account.go:131-133) é insuficiente como mitigação: trim/lowercase não removem CR/LF internos."
+        ],
+        "missing_to_conclude": "Falta o código do adaptador de e-mail (backend/internal/modules/account/adapters/mail/memory.go e qualquer implementação SMTP de produção) que compõe To/From/Subject/envelope, e a composição em backend/cmd/api que decide MailEnabled/ANPFUEL_MAIL_MODE no commit 018f2df18c8b; sem eles não se pode citar a etapa que coloca o endereço em cabeçalho.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: A composição de cabeçalhos/envelope no adaptador SMTP não foi analisada por ausência do arquivo no material fornecido.",
+          "Verificador: O comportamento do cliente de e-mail de produção em relação a endereços com múltiplos '@' ou controles além de CR/LF não foi avaliado, por falta de código.",
+          "Verificador: Não houve fase dinâmica: o lab está indisponível e nenhum caso aprovado foi definido.",
+          "Verificador: O arquivo do adaptador de e-mail (backend/internal/modules/account/adapters/mail/memory.go) não foi fornecido, impedindo verificar se há sanitização ou rejeição de CR/LF antes da composição da mensagem.",
+          "Verificador: Não há evidência do wiring de produção (backend/cmd/api) que indique se o envio de e-mail está habilitado (MailEnabled) e qual implementação de MailSender é injetada no commit analisado.",
+          "Verificador: Não foi apresentado qualquer middleware global que rejeite caracteres de controle no corpo JSON, nem confirmação de sua inexistência fora dos trechos exibidos.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/admin.go, backend/cmd/api/main.go, backend/cmd/worker/main.go, backend/internal/modules/account/adapters/pgstore.go, backend/internal/modules/admin/adapters/store.go, backend/internal/modules/companysession/adapters/account.go, backend/internal/modules/contributor/adapters/http/user.go, backend/internal/modules/evidence/adapters/store.go, backend/internal/modules/forum/adapters/stream/listener.go, backend/internal/modules/identity/adapters/registration.go, backend/internal/modules/kernel/cnpj.go, backend/internal/modules/kernel/condition.go, backend/internal/modules/kernel/enterprise_access.go, backend/internal/modules/kernel/org_scope.go, backend/internal/modules/kernel/price.go e mais 12."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-005",
+            "kind": "code_flow",
+            "description": "Caminho entrada→validação→porta de e-mail, com a lacuna de caracteres de controle demonstrada; o sink (composição de cabeçalhos SMTP) não está no material.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/account/adapters/http/http.go",
+                "line": "198-205",
+                "what_happens": "requestCode decodifica {email} via read/DecodeJSON e chama validEmail(dto.Email); se válido, invoca h.Service.RequestCode(r.Context(), dto.Email) com a string crua do corpo."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/decode.go",
+                "line": "31-47",
+                "what_happens": "DecodeJSON apenas garante objeto único, sem campos duplicados/desconhecidos e sem dados residuais; encoding/json desserializa \\r e \\n escapados na string, sem rejeitar caracteres de controle."
+              },
+              {
+                "file": "backend/internal/modules/account/adapters/http/http.go",
+                "line": "194-196",
+                "what_happens": "validEmail é um alias direto de domain.ValidEmail, portanto o handler herda exatamente o mesmo predicado do domínio."
+              },
+              {
+                "file": "backend/internal/modules/account/domain/account.go",
+                "line": "140-147",
+                "what_happens": "ValidEmail faz TrimSpace, recusa len==0, len>254, ausência de '@' na posição 0 ou final e qualquer ocorrência do caractere espaço; não recusa \\r, \\n, \\t nem outros controles, e não limita a quantidade de '@'. Um valor como \"a@b\\r\\nBcc:x@y.test\" não contém espaço e atravessa o predicado."
+              },
+              {
+                "file": "backend/internal/modules/account/application/accounts.go",
+                "line": "143-149",
+                "what_happens": "RequestCode retorna nil imediatamente quando MailEnabled é false (nenhum store IO, nenhum envio) e revalida a forma com domain.ValidEmail, aceitando o mesmo valor com CR/LF."
+              },
+              {
+                "file": "backend/internal/modules/account/domain/account.go",
+                "line": "131-133",
+                "what_happens": "NormalizeAddress só aplica ToLower e TrimSpace; CR/LF internos permanecem no valor usado para AddressHash (account.go:150-153), de modo que cada variante com cabeçalho injetado gera um hash de cota distinto."
+              },
+              {
+                "file": "backend/internal/modules/account/application/accounts.go",
+                "line": "180-183",
+                "what_happens": "Após TryIssueCode admitir, o endereço bruto (com CR/LF, se presente) é entregue a s.Mail.SendCode(ctx, address, code); não há revalidação nem sanitização de caracteres de controle nesta camada. O adaptador que efetivamente compõe cabeçalhos não foi fornecido, então o passo final rumo ao sink não pode ser citado."
+              }
+            ]
+          },
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-006",
+            "kind": "code_flow",
+            "description": "Controles de admissão que limitam volume, mas não a forma do endereço.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/account/application/memstore.go",
+                "line": "183-219",
+                "what_happens": "TryIssueCode aplica cota por AddressHash (5/hora), teto agregado (20/hora) e cooldown de reenvio; como o hash inclui as variantes com CR/LF, cada string alterada conta como endereço novo, mas o teto agregado de 20/hora limita o volume total."
+              },
+              {
+                "file": "backend/internal/modules/account/domain/policy.go",
+                "line": "13",
+                "what_happens": "MaxCodesPerAddressPerHour = 5 fixa a cota por endereço; não inspeciona caracteres do endereço."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/decode.go",
+                "line": "15-27",
+                "what_happens": "ReadBody limita o corpo a 8 KiB (http.go:91), o que restringe o tamanho do payload, mas não impede CR/LF."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    },
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-002",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:e4cf62160096e20ddddbe507abd00687c2201fa245f3e5704e29d249740b5078",
+      "state": "INCONCLUSIVE",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:35:52-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "X-Request-ID não validado é passado ao store de auditoria administrativa e ecoado como trace_id",
+      "category": "Log injection / envenenamento de trilha de auditoria",
+      "cwe": "CWE-117",
+      "asvs": [
+        "V6.3.8",
+        "V16.5.1"
+      ],
+      "entry_point": "EP-001",
+      "location": {
+        "file": "backend/internal/modules/admin/adapters/http/http.go",
+        "lines": "151",
+        "symbol": "login"
+      },
+      "reasoning": "Em login (linha 151) o valor bruto de r.Header.Get(\"X-Request-ID\") é enviado a h.Service.Login sem limite de tamanho nem filtro de caracteres; a memória registra que requestId compõe a trilha de auditoria administrativa persistida pelo store. O mesmo padrão aparece em PrepareMutation (linha 253) e o header cru é devolvido como trace_id em toda resposta de erro (httpapi/respond.go:34-39). Chamadas anônimas a POST /v1/admin/session alcançam esse ponto após Origin e corpo JSON.",
+      "impact_scenario": "Um chamador anônimo grava sequências arbitrárias, inclusive quebras de linha e caracteres de controle, em registros de auditoria de tentativas de login, corrompendo ou forjando a trilha usada em investigação de acessos administrativos, além de inflar a tabela com valores no tamanho máximo de cabeçalho por tentativa. Se painel administrativo ou coletor de logs renderizar request_id/trace_id sem escape, o valor vira XSS armazenado contra o operador.",
+      "required_conditions": [
+        "Store de login/auditoria persistir RequestID em tentativas frustradas",
+        "Ausência de middleware global que limite ou valide X-Request-ID",
+        "Para o efeito XSS: renderização de trace_id sem escape no consumidor"
+      ],
+      "how_to_verify": "1) Ler backend/internal/modules/admin/adapters/store.go e confirmar persistência e limite de LoginInput.RequestID. 2) Verificar main.go/httpserver por validação de charset e tamanho do header. 3) Teste: POST /v1/admin/session com X-Request-ID contendo \"%0a\" e valor muito longo, observando a linha gravada. 4) Em admin-web, checar se trace_id é escrito com textContent.",
+      "potential_severity": "LOW",
+      "confidence": "medium",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "inconclusive",
+        "justification": "Análise estática. O fluxo do cabeçalho cru até a camada de aplicação está comprovado: em backend/internal/modules/admin/adapters/http/http.go:151 o valor de r.Header.Get(\"X-Request-ID\") é entregue a h.Service.Login sem qualquer checagem de charset ou tamanho, e em backend/internal/modules/admin/application/service.go:154-171 esse valor é copiado para LoginInput.RequestID sem validação (apenas ipHash passa por ValidHash). Contudo, o sumidouro decisivo não está no material: backend/internal/modules/admin/adapters/store.go (que persiste a trilha de auditoria e o RequestID, conforme o mapa) não foi fornecido, então não é possível provar que o valor é gravado em tentativas frustradas, se há truncamento/limite na coluna, nem se algum log textual (slog/arquivo) recebe o request_id sem neutralização — condição necessária para CWE-117. O eco como trace_id em httpapi/respond.go:34-41 é atenuado: o valor passa por json.Marshal (linhas 35-42), que escapa caracteres de controle e metacaracteres HTML, e a listagem de auditoria (http.go:447 via writeJSON em 585-594) também é serializada por json.Marshal; portanto o vetor de injeção/XSS no lado da API não se sustenta. A parte XSS depende de código de admin-web que não foi apresentado. Sem store.go e sem o consumidor de renderização, o padrão exigido de evidência não é atingido: veredito inconclusivo.",
+        "mitigations_found": [
+          "Serialização por json.Marshal no envelope de erro (backend/internal/platform/httpapi/respond.go:35-42) e na listagem de auditoria (backend/internal/modules/admin/adapters/http/http.go:447 com writeJSON em 585-594) escapa caracteres de controle e metacaracteres HTML, neutralizando injeção/quebra de linha no lado da API.",
+          "Origin exato obrigatório no login (backend/internal/modules/admin/adapters/http/http.go:135-138 e 508-510), relevante contra CSRF de navegador.",
+          "Fence opcional por CIDR (backend/internal/modules/admin/adapters/http/http.go:74-98) quando AllowedCIDRs está configurado.",
+          "Comentário de projeto indica que o store aplica limites de falha antes de Verify (backend/internal/modules/admin/application/service.go:151-153), o que tenderia a limitar o volume de tentativas gravadas — porém o código do store não foi fornecido para confirmação.",
+          "Rota administrativa desmontada quando não há chave configurada (backend/cmd/api/admin.go:21-24 e backend/internal/modules/admin/adapters/http/http.go:44-46)."
+        ],
+        "missing_to_conclude": "Falta o código de backend/internal/modules/admin/adapters/store.go para provar que LoginInput.RequestID é persistido (inclusive em tentativas frustradas), se a coluna tem limite de tamanho/truncamento e se há query parametrizada; falta qualquer instrução de log (slog/arquivo) que escreva request_id sem neutralização; falta o código de renderização de admin-web que consuma trace_id/request_id; falta a configuração de MaxHeaderBytes do servidor HTTP (main.go/httpserver) para dimensionar o tamanho máximo aceito do cabeçalho.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: Persistência e possíveis limites/truncamentos no store administrativo não analisados por ausência do arquivo backend/internal/modules/admin/adapters/store.go no material.",
+          "Verificador: Renderização de trace_id no painel admin não analisada por ausência do código de admin-web.",
+          "Verificador: Configuração de limites de cabeçalho do servidor HTTP não analisada por ausência de main.go/httpserver no material.",
+          "Verificador: Fase dinâmica não executada porque o laboratório está indisponível (approved=false).",
+          "Verificador: Não foi fornecido o arquivo backend/internal/modules/admin/adapters/store.go, onde ocorre a persistência do request_id e da trilha de auditoria.",
+          "Verificador: Não há no material nenhuma instrução de logging que grave X-Request-ID, impedindo demonstrar o sumidouro clássico de CWE-117.",
+          "Verificador: Não foi fornecido o código de admin-web (ex.: admin-web/src/app.ts) para verificar se trace_id é renderizado com textContent ou innerHTML.",
+          "Verificador: Não foi apresentada a configuração de MaxHeaderBytes do servidor HTTP (backend/cmd/api/main.go ou pacote httpserver), necessária para avaliar o limite real de tamanho do cabeçalho.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/main.go, backend/internal/modules/contributor/adapters/http/admin.go, backend/internal/modules/forum/adapters/http/admin.go, backend/internal/modules/organization/adapters/http/suspension_admin.go, backend/internal/modules/organization/application/suspension.go, backend/internal/modules/staff/adapters/http/admin.go, backend/internal/platform/enterprisesuite/admin.go, backend/internal/modules/account/application/accounts.go (trechos omitidos), backend/internal/modules/contributor/application/claims.go (trechos omitidos)."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-008",
+            "kind": "code_flow",
+            "description": "Fluxo do cabeçalho X-Request-ID cru até a porta de persistência, com verificação das defesas encontradas no caminho.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "49",
+                "what_happens": "Rota POST /v1/admin/session é registrada no grupo admin apenas com securityHeaders e fence (linhas 47-49); não há middleware de sessão nem de saneamento de cabeçalhos, logo o cabeçalho do chamador chega ao handler."
+              },
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "130-151",
+                "what_happens": "O handler login valida apenas a ausência de ?key (131), o Origin exato (135) e o corpo JSON (142); entre 130 e 151 não existe validação de tamanho ou charset de X-Request-ID, e na linha 151 r.Header.Get(\"X-Request-ID\") é passado diretamente a h.Service.Login."
+              },
+              {
+                "file": "backend/internal/modules/admin/application/service.go",
+                "line": "154-171",
+                "what_happens": "Service.Login valida ipHash com domain.ValidHash (158) e calcula o hash da chave (161), mas recebe requestID como string opaca e o copia para LoginInput.RequestID (165) sem qualquer limite de comprimento ou filtro de caracteres de controle."
+              },
+              {
+                "file": "backend/internal/modules/admin/application/service.go",
+                "line": "121-122",
+                "what_happens": "A interface Store declara Login(context.Context, LoginInput) como sumidouro de persistência; a implementação concreta (backend/internal/modules/admin/adapters/store.go) que grava a trilha de auditoria e o request_id não está no material fornecido."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/respond.go",
+                "line": "34-41",
+                "what_happens": "O mesmo cabeçalho é lido novamente e ecoado como trace_id no envelope de erro; o map é serializado por json.Marshal (35-42), que escapa caracteres de controle e <, > e &, impedindo quebra de linha ou HTML na resposta JSON."
+              },
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "399-447",
+                "what_happens": "A listagem de auditoria devolve os eventos via writeJSON (447), que usa json.Marshal (585-594); mesmo que o request_id contenha quebras de linha ou metacaracteres, a serialização os escapa no lado da API."
+              }
+            ]
+          },
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-009",
+            "kind": "code_flow",
+            "description": "Defesas e controles inspecionados que reduzem o alcance do vetor, e controles examinados que não bloqueiam o fluxo do cabeçalho.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "135-138",
+                "what_happens": "validOrigin (508-510) exige Origin igual a ANPFUEL_ADMIN_ORIGIN; é um controle de CSRF de navegador, não impede clientes não-navegador de definir Origin e X-Request-ID livremente, então não bloqueia o fluxo do cabeçalho."
+              },
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "74-98",
+                "what_happens": "O fence de CIDR só é aplicado quando AllowedCIDRs está configurado (75-77); é condicional e não valida o conteúdo do cabeçalho."
+              },
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "32",
+                "what_happens": "O limite maxBodyBytes (16 KiB) aplica-se apenas ao corpo via httpapi.ReadBody (524-537); não há limite equivalente para cabeçalhos no código apresentado."
+              },
+              {
+                "file": "backend/internal/modules/admin/adapters/http/http.go",
+                "line": "519-537",
+                "what_happens": "readAdminJSONRaw valida Content-Type e tamanho do corpo, mas não toca em X-Request-ID, confirmando a ausência de validação do cabeçalho antes da linha 151."
+              },
+              {
+                "file": "backend/cmd/api/admin.go",
+                "line": "21-24",
+                "what_happens": "A superfície administrativa só é montada quando há chave configurada; não é uma mitigação do conteúdo do cabeçalho, apenas de disponibilidade da rota."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    },
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-003",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:21517aae238d4c8b67a598e0400e3edaef690f5ccbae4336eb030fa59c80a601",
+      "state": "INCONCLUSIVE",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:35:52-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "Guarda de TLS do webhook Asaas confia em X-Forwarded-Proto forjável pelo cliente",
+      "category": "Configuration / asserção de transporte não verificada",
+      "cwe": "CWE-290",
+      "asvs": [
+        "V9.1.1",
+        "V12.2.1"
+      ],
+      "entry_point": "EP-109",
+      "location": {
+        "file": "backend/internal/modules/payments/adapters/http/asaas_webhook.go",
+        "lines": "45",
+        "symbol": "AsaasWebhookHandler.handle"
+      },
+      "reasoning": "A condição é `h.RequireTLS && r.TLS == nil && !strings.EqualFold(strings.TrimSpace(r.Header.Get(\"X-Forwarded-Proto\")), \"https\")`. O handler não usa o Resolver com allowlist de proxies confiáveis (empregado pelo admin e pelo identity para IP), portanto qualquer peer que alcance o listener da API pode forjar o header e satisfazer a guarda. Atrás do Caddy r.TLS é sempre nil, então a decisão de transporte recai integralmente sobre um valor controlado pelo remetente.",
+      "impact_scenario": "Se a porta da API for alcançável fora do proxy (má configuração de rede, port-forward, namespace compartilhado), um atacante em posição de rede envia requisições HTTP em claro com X-Forwarded-Proto: https, possivelmente observando tráfego de webhook com token do provedor e dados financeiros de Pix, e reutilizando o token para injetar eventos na inbox dentro das validações de merchant.",
+      "required_conditions": [
+        "Listener da API alcançável diretamente por atacante de rede",
+        "Token de webhook desconhecido do atacante (a verificação de token permanece como controle primário)",
+        "Ausência de camada de rede que restrinja o listener ao proxy"
+      ],
+      "how_to_verify": "1) Conferir infra/k8s/staging/services.yaml e compose para saber se a porta 8080 é exposta além do Caddy. 2) Confirmar que nenhum middleware remove X-Forwarded-Proto de peers não confiáveis. 3) Teste: requisição HTTP direta com X-Forwarded-Proto: https e token válido deve retornar 403 se a guarda for efetiva.",
+      "potential_severity": "LOW",
+      "confidence": "medium",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "inconclusive",
+        "justification": "A linha 45 de asaas_webhook.go lê X-Forwarded-Proto diretamente de r.Header.Get, sem usar o resolvedor de proxies confiáveis empregado por outros módulos, e a guarda só recusa quando o valor não é 'https'. Isso confirma, no nível estático, que a asserção de transporte é controlável pelo remetente. Porém, a exploração descrita depende de duas condições que não estão demonstradas no material: (1) o listener da API (porta 8080) ser alcançável diretamente por um atacante de rede, fora do Caddy; (2) não existir middleware global que remova ou sobrescreva X-Forwarded-Proto para peers não confiáveis. Os arquivos de infraestrutura (infra/k8s/staging/services.yaml, compose.*.yml) e a composição do roteador/middlewares (backend/cmd/api/main.go) não estão em <code>, e o lab está indisponível. Além disso, a autenticação primária do webhook é o token 'asaas-access-token', comparado em tempo constante nas linhas 63-67 e 124-135; o desvio da guarda TLS, isoladamente, não permite gravar eventos sem esse token. Sem provar o alcance direto e a ausência de saneamento do header, o cenário não passa do padrão de evidência exigido para 'confirmed'.",
+        "mitigations_found": [
+          "Verificação de token do webhook em tempo constante: asaas_webhook.go:63-67 e 124-135.",
+          "Falha fechada quando o canal está desativado: asaas_webhook.go:109-122 e cmd/api/payments.go:265-268.",
+          "RequireTLS ligado na composição: cmd/api/payments.go:277.",
+          "Caddy como terminador TLS na borda, conforme o mapa de trust boundaries; isso não prova que a porta 8080 esteja inacessível diretamente."
+        ],
+        "missing_to_conclude": "Faltam o conteúdo de infra/k8s/staging/services.yaml e dos compose para saber se a porta 8080 da API é exposta fora do Caddy; a composição do roteador/middlewares em backend/cmd/api/main.go para saber se X-Forwarded-Proto é removido ou sobrescrito para peers não confiáveis; e a configuração do Caddy sobre sobrescrita do header.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: infra/k8s/staging/services.yaml e arquivos compose não incluídos em <code>, impedindo verificar alcance direto do listener.",
+          "Verificador: backend/cmd/api/main.go e middlewares globais não incluídos em <code>, impedindo verificar saneamento de X-Forwarded-Proto.",
+          "Verificador: Teste dinâmico não executado porque o lab está indisponível.",
+          "Verificador: Não foi fornecido o conteúdo dos manifests de infraestrutura que definem a exposição da porta 8080.",
+          "Verificador: Não foi fornecida a cadeia de middlewares do roteador principal da API.",
+          "Verificador: Não foi fornecida a configuração efetiva do Caddy para X-Forwarded-Proto.",
+          "Verificador: O lab está indisponível, então não houve teste dinâmico do cenário.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/admin.go, backend/cmd/api/body_limit.go, backend/cmd/api/company.go, backend/cmd/api/main.go, backend/cmd/api/profile_containment.go, backend/cmd/api/quality_auth.go, backend/cmd/api/quality_company_reads.go, backend/cmd/migrate/main.go, backend/cmd/ops/main.go, backend/cmd/station-locate/main.go, backend/cmd/station-review/main.go, backend/cmd/worker/dispatchers.go, backend/cmd/worker/evidence_schedule.go, backend/cmd/worker/main.go, backend/cmd/worker/payments.go e mais 298."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-010",
+            "kind": "code_flow",
+            "description": "Fluxo estático da guarda de transporte e da autenticação primária do webhook Asaas.",
+            "steps": [
+              {
+                "file": "backend/cmd/api/payments.go",
+                "line": "274-278",
+                "what_happens": "A composição cria AsaasWebhookHandler com RequireTLS: true, WebhookToken e Merchant vindos da configuração; o handler é montado sem middleware adicional neste arquivo."
+              },
+              {
+                "file": "backend/cmd/api/payments.go",
+                "line": "285-288",
+                "what_happens": "registerPaymentRoutes chama comp.AsaasHook.RegisterRoutes(r), sem qualquer wrapper de saneamento de X-Forwarded-Proto."
+              },
+              {
+                "file": "backend/internal/modules/payments/adapters/http/asaas_webhook.go",
+                "line": "36-38",
+                "what_happens": "RegisterRoutes monta POST /v1/payments/asaas/webhook diretamente em h.handle."
+              },
+              {
+                "file": "backend/internal/modules/payments/adapters/http/asaas_webhook.go",
+                "line": "40-48",
+                "what_happens": "handle verifica configured(); em seguida a guarda TLS usa r.TLS == nil e strings.EqualFold(strings.TrimSpace(r.Header.Get(\"X-Forwarded-Proto\")), \"https\"). O header é lido cru, sem allowlist de proxy confiável."
+              },
+              {
+                "file": "backend/internal/modules/payments/adapters/http/asaas_webhook.go",
+                "line": "63-67",
+                "what_happens": "Depois da guarda TLS, o handler exige exatamente um header 'asaas-access-token' e chama validToken; sem token válido responde 401, independentemente de X-Forwarded-Proto."
+              },
+              {
+                "file": "backend/internal/modules/payments/adapters/http/asaas_webhook.go",
+                "line": "124-135",
+                "what_happens": "validToken usa subtle.ConstantTimeCompare contra WebhookToken e PreviousWebhookToken; é o controle de autenticação efetivo do webhook."
+              },
+              {
+                "file": "backend/internal/modules/payments/adapters/http/asaas_webhook.go",
+                "line": "109-122",
+                "what_happens": "configured() falha fechado quando Inbox é nulo, APIKey/Merchant vazios, ambiente inválido ou token de webhook inválido/igual à APIKey; com canal desativado a composição zera token e merchant."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    },
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-004",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:eaae8405fba5c63a82f514eb9509f3d4369b3ff512aeaa810eb5d77929492aca",
+      "state": "DISMISSED",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:35:52-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "SetClaimProof não compara o dono do claim antes de gravar a prova do gist",
+      "category": "Access control (IDOR/BOLA)",
+      "cwe": "CWE-639",
+      "asvs": [],
+      "entry_point": null,
+      "location": {
+        "file": "backend/internal/modules/contributor/application/claims.go",
+        "lines": "152-158",
+        "symbol": "Service.SetClaimProof"
+      },
+      "reasoning": "O handler claimProof (contributor/adapters/http/user.go:85-105) deriva accountID da sessão, mas recebe claimID direto do path (chi.URLParam(r, \"id\")) e o entrega a Service.SetClaimProof, que chama Store.SetClaimProof(ctx, tx, claimID, accountID, gistID, status, now) sem checagem explícita de propriedade no trecho fornecido. WithdrawClaim, ao contrário, carrega o claim e compara claim.AccountID != accountID antes de mutar (linhas 167-173), o que evidencia a assimetria do controle.",
+      "impact_scenario": "Um usuário autenticado sobrescreve a prova de um claim de outro contribuidor, bloqueando a aprovação legítima (negando o tier CONTRIBUTOR a terceiros) ou influenciando a decisão administrativa com prova que ele controla, sem jamais possuir o claim.",
+      "required_conditions": [
+        "Query de SetClaimProof filtrar apenas por claim_id, sem predicado de account_id",
+        "Claim ainda em estado que aceite prova",
+        "Nenhuma revalidação de dono posterior dentro da mesma transação"
+      ],
+      "how_to_verify": "1) Ler a query SQL de SetClaimProof em backend/db/queries e checar o predicado de owner. 2) Teste integrado: criar claim na conta A, autenticar como conta B e chamar POST /v1/contributor/claims/{id}/proof; 200 com alteração do claim de A confirma a falha. 3) Verificar se status e lock são revalidados na transação.",
+      "potential_severity": "MEDIUM",
+      "confidence": "low",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "dismissed",
+        "justification": "Hipótese refutada por análise estática. O trecho citado pelo hunter (claims.go:152-158) é apenas a segunda transação de Service.SetClaimProof; a checagem de propriedade existe antes dele, na primeira transação (claims.go:121-135): o claim é carregado com LockClaim pelo claimID controlado pelo atacante (linha 123) e imediatamente comparado com o accountID derivado da sessão (linhas 127-129), devolvendo domain.ErrNotFound quando não coincide. Só depois de passar por essa comparação o claim é aceito em 'current' (linha 133). Além disso, o estado/lock é revalidado na mesma transação por domain.ClaimOpen (linhas 130-132), e a gravação subsequente (linha 155) passa o accountID da sessão ao Store.SetClaimProof, mantendo o escopo de dono na escrita. O comportamento é simétrico ao de WithdrawClaim (linhas 167-173), citado pelo hunter como referência de assimetria — assimetria que não se materializa. A condição declarada 'Query de SetClaimProof filtrar apenas por claim_id, sem predicado de account_id' não pode ser confirmada nem contra o código do serviço, porque a barreira já ocorre no nível de aplicação antes de qualquer chamada de escrita ao store; a ausência da SQL em <code> não altera esse resultado, pois o caminho proposto (gravar prova de claim alheio) já é bloqueado na linha 128. Não há lab disponível, então a confirmação dinâmica da hipótese também não foi possível, mas a refutação estática é suficiente e cita linhas existentes no commit.",
+        "mitigations_found": [
+          "Comparação explícita de dono em backend/internal/modules/contributor/application/claims.go:127-129 (claim.AccountID != accountID → domain.ErrNotFound) sob bloqueio de linha.",
+          "Revalidação de estado no mesmo trecho crítico via domain.ClaimOpen em backend/internal/modules/contributor/application/claims.go:130-132.",
+          "Escopo de dono propagado à escrita: accountID da sessão é passado a Store.SetClaimProof em backend/internal/modules/contributor/application/claims.go:155.",
+          "Validação canônica de UUID para claimID e accountID em backend/internal/modules/contributor/application/claims.go:118 e backend/internal/modules/contributor/domain/ids.go:9-15.",
+          "Resposta 404 unificada para não-dono (domain.ErrNotFound), consistente com a política declarada no mapa de '404 unificado para não-dono', evitando oráculo de existência.",
+          "Verificação de que o gist pertence ao login do próprio claim e contém o código do claim (backend/internal/modules/contributor/application/claims.go:141-149)."
+        ],
+        "missing_to_conclude": "O SQL de Store.LockClaim e Store.SetClaimProof em backend/db/queries não está em <code>, então não é possível citar o predicado exato do banco; a decisão, porém, não depende dele, pois a barreira de propriedade ocorre no serviço em claims.go:127-129 antes de qualquer escrita.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: A janela TOCTOU entre a primeira transação (lock/validação) e a segunda (gravação) não foi aprofundada por não fazer parte desta hipótese; ela exigiria analisar se ClaimOpen e o escopo do store são revalidados na segunda transação.",
+          "Verificador: O comportamento de Store.LockClaim no caso de claimID inexistente (qual erro retorna) não foi analisado, pois não afeta o veredito de controle de acesso.",
+          "Verificador: A camada HTTP claimProof (contributor/adapters/http/user.go:85-105) citada na hipótese não está presente em <code>, então a extração de claimID via chi.URLParam e o mapeamento de erros foram considerados apenas conforme descritos na hipótese.",
+          "Verificador: Não foi fornecido o SQL de LockClaim/SetClaimProof em backend/db/queries, impedindo verificar se a escrita também restringe por account_id no banco.",
+          "Verificador: Não há lab disponível (available=false), portanto a verificação dinâmica da hipótese não pôde ser executada.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/main.go, backend/internal/modules/contributor/adapters/http/admin.go, backend/internal/modules/contributor/adapters/http/public.go, backend/internal/modules/contributor/adapters/http/user.go, backend/internal/modules/account/adapters/oidc/oidc.go (trechos omitidos), backend/internal/modules/account/adapters/pgstore.go (trechos omitidos), backend/internal/modules/account/application/accounts.go (trechos omitidos), backend/internal/modules/account/application/memstore.go (trechos omitidos), backend/internal/modules/evidence/application/verify.go (trechos omitidos), backend/internal/modules/identity/adapters/auth/auth.go (trechos omitidos), backend/internal/modules/mapdist/distribution.go (trechos omitidos)."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-001",
+            "kind": "code_flow",
+            "description": "Análise estática do caminho POST /v1/contributor/claims/{id}/proof até a gravação da prova: o accountID vem da sessão e o claimID vem do path, mas a propriedade é verificada antes de qualquer escrita.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "117-120",
+                "what_happens": "SetClaimProof valida formato UUID de accountID (da sessão) e claimID (do path), gistID não vazio e limite de 128 caracteres; entradas inválidas retornam ErrInvalid."
+              },
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "122-126",
+                "what_happens": "Abre transação e carrega o claim pelo claimID com s.Store.LockClaim(ctx, tx, claimID), obtendo bloqueio de linha sobre o registro."
+              },
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "127-129",
+                "what_happens": "Controle ausente segundo a hipótese, na verdade PRESENTE: 'if claim.AccountID != accountID { return domain.ErrNotFound }' compara o dono do claim com o accountID derivado da sessão e encerra o fluxo com 404 unificado antes de qualquer gravação."
+              },
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "130-133",
+                "what_happens": "Revalida o estado na mesma transação com domain.ClaimOpen(claim, s.now()) (state PENDING e não expirado) e só então materializa 'current', do qual a gravação depende."
+              },
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "139-151",
+                "what_happens": "A verificação de prova consulta o gist e só marca ProofVerified quando gist.Owner == current.GitHubLogin (linha 142) e o conteúdo contém o código do claim, impedindo que uma prova de terceiro seja aceita como verificada."
+              },
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "153-158",
+                "what_happens": "A escrita só ocorre após o claim ter sido validado no passo 127-129; ademais, s.Store.SetClaimProof recebe o accountID da sessão como argumento de escopo (linha 155), e não apenas o claimID."
+              },
+              {
+                "file": "backend/internal/modules/contributor/application/claims.go",
+                "line": "166-174",
+                "what_happens": "Contraprova de simetria: WithdrawClaim usa exatamente o mesmo padrão (LockClaim + claim.AccountID != accountID → ErrNotFound + passagem de accountID ao store), mostrando que SetClaimProof não é uma exceção sem controle."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    },
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-005",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:908a0747a2e391bbbf43caf4d1b40d8e52990ea82348de198ec678261aa109ae",
+      "state": "INCONCLUSIVE",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:39:10-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "Teto global horário de admissão de contas permite bloquear o cadastro de todos os usuários",
+      "category": "abuso / lógica de negócio (negação de serviço)",
+      "cwe": "CWE-770",
+      "asvs": [
+        "V2.2.1"
+      ],
+      "entry_point": null,
+      "location": {
+        "file": "backend/internal/modules/account/domain/policy.go",
+        "lines": "29-36",
+        "symbol": "MaxAggregateCodesPerHour / MaxKeyAccountsPerHour"
+      },
+      "reasoning": "As cotas de admissão são GLOBAIS por hora e consumidas por qualquer chamador anônimo: MaxAggregateCodesPerHour=20 (códigos de e-mail emitidos somando todos os endereços) e MaxKeyAccountsPerHour=100 (criações de conta por chave somando todos os usuários). O contrato do Store (accounts.go:12-20) confirma que TryIssueCode/TryCreateKeyAccount fazem check+insert atômico contra esses tetos globais e recusam com admitted=false/ErrAggregateExhausted. Como a rota de código responde 202 idêntico em sucesso, cooldown e cota esgotada (http.go:198-211), o bloqueio é silencioso: com ~4 endereços distintos × 5 códigos/hora (ou 100 POSTs em /v1/accounts/keys) o atacante consome o orçamento global inteiro e nenhum cadastro legítimo por código ou por chave é admitido até a janela deslizar.",
+      "impact_scenario": "Um atacante sem conta gasta poucas dezenas de requisições por hora (ou 100 requisições em /v1/accounts/keys) e mantém, indefinidamente, o cadastro por e-mail e por chave indisponível para todos os usuários; o cliente recebe 202/erro de cota sem qualquer sinal de ataque, e o suporte não consegue distinguir falha legítima de abuso.",
+      "required_conditions": [
+        "A implementação Postgres repetir o mesmo teto agregado global (CountAllCodesSince / CountKeyAccountsSince) na mesma transação do insert.",
+        "O atacante conseguir emitir códigos para endereços que controla (ou apenas POSTar /v1/accounts/email/codes com endereços distintos) sem custo relevante.",
+        "Não existir priorização, fila por origem ou limite por IP antes da admissão agregada."
+      ],
+      "how_to_verify": "Ler a implementação SQL de TryIssueCode e TryCreateKeyAccount no adapter Postgres e confirmar que o teto agregado é contado e aplicado antes do insert (não apenas por endereço/username); confirmar via teste de integração que 5 emissões por endereço em 4 endereços distintos esgotam o teto de 20 e que 100 criações de chave esgotam o teto de 100; verificar se /v1/accounts/keys exige qualquer prova prévia; se confirmado, decidir com o dono se é risco aceito ou se o teto deve ser por IP/cliente em vez de global.",
+      "potential_severity": "MEDIUM",
+      "confidence": "medium",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "inconclusive",
+        "justification": "Análise estática parcial. O material fornecido mostra as constantes de teto global em policy.go (MaxAggregateCodesPerHour=20 e MaxKeyAccountsPerHour=100) e o caminho de aplicação que chama TryCreateKeyAccount em keyaccounts.go, mas não inclui a implementação Postgres de TryIssueCode/TryCreateKeyAccount nem os handlers HTTP e middlewares das rotas /v1/accounts/email/codes e /v1/accounts/keys. Sem esses trechos não é possível provar que a contagem agregada é executada e aplicada antes do insert na mesma transação, nem que a rota está exposta sem limite por IP/cliente. O lab não está disponível, portanto não há teste dinâmico.",
+        "mitigations_found": [
+          "ResendCooldownSeconds=60 (policy.go:12) limita reenvios por endereço, mas não endereços distintos.",
+          "MaxCodesPerAddressPerHour=5 (policy.go:13) limita por endereço, mas não o agregado global.",
+          "O comentário do contrato Store (accounts.go:13-18) declara check+insert atômico no Postgres, porém o código do adaptador não foi fornecido."
+        ],
+        "missing_to_conclude": "Faltam o adaptador Postgres que implementa TryIssueCode e TryCreateKeyAccount, os handlers HTTP das rotas /v1/accounts/email/codes e /v1/accounts/keys, e os middlewares de rate limit/identidade aplicados a essas rotas.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: Teste dinâmico não executado porque o lab está indisponível.",
+          "Verificador: Migrações e índices que poderiam confirmar a contagem agregada não foram analisados por não estarem no material.",
+          "Verificador: A implementação Postgres de TryIssueCode e TryCreateKeyAccount não foi fornecida, impedindo confirmar a contagem agregada e o insert na mesma transação.",
+          "Verificador: Os handlers HTTP das rotas /v1/accounts/email/codes e /v1/accounts/keys não foram fornecidos, impedindo confirmar exposição anônima e respostas.",
+          "Verificador: Não foram fornecidos middlewares de rate limit por IP/cliente aplicados às rotas de admissão de contas.",
+          "Verificador: O laboratório dinâmico não está disponível (available=false), então não há teste executado.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/company.go, backend/cmd/api/main.go, backend/cmd/worker/main.go, backend/internal/modules/account/adapters/http/http.go, backend/internal/modules/account/adapters/pgstore.go, backend/internal/modules/account/application/memstore.go, backend/internal/modules/companysession/adapters/account.go, backend/internal/modules/membership/adapters/http/devices.go, backend/internal/modules/orgaccess/adapters/http/account.go, backend/internal/modules/organization/adapters/ownership_transfer_store.go, backend/internal/modules/orgsync/adapters/http/http.go, backend/internal/modules/orgsync/adapters/http/review_results.go, backend/internal/platform/enterprisesuite/routes.go, backend/internal/modules/account/application/accounts.go (trechos omitidos), backend/internal/modules/companysession/application/service.go (trechos omitidos) e mais 3."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-007",
+            "kind": "code_flow",
+            "description": "Constatação estática do desenho de teto global e do caminho de criação de conta por chave; a implementação efetiva do teto não está no material.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/account/domain/policy.go",
+                "line": "33",
+                "what_happens": "MaxAggregateCodesPerHour = 20 define teto agregado por hora para códigos de e-mail emitidos somando todos os endereços."
+              },
+              {
+                "file": "backend/internal/modules/account/domain/policy.go",
+                "line": "36",
+                "what_happens": "MaxKeyAccountsPerHour = 100 define teto agregado por hora para criações anônimas de conta por chave."
+              },
+              {
+                "file": "backend/internal/modules/account/application/accounts.go",
+                "line": "24-25",
+                "what_happens": "A porta Store expõe CountAllCodesSince e CountKeyAccountsSince, indicando contagem agregada prevista."
+              },
+              {
+                "file": "backend/internal/modules/account/application/accounts.go",
+                "line": "29-30",
+                "what_happens": "A porta Store expõe TryIssueCode e TryCreateKeyAccount como operações de admissão e inserção."
+              },
+              {
+                "file": "backend/internal/modules/account/application/keyaccounts.go",
+                "line": "26-36",
+                "what_happens": "CreateKeyAccount valida apenas o formato do username e consulta colisão; não há prova de conta, IP ou cliente antes de prosseguir."
+              },
+              {
+                "file": "backend/internal/modules/account/application/keyaccounts.go",
+                "line": "64",
+                "what_happens": "CreateKeyAccount chama TryCreateKeyAccount, mas o corpo dessa implementação não está no <code>."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    },
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-006",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:9174ce23475e75b7b1f511bb60f64dae8f47b137682753c6b748f4386654fe11",
+      "state": "INCONCLUSIVE",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:39:10-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "device_id enviado no corpo é copiado para o principal e não é validado quanto ao dono antes de operações de escrita na nuvem",
+      "category": "controle de acesso (BOLA/IDOR)",
+      "cwe": "CWE-639",
+      "asvs": [
+        "V8.2.2",
+        "V6.8.2"
+      ],
+      "entry_point": "EP-045",
+      "location": {
+        "file": "backend/internal/modules/cloudsync/adapters/http/push.go",
+        "lines": "26-32",
+        "symbol": "syncPush"
+      },
+      "reasoning": "O handler resolve a sessão (family_id+access_token) e a prova assinada (SignedOwner) apenas para obter o owner da conta; em seguida atribui p.DeviceID = dto.DeviceID vindo do corpo sem qualquer verificação de que o dispositivo pertence a essa conta — caso idêntico em /v1/cloud/commands (http.go:326), /v1/cloud/sync/pull (pull.go:93), /v1/cloud/sync/snapshot (import_snapshot.go:162) e /v1/cloud/snapshots/manifest (backup.go:27). Em commands não há sequer validação de formato (domain.ValidID) do device_id, ao contrário de push/pull/snapshot. O escopo de tenant (AccountID) e o identificador de recurso (DeviceID) viajam separados dentro do mesmo Principal e só o escopo é provado criptograficamente pelo handler.",
+      "impact_scenario": "Se a camada de aplicação resolver o dispositivo apenas por p.DeviceID (sem cruzar com p.AccountID), um atacante com conta e chave de dispositivo próprias poderia aplicar comandos/gravar em registros de dispositivo de outra conta, ou puxar/gerar snapshots com cursor em nome de dispositivo alheio, quebrando o isolamento por conta nos dados privados de cloud.",
+      "required_conditions": [
+        "A camada cloudsync/application resolver o dispositivo sem filtrar por AccountID (não fornecida nesta rodada).",
+        "O atacante possuir conta válida e prova assinada de dispositivo própria para alcançar o handler."
+      ],
+      "how_to_verify": "Ler backend/internal/modules/cloudsync/application (Apply, Erase, Pull, Snapshot, Manifest) e as consultas SQL de DeviceStore/BatchStore/PullStore: verificar se toda leitura/escrita de dispositivo inclui AccountID do principal na cláusula; verificar se RegisterDevice/RevokeDevice checam posse do device_id; adicionar teste de integração em que a conta A envia device_id da conta B e confirmar recusa (ErrDenied/ErrNotFound).",
+      "potential_severity": "MEDIUM",
+      "confidence": "low",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "inconclusive",
+        "justification": "A hipótese descreve que os handlers copiam o device_id do corpo para app.Principal (p.DeviceID) após a prova assinada, sem checagem de dono na camada HTTP. Isso é confirmável estaticamente (push.go:31, http.go:326, pull.go:93, import_snapshot.go:162, backup.go:27, restore.go:36, restore.go:79, restore_commit.go:34) e é verdadeiro. Porém o defeito alegado (CWE-639/BOLA) depende de a camada cloudsync/application/adapters resolver o dispositivo ou os dados por DeviceID sem filtrar pelo AccountID do principal — e essa camada (Store que implementa Apply, Pull, Snapshot, Manifest, Preview, RevokeDevice e o SQL de DeviceStore/BatchStore/PullStore/BackupStore) NÃO está presente em <code>. Sem ver o sink real (query SQL) não é possível demonstrar a ausência nem a presença do controle de escopo por conta. Os únicos controles visíveis são: (a) validação de formato domain.ValidID do device_id (push.go:22, pull.go:84, import_snapshot.go:111/149, backup.go:18, restore.go:27/70, restore_commit.go:25) — que não é controle de posse; e (b) amarração de cursor a (AccountID, DeviceID) em pullFilter (pull.go:24-26,98) e snapshotFilter (import_snapshot.go:26-28,167), que impede reutilização de cursor entre contas, mas não prova o escopo das queries de dados. O próprio hunter aponta que a resolução na camada application 'não é fornecida nesta rodada', o que, pela regra do padrão de evidência, torna o veredito inconclusivo. A prova estática é insuficiente para confirmar ou refutar.",
+        "mitigations_found": [
+          "Validação de formato do device_id em push/pull/snapshot/manifest/restore (domain.ValidID) — não é controle de posse.",
+          "Cursor de pull/snapshot vinculado a (AccountID, Origin, DeviceID) via FilterHash (pull.go:24-26,98; import_snapshot.go:26-28,167; httpapi/cursor.go:59-64) — impede reuso de cursor entre contas, mas não substitui filtro de escopo nas queries de dados.",
+          "Camada HTTP exige account proof (Sessions) + prova assinada (SignedOwner) antes de montar o Principal; isso autentica a conta, não a posse do device_id."
+        ],
+        "missing_to_conclude": "Faltam em <code>: (1) implementação de app.DeviceStore/BatchStore/PullStore/SnapshotStore/BackupStore/ImportStore/RestoreStore/RestoreCommitStore (o adapters.Store de cloudsync) que recebe Principal; (2) o SQL efetivo de Apply, Pull, Snapshot, Manifest, Preview, RevokeDevice, RegisterDevice, ListSnapshots, PreviewRestore e RestoreCommit, para verificar se o WHERE inclui account_id e se o device_id é usado como chave de recurso sem escopo de conta.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: Não foi analisada a lógica de resolvedor de dispositivo em RegisterDevice/RevokeDevice (checagem de posse) por ausência do código do adapters.Store no <code>.",
+          "Verificador: Não foi analisado o comportamento dinâmico (conta A enviando device_id da conta B) porque o lab não está disponível.",
+          "Verificador: A implementação de cloudadapters.NewStore (adapters/Store) que satisfaz app.BatchStore/DeviceStore/PullStore/SnapshotStore/BackupStore não está no material fornecido.",
+          "Verificador: As queries SQL de dispositivo/dispositivo em batch/pull/snapshot/manifest/revoke não estão no material fornecido, impossibilitando verificar se elas filtram por account_id.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/cmd/api/main.go (trechos omitidos)."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-002",
+            "kind": "code_flow",
+            "description": "Observação estática: o handler de /v1/cloud/sync/push lê device_id do corpo, valida apenas formato, autentica via account proof + SignedOwner e copia o device_id para o Principal — sem checagem de dono na camada HTTP. O sink (Apply) não está em <code>.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/push.go",
+                "line": "14-16",
+                "what_happens": "DTO recebe session e DeviceID a partir do corpo JSON."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/push.go",
+                "line": "22",
+                "what_happens": "Somente validação de formato: domain.ValidID(dto.DeviceID); nenhuma checagem de posse."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/push.go",
+                "line": "26",
+                "what_happens": "h.principal(r, dto.session, true) resolve AccountID pela sessão e ContributorID/KeyID pelo SignedOwner; a assinatura prova a conta, não a posse do device_id."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/push.go",
+                "line": "31",
+                "what_happens": "p.DeviceID = dto.DeviceID — device_id do corpo é copiado para o Principal sem cruzar com AccountID."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/push.go",
+                "line": "32",
+                "what_happens": "h.Service.Apply(ctx, p, batch) — sink real; a implementação de Apply não está em <code>, impedindo verificar o escopo da query."
+              }
+            ]
+          },
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-003",
+            "kind": "code_flow",
+            "description": "Padrão idêntico em outros endpoints cloud que recebem device_id: já validam formato e autenticam, mas apenas atribuem p.DeviceID sem checagem de posse, remetendo ao mesmo sink ausente.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/http.go",
+                "line": "321-327",
+                "what_happens": "/v1/cloud/commands: p.DeviceID = dto.DeviceID sem sequer validar formato e chama Apply, sem checagem de dono."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/pull.go",
+                "line": "93",
+                "what_happens": "/v1/cloud/sync/pull: p.DeviceID = dto.DeviceID antes de Service.Pull."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/import_snapshot.go",
+                "line": "162",
+                "what_happens": "/v1/cloud/sync/snapshot: p.DeviceID = dto.DeviceID antes de Service.Snapshot."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/backup.go",
+                "line": "27",
+                "what_happens": "/v1/cloud/snapshots/manifest: p.DeviceID = dto.DeviceID antes de Service.Manifest."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/restore.go",
+                "line": "36",
+                "what_happens": "/v1/cloud/snapshots/list: p.DeviceID = dto.DeviceID antes de ListSnapshots."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/restore.go",
+                "line": "79",
+                "what_happens": "/v1/cloud/restore/preview: p.DeviceID = dto.DeviceID antes de PreviewRestore."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/restore_commit.go",
+                "line": "34",
+                "what_happens": "/v1/cloud/restore/commit: p.DeviceID = dto.DeviceID antes de RestoreCommit."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/http.go",
+                "line": "305",
+                "what_happens": "/v1/cloud/devices/revoke: h.Service.RevokeDevice(ctx, p, dto.DeviceID) passa o device_id como argumento separado; implementação (checagem de posse) ausente em <code>."
+              }
+            ]
+          },
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-004",
+            "kind": "code_flow",
+            "description": "Controles presentes que reduzem, mas não decidem, a hipótese: amarração de cursor ao AccountID+DeviceID via FilterHash. Isso impede cruzamento de cursor entre contas, mas não demonstra o escopo das queries de dados.",
+            "steps": [
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/pull.go",
+                "line": "24-26",
+                "what_happens": "pullFilter inclui owner (AccountID), origin e device — cursor fica vinculado à conta."
+              },
+              {
+                "file": "backend/internal/modules/cloudsync/adapters/http/pull.go",
+                "line": "98",
+                "what_happens": "filter := pullFilter(p.AccountID, h.Origin, p.DeviceID) — AccountID participa do filtro do cursor."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/cursor.go",
+                "line": "59-64",
+                "what_happens": "Open rejeita cursor cujo FilterHash não confere — cursor de uma conta/device não serve em outra."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    },
+    {
+      "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-007",
+      "audit_id": "AUD-ABASTEVO-20261114-1501",
+      "fingerprint": "sha256:d9ff4843857d0a0e88ffbd40b919595bdd3c38c113aa60c4f6dd708fc8552e8d",
+      "state": "INCONCLUSIVE",
+      "finding_id": null,
+      "created_at": "2026-11-14T18:39:10-03:00",
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "title": "Checagem de prefixo de caminho no proxy de storage de desenvolvimento não normaliza o caminho antes de encaminhar",
+      "category": "traversal de caminho em infraestrutura de desenvolvimento",
+      "cwe": "CWE-22",
+      "asvs": [
+        "V15.3.1"
+      ],
+      "entry_point": null,
+      "location": {
+        "file": "backend/internal/platform/httpapi/development_storage.go",
+        "lines": "33-38",
+        "symbol": "developmentStorageProxy"
+      },
+      "reasoning": "A guarda do proxy usa strings.HasPrefix(r.URL.Path, \"/\"+bucket+\"/\") sobre o caminho bruto, sem path.Clean; o httputil.NewSingleHostReverseProxy faz join do caminho sem normalização. Um caminho como /abastevo-dev-photos/../<outro-bucket>/<chave> satisfaz o prefixo e, além disso, a autorização aceita qualquer cabeçalho Authorization iniciado por \"AWS4-HMAC-SHA256 \" (sem vincular bucket/paths). Se o serviço S3-compatível normalizar segmentos \"..\", o pedido atinge outro bucket do mesmo storage.",
+      "impact_scenario": "Um chamador com acesso à origem de desenvolvimento poderia tentar ler/gravar objetos fora do bucket de fotos de desenvolvimento, expondo ou corrompendo conteúdo de outros buckets do storage temporário; o impacto é limitado ao ambiente de desenvolvimento explicitamente habilitado (ANPFUEL_DEV_STORAGE_SERVICE, rejeitado em produção).",
+      "required_conditions": [
+        "Ambiente de desenvolvimento com o proxy habilitado (non-production).",
+        "O backend de storage normalizar \"..\" e o atacante possuir assinatura ou cabeçalho AWS4 válido para o alvo.",
+        "Conhecer o nome de outro bucket no mesmo storage."
+      ],
+      "how_to_verify": "Revisar o roteamento chi/Caddy que monta DevelopmentStorageProxy (se o mux limpa o caminho antes) e o comportamento de normalização de caminho do MinIO versionado; verificar se o proxy é alcançável fora de dev; se o mux limpar o caminho, encerrar como falso positivo. Teste dinâmico exigiria lab, hoje inexistente (análise estática).",
+      "potential_severity": "LOW",
+      "confidence": "low",
+      "origin": "manual_analysis",
+      "possible_regression_of": null,
+      "system_notes": [],
+      "verification": {
+        "verdict": "inconclusive",
+        "justification": "Análise estática do commit 018f2df18c8b. O proxy (development_storage.go:27-41) instala um httputil.NewSingleHostReverseProxy com destino fixo (linhas 15 e 23) e, no handler, valida o caminho apenas com strings.HasPrefix(r.URL.Path, \"/\"+bucket+\"/\") (linha 33), sem path.Clean; a checagem de autorização aceita qualquer X-Amz-Signature não vazio ou qualquer Authorization iniciado por \"AWS4-HMAC-SHA256 \" (linha 35), sem vincular bucket/caminho. O ReverseProxy padrão (linha 28) junta o caminho bruto sem normalização (joinURLPath) e o repassa em proxy.ServeHTTP (linha 40) — o proxy, por si, não remove segmentos \"..\". Esse trecho confirma o mecanismo descrito pelo hunter. Entretanto, a condição necessária declarada na própria hipótese — de que o mux normalize o caminho e/ou de que o storage S3-compatível normalize \"..\" — não pode ser decidida com o material: o tipo e a implementação do roteador (router.Handle em main.go:1562; não se vê se é chi, ServeMux do Go 1.22 — que responde 301 para o caminho limpo antes do handler — ou outro) e o código/versão do MinIO (infra/k8s/staging/storage-deployment.yaml; imagem bitnamilegacy/minio) não estão em <code>. Como a API S3 trata o primeiro segmento como bucket e o restante como nome de objeto, a eficácia da travessia depende inteiramente desse comportamento externo, que não posso citar como prova. A rota ainda é montada apenas quando ANPFUEL_DEV_PHOTO_PREVIEW_UNTIL está definido e cfg.R2.Bucket == \"abastevo-dev-photos\" (main.go:1557-1562), em ambiente explicitamente de desenvolvimento (segundo o mapa, ANPFUEL_DEV_STORAGE_SERVICE é rejeitado em produção), e o Caddyfile — que segundo o mapa só encaminha /v1/* e /health/* — não está no material, de modo que a alcançabilidade externa também não está demonstrada. Por fim, não há prova de que um atacante possua assinatura válida para o caminho de travessia: a URL pré-assinada é vinculada ao caminho exato e não valida para \"/abastevo-dev-photos/../<outro-bucket>/<chave>\"; o cabeçalho aceito pelo proxy é verificado depois pelo storage. Faltando os dois elementos decisivos (roteador e storage) e sem lab, o veredito é inconclusivo, não confirmado nem descartado.",
+        "mitigations_found": [
+          "A rota do proxy só existe quando ANPFUEL_DEV_PHOTO_PREVIEW_UNTIL está definido e cfg.R2.Bucket é exatamente \"abastevo-dev-photos\" (main.go:1557-1562), configuração restrita ao ambiente de desenvolvimento.",
+          "O bucket passado ao proxy é fixo (comparação com o literal \"abastevo-dev-photos\" em development_storage.go:33), impedindo troca direta de bucket por parâmetro.",
+          "O destino do ReverseProxy é constante (127.0.0.1:9000 ou abastevo-temp-storage:9000, linhas 15 e 23), sem destino arbitrário controlado pelo cliente.",
+          "O proxy exige método permitido e presença de X-Amz-Signature ou Authorization \"AWS4-HMAC-SHA256 \" (development_storage.go:34-35), recusando requisições anônimas antes do encaminhamento; a validade da assinatura é verificada pelo storage.",
+          "Segundo o mapa, ANPFUEL_DEV_STORAGE_SERVICE é rejeitado em produção, restringindo o mecanismo ao ambiente de desenvolvimento."
+        ],
+        "missing_to_conclude": "Faltam em <code> o código/versão do roteador (router.Handle) que decide se caminhos com \".\" ou \"..\" são limpos, redirecionados ou entregues ao handler, e o código/versão do serviço de storage MinIO (roteamento S3, normalização de \"..\", validação de nome de objeto e política de bucket), além do Caddyfile que determina se /abastevo-dev-photos/* chega à API; sem esses elementos não é possível provar que o caminho com travessia atinge outro bucket.",
+        "model": "deepseek-v4.1-flash",
+        "prompt_version": "verifier@1.4.0",
+        "system_notes": [
+          "Verificador: A fase dinâmica não foi executada porque não há lab disponível (approved=false, available=false).",
+          "Verificador: Os arquivos de contexto fornecidos em <code> (oidc.go, stub.go, verify.go, auth.go, registration.go, distribution.go, respond.go, cursor.go, decode.go) não participam do caminho do proxy de storage e não foram analisados em profundidade.",
+          "Verificador: O tipo e a implementação do roteador usado pela API não estão no material; a hipótese depende de saber se ele normaliza o caminho antes do handler.",
+          "Verificador: O código e a versão do MinIO (imagem bitnamilegacy/minio) não estão no material; o comportamento de normalização de \"..\" e a validação de nome de objeto não puderam ser verificados.",
+          "Verificador: O Caddyfile não está no material; segundo o mapa só /v1/* e /health/* são proxiados, o que pode tornar /abastevo-dev-photos/* inalcançável externamente.",
+          "Verificador: Não foi demonstrado que exista outro bucket no storage de desenvolvimento nem que credenciais válidas para ele estejam disponíveis ao atacante.",
+          "Verificador: Não há laboratório disponível (lab available=false), então nenhuma execução dinâmica foi realizada.",
+          "Arquivos ou trechos de código não enviados ao verificador por limite de contexto: backend/internal/modules/account/adapters/oidc/oidc.go (trechos omitidos), backend/internal/modules/evidence/application/verify.go (trechos omitidos), backend/internal/modules/identity/adapters/auth/auth.go (trechos omitidos), backend/internal/modules/identity/adapters/registration.go (trechos omitidos), backend/internal/modules/mapdist/distribution.go (trechos omitidos), backend/cmd/api/main.go (trechos omitidos)."
+        ],
+        "lab_run_number": null,
+        "evidence": [
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-011",
+            "kind": "code_flow",
+            "description": "Fluxo estático: o gate do proxy usa prefixo sobre r.URL.Path sem path.Clean e o ReverseProxy encaminha o caminho bruto; o roteador e o serviço de storage, que decidiriam se \"..\" é normalizado, não estão no material fornecido.",
+            "steps": [
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "27-28",
+                "what_happens": "developmentStorageProxy cria httputil.NewSingleHostReverseProxy com destino fixo; o Director padrão junta target (path vazio) e r.URL.Path via joinURLPath, sem path.Clean, preservando segmentos \"..\" no caminho encaminhado."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "33",
+                "what_happens": "O gate verifica bucket fixo e strings.HasPrefix(r.URL.Path, \"/abastevo-dev-photos/\") sobre o caminho bruto, sem path.Clean; por raciocínio estático, um caminho como /abastevo-dev-photos/../<outro>/<chave> satisfaz esse prefixo."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "35",
+                "what_happens": "A autorização aceita qualquer X-Amz-Signature não vazio ou qualquer Authorization iniciado por \"AWS4-HMAC-SHA256 \", sem vincular bucket ou caminho; a validação de assinatura real fica a cargo do storage de destino."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "40",
+                "what_happens": "proxy.ServeHTTP(w, r) encaminha a requisição sem reescrever nem normalizar o caminho, transferindo a decisão sobre \"..\" ao backend S3-compatível."
+              },
+              {
+                "file": "backend/cmd/api/main.go",
+                "line": "1557-1562",
+                "what_happens": "A rota \"/abastevo-dev-photos/*\" só é montada quando !cfg.DevelopmentPhotoPreviewUntil.IsZero() e cfg.R2.Bucket == \"abastevo-dev-photos\"; a variante de serviço depende de cfg.DevelopmentStorageService — ambiente de desenvolvimento explicitamente habilitado."
+              }
+            ]
+          },
+          {
+            "evidence_id": "AUD-ABASTEVO-20261114-1501-EV-012",
+            "kind": "code_flow",
+            "description": "Controles existentes no proxy que limitam o escopo do caminho (mas não decidem a normalização de \"..\").",
+            "steps": [
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "33",
+                "what_happens": "O parâmetro bucket é conferido contra o literal \"abastevo-dev-photos\", então o primeiro segmento aceito não pode ser trocado por outro bucket diretamente; a única via teórica é a travessia via \"..\"."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "34",
+                "what_happens": "Somente PUT, GET, HEAD e DELETE são aceitos; outros métodos recebem 403 antes do proxy."
+              },
+              {
+                "file": "backend/internal/platform/httpapi/development_storage.go",
+                "line": "15",
+                "what_happens": "O destino é fixo em http://127.0.0.1:9000 (linha 15) ou http://abastevo-temp-storage:9000 (linha 23), sem destino arbitrário vindo da requisição — não há SSRF por Host/URL."
+              }
+            ]
+          }
+        ],
+        "regression_test": null
+      }
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "entry_points": [
+        "EP-001",
+        "EP-011",
+        "EP-012",
+        "EP-013",
+        "EP-014",
+        "EP-052",
+        "EP-053",
+        "EP-108",
+        "EP-109",
+        "EP-003",
+        "EP-004",
+        "EP-007",
+        "EP-009",
+        "EP-015",
+        "EP-016",
+        "EP-017",
+        "EP-018",
+        "EP-019",
+        "EP-020",
+        "EP-021"
+      ],
+      "requirements_checked": [
+        "V2.2.1",
+        "V2.4.1",
+        "V4.1.5",
+        "V6.3.1",
+        "V6.3.8",
+        "V6.4.1",
+        "V6.5.1",
+        "V6.5.4",
+        "V6.5.5",
+        "V6.7.2",
+        "V6.8.2",
+        "V7.2.4",
+        "V7.4.1",
+        "V7.4.2",
+        "V7.4.3",
+        "V8.2.2",
+        "V8.3.1",
+        "V9.1.1",
+        "V10.4.5",
+        "V10.4.8",
+        "V11.2.1",
+        "V11.5.1",
+        "V11.6.1",
+        "V12.2.1",
+        "V13.3.1",
+        "V14.2.7",
+        "V15.3.4",
+        "V16.3.1",
+        "V16.5.1",
+        "V16.5.3"
+      ],
+      "new_hypotheses": 4,
+      "strong_hypotheses": 3,
+      "gaps": [
+        "A implementação do MailSender de produção (backend/internal/modules/account/adapters/mail) não foi fornecida, impedindo confirmar se o endereço é sanitizado antes de compor cabeçalhos SMTP.",
+        "backend/internal/modules/admin/adapters/store.go não foi fornecido, impedindo confirmar se RequestID é persistido em tentativas de login frustradas e com qual limite de tamanho.",
+        "As queries SQL de SetClaimProof (backend/db/queries ou adaptador do store de contributor) não foram fornecidas, impedindo confirmar o predicado de owner.",
+        "Os handlers de webhook Stripe (stripe_webhook.go) e o restante do handler Asaas além da linha 190 não foram fornecidos.",
+        "infra/k8s/staging/api-deployment.yaml e os demais manifestos citados pelo Trivy não estão no <code>, impedindo verificar securityContext, hostPath e registro de imagens.",
+        "O admin-web e o forum/adapters/http/admin.go:521 não foram fornecidos, impedindo avaliar renderização de trace_id e o contexto do achado de XSS do scanner.",
+        "Não há confirmação de middleware global que valide X-Request-ID ou normalize X-Forwarded-Proto antes dos handlers.",
+        "A topologia de rede do staging (exposição da porta 8080 além do Caddy) não foi fornecida."
+      ],
+      "not_analyzed": [
+        "Trivy de infraestrutura (KSV-*) ficou sem hipótese porque as localizações exigidas não existem no <code> desta rodada.",
+        "Gitleaks em docs/, contracts/testdata e testes ficou sem verificação manual de histórico por orçamento e por não serem artefatos de runtime.",
+        "Registro de contribuidores (EP-053), rotação de chave (rotate) e fluxo OIDC completo foram lidos apenas como contexto, sem tracing exaustivo por orçamento.",
+        "Rotas de companhia (orgaccess/companysession) e orgsync não foram rastreadas nesta rodada por não integrarem os entry points fornecidos.",
+        "CVE do chi (trivy:1) não foi aprofundada por não haver chamada a ClientIPFromXFF no material."
+      ],
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "scanner_triage": [
+        {
+          "result_id": "semgrep:27",
+          "decision": "noise",
+          "reason": "FinishMutation grava body JSON com Content-Type application/json; sem contexto HTML."
+        },
+        {
+          "result_id": "semgrep:28",
+          "decision": "noise",
+          "reason": "writeJSON define Content-Type application/json antes da escrita."
+        },
+        {
+          "result_id": "semgrep:40",
+          "decision": "noise",
+          "reason": "Handler admin de fórum responde JSON via FinishMutation; linha fora do excerto."
+        },
+        {
+          "result_id": "semgrep:42",
+          "decision": "noise",
+          "reason": "wait é declarada no escopo do if e usada só dentro dele."
+        },
+        {
+          "result_id": "semgrep:43",
+          "decision": "noise",
+          "reason": "Mesmo padrão de escopo curto no laço de CheckQuota."
+        },
+        {
+          "result_id": "semgrep:51",
+          "decision": "noise",
+          "reason": "writeJSON do staff serializa JSON com Content-Type fixo."
+        },
+        {
+          "result_id": "semgrep:53",
+          "decision": "noise",
+          "reason": "Envelope de erro JSON com mensagem estática, sem template HTML."
+        },
+        {
+          "result_id": "semgrep:54",
+          "decision": "noise",
+          "reason": "WriteJSONWithETag responde JSON com Content-Type fixo."
+        },
+        {
+          "result_id": "gitleaks:1",
+          "decision": "noise",
+          "reason": "Documento de evidência em docs; não é artefato executável."
+        },
+        {
+          "result_id": "gitleaks:2",
+          "decision": "noise",
+          "reason": "Evidência JSON em docs/backend; fora do runtime da API."
+        },
+        {
+          "result_id": "gitleaks:3",
+          "decision": "noise",
+          "reason": "Manifesto de staging, detecção genérica de nome de variável."
+        },
+        {
+          "result_id": "gitleaks:4",
+          "decision": "noise",
+          "reason": "Idem: referência de configuração em api-deployment.yaml."
+        },
+        {
+          "result_id": "gitleaks:5",
+          "decision": "noise",
+          "reason": "Script de teste de guarda administrativa em CI."
+        },
+        {
+          "result_id": "gitleaks:6",
+          "decision": "noise",
+          "reason": "Manifesto de staging; nome de variável de ambiente."
+        },
+        {
+          "result_id": "gitleaks:7",
+          "decision": "noise",
+          "reason": "Manifesto de staging; nome de variável de ambiente."
+        },
+        {
+          "result_id": "gitleaks:8",
+          "decision": "noise",
+          "reason": "Arquivo de teste de pagamentos; valor fictício."
+        },
+        {
+          "result_id": "gitleaks:9",
+          "decision": "noise",
+          "reason": "Teste de privacidade de pagamentos; valor fictício."
+        },
+        {
+          "result_id": "gitleaks:10",
+          "decision": "noise",
+          "reason": "Teste de integração de pagamentos; valor fictício."
+        },
+        {
+          "result_id": "gitleaks:11",
+          "decision": "noise",
+          "reason": "Teste de integração de pagamentos; valor fictício."
+        },
+        {
+          "result_id": "gitleaks:12",
+          "decision": "noise",
+          "reason": "Teste de webhook Asaas; token fictício."
+        },
+        {
+          "result_id": "gitleaks:13",
+          "decision": "noise",
+          "reason": "ROADMAP.md; documentação sem segredo operacional."
+        },
+        {
+          "result_id": "gitleaks:14",
+          "decision": "noise",
+          "reason": "Manifesto de evidência em docs; não executável."
+        },
+        {
+          "result_id": "gitleaks:15",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:16",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:17",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:18",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:19",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:20",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:21",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:22",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:23",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:24",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:25",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:26",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:27",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:28",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:29",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:30",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:31",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:32",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:33",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:34",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:35",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:36",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:37",
+          "decision": "noise",
+          "reason": "Fixture de contrato de teste."
+        },
+        {
+          "result_id": "gitleaks:38",
+          "decision": "noise",
+          "reason": "Evidência de confiabilidade em docs; não executável."
+        },
+        {
+          "result_id": "gitleaks:39",
+          "decision": "noise",
+          "reason": "Evidência de aceitação em docs; não executável."
+        },
+        {
+          "result_id": "gitleaks:40",
+          "decision": "noise",
+          "reason": "Teste unitário Kotlin; chave fictícia."
+        },
+        {
+          "result_id": "gitleaks:41",
+          "decision": "noise",
+          "reason": "Fixture de contrato de API; chave de exemplo."
+        },
+        {
+          "result_id": "gitleaks:42",
+          "decision": "noise",
+          "reason": "Fixture de contrato de API; chave de exemplo."
+        },
+        {
+          "result_id": "gitleaks:43",
+          "decision": "noise",
+          "reason": "Spec OpenAPI com exemplo de chave, não segredo real."
+        },
+        {
+          "result_id": "gitleaks:44",
+          "decision": "noise",
+          "reason": "keyAlphabet é alfabeto de geração de chaves, não credencial."
+        },
+        {
+          "result_id": "gitleaks:45",
+          "decision": "noise",
+          "reason": "Módulo DI Kotlin; provável nome de constante/parâmetro."
+        },
+        {
+          "result_id": "gitleaks:46",
+          "decision": "noise",
+          "reason": "Documento de matriz de dispositivos; valor de exemplo."
+        },
+        {
+          "result_id": "gitleaks:47",
+          "decision": "noise",
+          "reason": "Teste de caso de uso; valor fictício."
+        },
+        {
+          "result_id": "gitleaks:48",
+          "decision": "noise",
+          "reason": "Fixture de vínculo OIDC; id_token de exemplo."
+        },
+        {
+          "result_id": "gitleaks:49",
+          "decision": "noise",
+          "reason": "Documento de portas da aplicação; valor de exemplo."
+        },
+        {
+          "result_id": "gitleaks:50",
+          "decision": "noise",
+          "reason": "Teste de httpserver; valor fictício."
+        },
+        {
+          "result_id": "trivy:1",
+          "decision": "noise",
+          "reason": "CVE do chi ClientIPFromXFF; a aplicação usa Resolver próprio com allowlist de proxies."
+        },
+        {
+          "result_id": "trivy:2",
+          "decision": "noise",
+          "reason": "Protobuf em CLI offline de preparação; não alcançável por entry point HTTP."
+        },
+        {
+          "result_id": "trivy:3",
+          "decision": "noise",
+          "reason": "AUSÊNCIA de HEALTHCHECK é higiene de imagem, sem impacto de segurança."
+        },
+        {
+          "result_id": "trivy:4",
+          "decision": "noise",
+          "reason": "Manifesto k8s de staging fora do <code>; sem localização válida para hipótese."
+        },
+        {
+          "result_id": "trivy:5",
+          "decision": "noise",
+          "reason": "Manifesto k8s de staging fora do <code>; sem localização válida."
+        },
+        {
+          "result_id": "trivy:6",
+          "decision": "noise",
+          "reason": "hostPath em CronJob de staging; arquivo não fornecido nesta rodada."
+        },
+        {
+          "result_id": "trivy:7",
+          "decision": "noise",
+          "reason": "Política de quota de namespace; configuração de staging não fornecida."
+        },
+        {
+          "result_id": "trivy:8",
+          "decision": "noise",
+          "reason": "Registro de imagem de staging; arquivo não fornecido."
+        },
+        {
+          "result_id": "trivy:9",
+          "decision": "noise",
+          "reason": "Manifesto api-deployment.yaml fora do <code>; imagem distroless nonroot já é fixada no Dockerfile."
+        },
+        {
+          "result_id": "trivy:10",
+          "decision": "noise",
+          "reason": "Mesmo caso no container worker; sem trecho de código fornecido."
+        },
+        {
+          "result_id": "trivy:11",
+          "decision": "noise",
+          "reason": "Drops de capability em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:12",
+          "decision": "noise",
+          "reason": "Drops de capability em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:13",
+          "decision": "noise",
+          "reason": "Drops de capability em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:14",
+          "decision": "noise",
+          "reason": "Drops de capability em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:15",
+          "decision": "noise",
+          "reason": "Reporta root, mas Dockerfile usa 65532:65532; manifesto fora do <code>."
+        },
+        {
+          "result_id": "trivy:16",
+          "decision": "noise",
+          "reason": "Idem para worker; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:17",
+          "decision": "noise",
+          "reason": "Tag :latest em manifesto de staging não fornecido."
+        },
+        {
+          "result_id": "trivy:18",
+          "decision": "noise",
+          "reason": "Tag :latest em manifesto de staging não fornecido."
+        },
+        {
+          "result_id": "trivy:19",
+          "decision": "noise",
+          "reason": "readOnlyRootFilesystem ausente em manifesto não fornecido; sem localização válida."
+        },
+        {
+          "result_id": "trivy:20",
+          "decision": "noise",
+          "reason": "readOnlyRootFilesystem ausente em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:21",
+          "decision": "noise",
+          "reason": "UID em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:22",
+          "decision": "noise",
+          "reason": "UID em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:23",
+          "decision": "noise",
+          "reason": "GID em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:24",
+          "decision": "noise",
+          "reason": "GID em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:25",
+          "decision": "noise",
+          "reason": "hostPath em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:26",
+          "decision": "noise",
+          "reason": "Seccomp em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:27",
+          "decision": "noise",
+          "reason": "Seccomp em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:28",
+          "decision": "noise",
+          "reason": "Quota de namespace em staging não fornecido."
+        },
+        {
+          "result_id": "trivy:29",
+          "decision": "noise",
+          "reason": "Seccomp desabilitado em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:30",
+          "decision": "noise",
+          "reason": "Seccomp desabilitado em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:31",
+          "decision": "noise",
+          "reason": "Capabilities em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:32",
+          "decision": "noise",
+          "reason": "Capabilities em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:33",
+          "decision": "noise",
+          "reason": "SecurityContext padrão em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:34",
+          "decision": "noise",
+          "reason": "SecurityContext padrão em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:35",
+          "decision": "noise",
+          "reason": "SecurityContext de deployment em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:36",
+          "decision": "noise",
+          "reason": "StatefulSet do banco em staging não fornecido."
+        },
+        {
+          "result_id": "trivy:37",
+          "decision": "noise",
+          "reason": "StatefulSet do banco em staging não fornecido."
+        },
+        {
+          "result_id": "trivy:38",
+          "decision": "noise",
+          "reason": "StatefulSet do banco em staging não fornecido."
+        },
+        {
+          "result_id": "trivy:39",
+          "decision": "noise",
+          "reason": "Container postgres roda como postgres por design; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:40",
+          "decision": "noise",
+          "reason": "Filesystem gravável exigido pelo PostgreSQL; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:41",
+          "decision": "noise",
+          "reason": "UID do banco em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:42",
+          "decision": "noise",
+          "reason": "GID do banco em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:43",
+          "decision": "noise",
+          "reason": "Seccomp do banco em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:44",
+          "decision": "noise",
+          "reason": "Quota de namespace em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:45",
+          "decision": "noise",
+          "reason": "Seccomp do banco em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:46",
+          "decision": "noise",
+          "reason": "Capabilities do banco em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:47",
+          "decision": "noise",
+          "reason": "SecurityContext do banco em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:48",
+          "decision": "noise",
+          "reason": "SecurityContext do StatefulSet em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:49",
+          "decision": "noise",
+          "reason": "Registro da imagem postgis em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:50",
+          "decision": "noise",
+          "reason": "RBAC do agente de deploy; arquivo não fornecido nesta rodada."
+        },
+        {
+          "result_id": "trivy:51",
+          "decision": "noise",
+          "reason": "RBAC do agente de deploy; arquivo não fornecido nesta rodada."
+        },
+        {
+          "result_id": "trivy:52",
+          "decision": "noise",
+          "reason": "UID do CronJob registry-sync; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:53",
+          "decision": "noise",
+          "reason": "GID do CronJob registry-sync; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:54",
+          "decision": "noise",
+          "reason": "hostPath no CronJob; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:55",
+          "decision": "noise",
+          "reason": "Quota de namespace; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:56",
+          "decision": "noise",
+          "reason": "Registro de imagem; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:57",
+          "decision": "noise",
+          "reason": "Quota de namespace em services.yaml não fornecido."
+        },
+        {
+          "result_id": "trivy:58",
+          "decision": "noise",
+          "reason": "Quota de namespace em services.yaml não fornecido."
+        },
+        {
+          "result_id": "trivy:59",
+          "decision": "noise",
+          "reason": "Quota de namespace em services.yaml não fornecido."
+        },
+        {
+          "result_id": "trivy:60",
+          "decision": "noise",
+          "reason": "Capabilities do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:61",
+          "decision": "noise",
+          "reason": "Capabilities do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:62",
+          "decision": "noise",
+          "reason": "Root aparente em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:63",
+          "decision": "noise",
+          "reason": "Tag :latest em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:64",
+          "decision": "noise",
+          "reason": "Filesystem do MinIO gravável por design; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:65",
+          "decision": "noise",
+          "reason": "UID do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:66",
+          "decision": "noise",
+          "reason": "GID do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:67",
+          "decision": "noise",
+          "reason": "hostPath do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:68",
+          "decision": "noise",
+          "reason": "Seccomp do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:69",
+          "decision": "noise",
+          "reason": "Quota de namespace em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:70",
+          "decision": "noise",
+          "reason": "Seccomp do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:71",
+          "decision": "noise",
+          "reason": "Capabilities do storage em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:72",
+          "decision": "noise",
+          "reason": "SecurityContext de deployment não fornecido."
+        },
+        {
+          "result_id": "trivy:73",
+          "decision": "noise",
+          "reason": "Quota de namespace em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:74",
+          "decision": "noise",
+          "reason": "Caddyfile em ConfigMap não fornecido; cabeçalho Permissions-Policy não é segredo."
+        },
+        {
+          "result_id": "trivy:75",
+          "decision": "noise",
+          "reason": "Tag :latest do caddy em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:76",
+          "decision": "noise",
+          "reason": "Capability adicionada (NET_BIND_SERVICE) esperada pelo proxy; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:77",
+          "decision": "noise",
+          "reason": "hostPath em web-deployment não fornecido."
+        },
+        {
+          "result_id": "trivy:78",
+          "decision": "noise",
+          "reason": "Quota de namespace em manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:79",
+          "decision": "noise",
+          "reason": "Job de carga em infra/scripts; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:80",
+          "decision": "noise",
+          "reason": "Job de carga em infra/scripts; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:81",
+          "decision": "noise",
+          "reason": "Job de carga em infra/scripts; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:82",
+          "decision": "noise",
+          "reason": "hostPath em Job de carga; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:83",
+          "decision": "noise",
+          "reason": "Seccomp em Job de carga; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:84",
+          "decision": "noise",
+          "reason": "Quota de namespace em Job de carga."
+        },
+        {
+          "result_id": "trivy:85",
+          "decision": "noise",
+          "reason": "Seccomp em Job de carga; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:86",
+          "decision": "noise",
+          "reason": "SecurityContext de Job de carga; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:87",
+          "decision": "noise",
+          "reason": "Job de preparação em infra/scripts; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:88",
+          "decision": "noise",
+          "reason": "Job de preparação em infra/scripts; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:89",
+          "decision": "noise",
+          "reason": "Job de preparação em infra/scripts; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:90",
+          "decision": "noise",
+          "reason": "hostPath em Job de preparação; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:91",
+          "decision": "noise",
+          "reason": "Seccomp em Job de preparação; manifesto não fornecido."
+        },
+        {
+          "result_id": "trivy:92",
+          "decision": "noise",
+          "reason": "Quota de namespace em Job de preparação; manifesto não fornecido."
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "entry_points": [
+        "EP-022",
+        "EP-023",
+        "EP-024",
+        "EP-025",
+        "EP-028",
+        "EP-029",
+        "EP-030",
+        "EP-031",
+        "EP-033",
+        "EP-035",
+        "EP-036",
+        "EP-037",
+        "EP-038",
+        "EP-039",
+        "EP-040",
+        "EP-041",
+        "EP-042",
+        "EP-043",
+        "EP-044",
+        "EP-045"
+      ],
+      "requirements_checked": [
+        "V8.2.2",
+        "V2.2.1",
+        "V2.3.1",
+        "V6.8.2",
+        "V15.3.1",
+        "V14.3.2",
+        "V5.2.1",
+        "V5.4.1"
+      ],
+      "new_hypotheses": 3,
+      "strong_hypotheses": 1,
+      "gaps": [
+        "A implementação Postgres do Store de account (TryIssueCode, TryCreateKeyAccount, TryCreateFamily, TryConsume) não foi fornecida, impedindo confirmar se os tetos agregados globais são aplicados na mesma transação do insert.",
+        "A camada backend/internal/modules/cloudsync/application (Apply, Erase, Pull, Snapshot, Manifest) e as consultas de DeviceStore/BatchStore/PullStore não foram fornecidas, impedindo confirmar se device_id é resolvido por conta.",
+        "A camada backend/internal/modules/subscription/application Store (Status, Begin, Commit, ExportRows) não foi fornecida, impedindo verificar o escopo por conta nas leituras de status/exportação.",
+        "O módulo contributor/application/claims.go não está em <code>, portanto a checagem de posse em WithdrawClaim (e a extensão do problema registrado em H-004 a SetClaimProof) não pôde ser localizada com linhas válidas.",
+        "A implementação de KeyProver (VerifyKeyProof) e dos verificadores OIDC (JWKS, nonce, audience) não foi fornecida, impossibilitando avaliar replay e binding das provas de vinculação.",
+        "O painel admin-web e o renderizador de casos de moderação não foram fornecidos, impedindo avaliar XSS armazenado a partir de detail/reason de disputas (EP-029) que entram em OpenReportCase.",
+        "A configuração de inicialização (cmd/api/main.go) só foi fornecida em trechos, impedindo confirmar se CursorSecret mínimo de 32 bytes é validado para o histórico da comunidade (community/adapters/http/http.go:479), que não checa comprimento no handler.",
+        "Não há lab dinâmico (apenas análise estática), então a normalização de caminho do proxy de storage de desenvolvimento e o roteamento do mux não podem ser observados em execução."
+      ],
+      "not_analyzed": [
+        "Módulos admin, companysession, orgaccess, enterprisesuite e orgsync não foram incluídos em <code> nesta rodada e ficaram fora da análise, apesar de serem superfícies sensíveis de autorização.",
+        "Handlers de forum, alerts, driver, ledger, directory, feedback e cloudsync/application não receberam código nesta rodada e não foram traçados.",
+        "Rotas de identidade/registro de dispositivo assinado (identity) e os webhooks de pagamento (Stripe/Asaas) não foram fornecidos, portanto a verificação HMAC dos webhooks não foi reexaminada.",
+        "A busca por segredos no histórico do repositório não foi executada além do resultado do gitleaks, por falta de acesso a histórico/diff nesta rodada.",
+        "O limite de requisições por IP e a proteção antiabuso em nível de Caddy/API para /v1/accounts/* não puderam ser avaliados por falta da configuração completa de middleware e do Caddyfile."
+      ],
+      "model": "deepseek-v4.1-flash",
+      "prompt_version": "hunter@2.3.0",
+      "scanner_triage": [
+        {
+          "result_id": "semgrep:31",
+          "decision": "noise",
+          "reason": "cloudsync/adapters/http/http.go:74 é a escrita de um corpo já serializado por json.Marshal em write(), que fixa Content-Type application/json e Cache-Control no-store antes do Write; não há HTML nem reflexão de entrada, então não existe vetor de XSS."
+        },
+        {
+          "result_id": "semgrep:32",
+          "decision": "noise",
+          "reason": "cloudsync/adapters/http/push.go:45 responde ao conflito com struct serializada por json.Marshal e Content-Type application/json definido nas linhas anteriores; conteúdo é JSON, não HTML."
+        },
+        {
+          "result_id": "semgrep:52",
+          "decision": "noise",
+          "reason": "subscription/adapters/http/http.go:107 usa o mesmo padrão de writePremium: json.Marshal + Content-Type application/json + no-store, sem interpolação de entrada em HTML."
+        },
+        {
+          "result_id": "semgrep:53",
+          "decision": "noise",
+          "reason": "httpapi/respond.go:46 escreve o envelope de erro serializado por json.Marshal e define Content-Type application/json; code/message/details são estáticos e o trace_id é ecoado dentro do JSON, onde as aspas são escapadas."
+        },
+        {
+          "result_id": "semgrep:54",
+          "decision": "noise",
+          "reason": "httpapi/respond.go:105 (WriteJSONWithETag) grava corpo JSON com Content-Type application/json e Cache-Control explícito; o ETag é hash do corpo e não altera a interpretação do conteúdo pelo navegador."
+        },
+        {
+          "result_id": "gitleaks:44",
+          "decision": "noise",
+          "reason": "account/domain/keyaccount.go:29 é a constante keyAlphabet (31 glifos ambíguos removidos, usada para gerar chaves de conta por crypto/rand); não é segredo nem credencial. Observação: o scanner referencia o commit 3584c207ee35, diferente do commit analisado 018f2df18c8b, mas o conteúdo da linha não contém segredo."
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "report_md": "# RELATÓRIO DE AUDITORIA — AUD-ABASTEVO-20261114-1501\n\n- Aplicação: Abastevo (abastevo)\n- Commit: `018f2df18c8b029ec3e665fc98ba7318e6f076bc`\n- Tipo: FULL · Status: PARTIAL\n- Início: 14/11/2026 às 18:19 (horário de Brasília) (2026-11-14T18:19:08-03:00)\n- Término: 14/11/2026 às 18:43 (horário de Brasília) (2026-11-14T18:43:15-03:00)\n- Duração: 24 min 7 s\n- Modelos: cartographer: deepseek-v4.1-flash, hunter: deepseek-v4.1-flash, reporter: deepseek-v4.1-flash, verifier: deepseek-v4.1-flash\n- Prompts: base@1.1.0, cartographer@2.2.0, hunter@2.3.0, reporter@2.1.0, verifier@1.4.0\n- Scanners: gitleaks 8.30.1, osv-scanner 2.7.1, semgrep 1.184.0, trivy 0.76.2\n- Consumo: 12 chamadas, 971356 tokens de entrada, 141826 de saída, US$ 0.1278\n\n## 1. Resumo executivo\n\nAuditoria FULL do commit 018f2df18c8b, a primeira do aplicativo — não há auditoria anterior para comparar. Nenhum achado foi confirmado: 0 crítico, 0 alto, 0 médio, 0 baixo e 0 informativo. Das 7 hipóteses levantadas, 1 foi descartada e 6 permanecem inconclusivas, todas por falta de código no material analisado (adaptadores de store, SQL, middlewares, manifests e adaptador de e-mail). A cobertura OWASP ASVS ficou em 22% (27 de 118 requisitos verificados, 0 reprovados, 91 não testados). Não houve teste dinâmico: o laboratório não está disponível (available=false), portanto tudo é análise estática.\n\n## 2. Comparação com a auditoria anterior\n\nNão existe auditoria anterior (`previous_audit_id` nulo); esta é a primeira auditoria do aplicativo registrada na memória. Pelo mesmo motivo, os conjuntos novos, persistentes, não reencontrados e regressões estão todos vazios (0 em todas as severidades). Reforço: \"não reencontrado\" nunca significa corrigido — só uma reverificação encerra um achado, e aqui não há nenhum aberto.\n\n## 3. Achados por severidade\n\nNenhum achado registrado nesta auditoria — 0 CRITICAL, 0 HIGH, 0 MEDIUM, 0 LOW e 0 INFO, sem ID, localização ou estado a reportar. A hipótese descartada (H-004, CWE-639 em `backend/internal/modules/contributor/application/claims.go`, `Service.SetClaimProof`) não é achado e está registrada como falso positivo conhecido na memória; não deve ser reaberta sem mudança de código.\n\n## 4. Cobertura OWASP ASVS\n\nAplicáveis: 118. Verificados: 27 (22%). Reprovados: 0. Não testados: 91.\n\nÁreas cegas declaradas: módulos internos do backend sem código selecionado (official, quality, charging, ranking, forum, mapdata/mapdist, orgmedia, enterpriseportal, contributor público, public station reads, health, entre outros); UI e camada de rede de Android (Kotlin) e iOS (Swift); workflows de CI e pipelines de release; Dockerfiles variantes, Kustomize de produção e agente de deploy; migrações SQL além da 000167 (200 arquivos); ramo de privacidade/LGPD (privacy/erasure) além dos endpoints de account/cloud/ledger/alerts. No total, 71 dos 111 entry points mapeados não foram analisados pelo caçador.\n\n## 5. Hipóteses inconclusivas ou não verificadas\n\n- **AUD-ABASTEVO-20261114-1501-H-001** — ValidEmail aceita caracteres de controle (CR/LF) e o endereço bruto segue para o remetente de e-mail (`backend/internal/modules/account/domain/account.go:140-147`). **Inconclusiva.** Falta o código do adaptador de e-mail (`backend/internal/modules/account/adapters/mail/memory.go` e a implementação SMTP de produção) que compõe To/From/Subject/envelope, e o wiring em `backend/cmd/api` que decide `MailEnabled`/`ANPFUEL_MAIL_MODE` no commit 018f2df18c8b.\n- **AUD-ABASTEVO-20261114-1501-H-002** — X-Request-ID não validado é passado ao store de auditoria administrativa e ecoado como trace_id (`backend/internal/modules/admin/adapters/http/http.go:151`). **Inconclusiva.** Falta `backend/internal/modules/admin/adapters/store.go` (persistência, truncamento, query parametrizada), qualquer instrução de log que grave request_id, o código de admin-web que renderiza trace_id e a configuração de `MaxHeaderBytes`.\n- **AUD-ABASTEVO-20261114-1501-H-003** — Guarda de TLS do webhook Asaas confia em X-Forwarded-Proto forjável (`backend/internal/modules/payments/adapters/http/asaas_webhook.go:45`). **Inconclusiva.** Faltam `infra/k8s/staging/services.yaml` e composes (exposição da porta 8080), a composição de roteador/middlewares em `backend/cmd/api/main.go` e a configuração do Caddy sobre sobrescrita do header.\n- **AUD-ABASTEVO-20261114-1501-H-005** — Teto global horário de admissão de contas permite bloquear o cadastro de todos os usuários (`backend/internal/modules/account/domain/policy.go:29-36`). **Inconclusiva.** Faltam o adaptador Postgres de `TryIssueCode`/`TryCreateKeyAccount`, os handlers de `/v1/accounts/email/codes` e `/v1/accounts/keys` e os middlewares de rate limit/identidade dessas rotas.\n- **AUD-ABASTEVO-20261114-1501-H-006** — `device_id` enviado no corpo é copiado para o principal e não é validado quanto ao dono antes de escritas na nuvem (`backend/internal/modules/cloudsync/adapters/http/push.go:26-32`). **Inconclusiva.** Faltam a implementação de `adapters.Store` que recebe `Principal` e o SQL efetivo de Apply, Pull, Snapshot, Manifest, Preview, RevokeDevice, RegisterDevice, ListSnapshots, PreviewRestore e RestoreCommit, para verificar se o WHERE inclui account_id.\n- **AUD-ABASTEVO-20261114-1501-H-007** — Checagem de prefixo no proxy de storage de desenvolvimento não normaliza o caminho antes de encaminhar (`backend/internal/platform/httpapi/development_storage.go:33-38`). **Inconclusiva.** Faltam o roteador (`router.Handle`) e sua versão, o código/versão do MinIO (normalização de \"..\" e validação de nome de objeto) e o Caddyfile que determina se `/abastevo-dev-photos/*` chega à API.\n\nRegistro adicional: a hipótese **AUD-ABASTEVO-20261114-1501-H-004** foi **descartada** nesta auditoria (falso positivo conhecido, sha256:eaae8405…, CWE-639 em `Service.SetClaimProof`).\n\n## 6. Instruções suspeitas detectadas no código\n\nNenhuma instrução suspeita foi detectada no conteúdo analisado.\n\n## 7. Limitações desta auditoria\n\n- Mapa: módulos internos do backend cujo código não foi selecionado (official, quality, charging, ranking, forum, mapdata/mapdist, orgmedia, enterpriseportal, contributor público, public station reads, health, entre outros) ficaram fora do material fornecido.\n- Mapa: código de UI e rede de Android (Kotlin) e iOS (Swift) não foi inspecionado linha a linha, exceto pelos artefatos enviados.\n- Mapa: workflows de CI (`.github/workflows/*.yml`) e pipelines de release não foram inspecionados além do que aparece em config.\n- Mapa: Dockerfiles variantes (além de `infra/docker/Dockerfile`), Kustomize de produção e o agente de deploy (`infra/deploy/agent/*.sh`) não foram inspecionados linha a linha.\n- Mapa: migrações SQL além da 000167 (200 arquivos) não foram lidas; o mapa reflete apenas o material fornecido.\n- Mapa: ramo de separação LGPD (privacy/erasure) não detalhado além dos endpoints de account/cloud/ledger/alerts.\n- Mapa: arquivos ou trechos não enviados ao cartógrafo por limite de contexto: `backend/cmd/station-sync/main.go`, `backend/internal/modules/account/domain/ports.go`, `backend/internal/modules/community/application/photo_capture.go`, `backend/internal/modules/companysession/adapters/store.go`, `backend/internal/modules/contributor/adapters/http/public.go`, `backend/internal/modules/evidence/adapters/final_output.go`, `backend/internal/modules/evidence/adapters/http/upload.go`, `backend/internal/modules/evidence/application/verify.go`, `backend/internal/modules/membership/adapters/http/invitations.go`, `backend/internal/modules/membership/adapters/redemption.go`, `backend/internal/modules/metrics/adapters/http/http.go`, `backend/internal/modules/orgevent/adapters/handler.go`, `backend/internal/modules/privacy/adapters/http/http.go`, `backend/internal/platform/apicontract/admin_organization.go`, `backend/cmd/charging-catalog/main.go` e mais 70.\n- Mapa: arquivos ou trechos de configuração não enviados ao cartógrafo por limite de contexto: `infra/k8s/staging/storage-deployment.yaml`, `infra/k8s/staging/web-caddy-configmap.yaml`, `infra/k8s/staging/web-deployment.yaml`, `maps/engine/build.gradle.kts`, `.github/workflows/android-release.yml`, `.github/workflows/backend.yml`, `.github/workflows/quick.yml`, `.github/workflows/release-staging.yml`, `app/build.gradle.kts` (trechos omitidos).\n- Caçador: Trivy de infraestrutura (KSV-*) ficou sem hipótese porque as localizações exigidas não existem no material desta rodada.\n- Caçador: Gitleaks em `docs/`, `contracts/testdata` e testes ficou sem verificação manual de histórico por orçamento e por não serem artefatos de runtime.\n- Caçador: registro de contribuidores (EP-053), rotação de chave (rotate) e fluxo OIDC completo foram lidos apenas como contexto, sem tracing exaustivo por orçamento.\n- Caçador: rotas de companhia (orgaccess/companysession) e orgsync não foram rastreadas nesta rodada por não integrarem os entry points fornecidos.\n- Caçador: CVE do chi (trivy:1) não foi aprofundada por não haver chamada a `ClientIPFromXFF` no material.\n- Caçador: arquivos ou trechos não enviados na rodada 1 por limite de contexto: `backend/cmd/api/body_limit.go`, `backend/cmd/api/company.go`, `backend/cmd/api/profile_containment.go`, `backend/cmd/api/quality_auth.go`, `backend/cmd/api/quality_company_reads.go`, `backend/internal/modules/account/application/doc.go`, `backend/internal/modules/account/application/erasure.go`, `backend/internal/modules/account/domain/doc.go`, `backend/internal/modules/account/domain/hash.go`, `backend/internal/modules/account/domain/policy.go`, `backend/internal/modules/entitlement/domain/grant.go`, `backend/internal/modules/identity/adapters/auth/doc.go`, `backend/internal/modules/identity/domain/doc.go`, `backend/internal/modules/identity/profile/doc.go`, `backend/internal/modules/payments/adapters/asaas.go` e mais 40.\n- Caçador: módulos admin, companysession, orgaccess, enterprisesuite e orgsync não foram incluídos no material desta rodada e ficaram fora da análise, apesar de serem superfícies sensíveis de autorização.\n- Caçador: handlers de forum, alerts, driver, ledger, directory, feedback e cloudsync/application não receberam código nesta rodada e não foram traçados.\n- Caçador: rotas de identidade de registro de dispositivo assinado e os webhooks de pagamento (Stripe/Asaas) não foram fornecidos, portanto a verificação HMAC dos webhooks não foi reexaminada.\n- Caçador: a busca por segredos no histórico do repositório não foi executada além do resultado do gitleaks, por falta de acesso a histórico/diff nesta rodada.\n- Caçador: o limite de requisições por IP e a proteção antiabuso em nível de Caddy/API para `/v1/accounts/*` não puderam ser avaliados por falta da configuração completa de middleware e do Caddyfile.\n- Caçador: arquivos ou trechos não enviados na rodada 2 por limite de contexto: `backend/internal/modules/cloudsync/adapters/http/restore.go`, `backend/internal/modules/cloudsync/adapters/http/restore_commit.go`, `backend/internal/modules/cloudsync/application/ports.go`, `backend/internal/modules/cloudsync/domain/datasets.go`, `backend/internal/modules/cloudsync/domain/preferences.go`, `backend/internal/modules/cloudsync/domain/vehicle_fields.go`, `backend/internal/modules/community/adapters/http/doc.go`, `backend/internal/modules/community/adapters/http/helpfulness.go`, `backend/internal/modules/community/adapters/http/photo_capture.go`, `backend/internal/modules/community/application/derive.go`, `backend/internal/modules/community/application/doc.go`, `backend/internal/modules/community/application/feed.go`, `backend/internal/modules/community/application/helpfulness.go`, `backend/internal/modules/community/application/location.go`, `backend/internal/modules/community/application/location_verify.go` e mais 27.\n- Caçador: 71 de 111 entradas não foram analisadas (EP-002, EP-005, EP-006, EP-008, EP-010, EP-026, EP-027, EP-032, EP-034, EP-046, EP-047, EP-048, EP-049, EP-050, EP-051, EP-054, EP-055, EP-056, EP-057, EP-058 e mais 51).\n- Verificador: a janela TOCTOU entre a primeira transação (lock/validação) e a segunda (gravação) não foi aprofundada; exigiria analisar se `ClaimOpen` e o escopo do store são revalidados na segunda transação.\n- Verificador: o comportamento de `Store.LockClaim` no caso de claimID inexistente não foi analisado, pois não afeta o veredito de controle de acesso.\n- Verificador: a camada HTTP `claimProof` (`contributor/adapters/http/user.go:85-105`) não está no material; a extração de claimID via `chi.URLParam` e o mapeamento de erros foram considerados apenas como descritos na hipótese.\n- Verificador: não foi fornecido o SQL de `LockClaim`/`SetClaimProof` em `backend/db/queries`, impedindo verificar restrição por account_id no banco.\n- Verificador: não há lab disponível (available=false), portanto a verificação dinâmica não pôde ser executada em nenhuma hipótese.\n- Verificador: arquivos não enviados por limite de contexto: `backend/cmd/api/main.go`, `backend/internal/modules/contributor/adapters/http/admin.go`, `backend/internal/modules/contributor/adapters/http/public.go`, `backend/internal/modules/contributor/adapters/http/user.go`, `backend/internal/modules/account/adapters/oidc/oidc.go` (trechos omitidos), `backend/internal/modules/account/adapters/pgstore.go` (trechos omitidos), `backend/internal/modules/account/application/accounts.go` (trechos omitidos), `backend/internal/modules/account/application/memstore.go` (trechos omitidos), `backend/internal/modules/evidence/application/verify.go` (trechos omitidos), `backend/internal/modules/identity/adapters/auth/auth.go` (trechos omitidos), `backend/internal/modules/mapdist/distribution.go` (trechos omitidos).\n- Verificador: não foi analisada a lógica de resolvedor de dispositivo em RegisterDevice/RevokeDevice (checagem de posse) por ausência do código do `adapters.Store`.\n- Verificador: não foi analisado o comportamento dinâmico (conta A enviando device_id da conta B) porque o lab não está disponível.\n- Verificador: a implementação de `cloudadapters.NewStore` que satisfaz `app.BatchStore`/`DeviceStore`/`PullStore`/`SnapshotStore`/`BackupStore` não está no material.\n- Verificador: as queries SQL de dispositivo/batch/pull/snapshot/manifest/revoke não estão no material, impossibilitando verificar filtro por account_id.\n- Verificador: a composição de cabeçalhos/envelope no adaptador SMTP não foi analisada por ausência do arquivo.\n- Verificador: o comportamento do cliente de e-mail de produção para endereços com múltiplos '@' ou controles além de CR/LF não foi avaliado por falta de código.\n- Verificador: o arquivo `backend/internal/modules/account/adapters/mail/memory.go` não foi fornecido, impedindo verificar sanitização ou rejeição de CR/LF antes da composição da mensagem.\n- Verificador: não há evidência do wiring de produção (`backend/cmd/api`) que indique se `MailEnabled` está ativo e qual `MailSender` é injetado no commit analisado.\n- Verificador: não foi apresentado qualquer middleware global que rejeite caracteres de controle no corpo JSON, nem confirmação de sua inexistência fora dos trechos exibidos.\n- Verificador: arquivos não enviados por limite de contexto: `backend/cmd/api/admin.go`, `backend/cmd/api/main.go`, `backend/cmd/worker/main.go`, `backend/internal/modules/account/adapters/pgstore.go`, `backend/internal/modules/admin/adapters/store.go`, `backend/internal/modules/companysession/adapters/account.go`, `backend/internal/modules/contributor/adapters/http/user.go`, `backend/internal/modules/evidence/adapters/store.go`, `backend/internal/modules/forum/adapters/stream/listener.go`, `backend/internal/modules/identity/adapters/registration.go`, `backend/internal/modules/kernel/cnpj.go`, `backend/internal/modules/kernel/condition.go`, `backend/internal/modules/kernel/enterprise_access.go`, `backend/internal/modules/kernel/org_scope.go`, `backend/internal/modules/kernel/price.go` e mais 12.\n- Verificador: migrações e índices que poderiam confirmar a contagem agregada não foram analisados por não estarem no material.\n- Verificador: a implementação Postgres de `TryIssueCode` e `TryCreateKeyAccount` não foi fornecida, impedindo confirmar a contagem agregada e o insert na mesma transação.\n- Verificador: os handlers HTTP das rotas `/v1/accounts/email/codes` e `/v1/accounts/keys` não foram fornecidos, impedindo confirmar exposição anônima e respostas.\n- Verificador: não foram fornecidos middlewares de rate limit por IP/cliente aplicados às rotas de admissão de contas.\n- Verificador: arquivos não enviados por limite de contexto: `backend/cmd/api/company.go`, `backend/cmd/api/main.go`, `backend/cmd/worker/main.go`, `backend/internal/modules/account/adapters/http/http.go`, `backend/internal/modules/account/adapters/pgstore.go`, `backend/internal/modules/account/application/memstore.go`, `backend/internal/modules/companysession/adapters/account.go`, `backend/internal/modules/membership/adapters/http/devices.go`, `backend/internal/modules/orgaccess/adapters/http/account.go`, `backend/internal/modules/organization/adapters/ownership_transfer_store.go`, `backend/internal/modules/orgsync/adapters/http/http.go`, `backend/internal/modules/orgsync/adapters/http/review_results.go`, `backend/internal/platform/enterprisesuite/routes.go`, `backend/internal/modules/account/application/accounts.go` (trechos omitidos), `backend/internal/modules/companysession/application/service.go` (trechos omitidos) e mais 3.\n- Verificador: persistência e possíveis limites/truncamentos no store administrativo não analisados por ausência de `backend/internal/modules/admin/adapters/store.go`.\n- Verificador: renderização de trace_id no painel admin não analisada por ausência do código de admin-web.\n- Verificador: configuração de limites de cabeçalho do servidor HTTP não analisada por ausência de `main.go`/`httpserver`.\n- Verificador: não há no material nenhuma instrução de logging que grave X-Request-ID, impedindo demonstrar o sumidouro clássico de CWE-117.\n- Verificador: não foi fornecido o código de admin-web (ex.: `admin-web/src/app.ts`) para verificar se trace_id é renderizado com textContent ou innerHTML.\n- Verificador: arquivos não enviados por limite de contexto: `backend/cmd/api/main.go`, `backend/internal/modules/contributor/adapters/http/admin.go`, `backend/internal/modules/forum/adapters/http/admin.go`, `backend/internal/modules/organization/adapters/http/suspension_admin.go`, `backend/internal/modules/organization/application/suspension.go`, `backend/internal/modules/staff/adapters/http/admin.go`, `backend/internal/platform/enterprisesuite/admin.go`, `backend/internal/modules/account/application/accounts.go` (trechos omitidos), `backend/internal/modules/contributor/application/claims.go` (trechos omitidos).\n- Verificador: `infra/k8s/staging/services.yaml` e arquivos compose não incluídos, impedindo verificar alcance direto do listener.\n- Verificador: `backend/cmd/api/main.go` e middlewares globais não incluídos, impedindo verificar saneamento de X-Forwarded-Proto.\n- Verificador: não foram fornecidos os manifests de infraestrutura que definem a exposição da porta 8080.\n- Verificador: não foi fornecida a cadeia de middlewares do roteador principal da API.\n- Verificador: não foi fornecida a configuração efetiva do Caddy para X-Forwarded-Proto.\n- Verificador: arquivos não enviados por limite de contexto: `backend/cmd/api/admin.go`, `backend/cmd/api/body_limit.go`, `backend/cmd/api/company.go`, `backend/cmd/api/main.go`, `backend/cmd/api/profile_containment.go`, `backend/cmd/api/quality_auth.go`, `backend/cmd/api/quality_company_reads.go`, `backend/cmd/migrate/main.go`, `backend/cmd/ops/main.go`, `backend/cmd/station-locate/main.go`, `backend/cmd/station-review/main.go`, `backend/cmd/worker/dispatchers.go`, `backend/cmd/worker/evidence_schedule.go`, `backend/cmd/worker/main.go`, `backend/cmd/worker/payments.go` e mais 298.\n- Verificador: os arquivos de contexto fornecidos (`oidc.go`, `stub.go`, `verify.go`, `auth.go`, `registration.go`, `distribution.go`, `respond.go`, `cursor.go`, `decode.go`) não participam do caminho do proxy de storage e não foram analisados em profundidade.\n- Verificador: o tipo e a implementação do roteador usado pela API não estão no material; a hipótese depende de saber se ele normaliza o caminho antes do handler.\n- Verificador: o código e a versão do MinIO (imagem bitnamilegacy/minio) não estão no material; o comportamento de normalização de \"..\" e a validação de nome de objeto não puderam ser verificados.\n- Verificador: o Caddyfile não está no material; segundo o mapa, só `/v1/*` e `/health/*` são proxiados, o que pode tornar `/abastevo-dev-photos/*` inalcançável externamente.\n- Verificador: não foi demonstrado que exista outro bucket no storage de desenvolvimento nem que credenciais válidas para ele estejam disponíveis ao atacante.\n- Verificador: arquivos não enviados por limite de contexto: `backend/internal/modules/account/adapters/oidc/oidc.go` (trechos omitidos), `backend/internal/modules/evidence/application/verify.go` (trechos omitidos), `backend/internal/modules/identity/adapters/auth/auth.go` (trechos omitidos), `backend/internal/modules/identity/adapters/registration.go` (trechos omitidos), `backend/internal/modules/mapdist/distribution.go` (trechos omitidos), `backend/cmd/api/main.go` (trechos omitidos).\n- Testes dinâmicos não executados (sem laboratório).\n\n## 8. Próximos passos recomendados\n\n1. Fornecer ao próximo ciclo o `adapters.Store` de cloudsync e o SQL efetivo de Apply, Pull, Snapshot, Manifest, Preview, RevokeDevice, RegisterDevice, ListSnapshots, PreviewRestore e RestoreCommit, para fechar H-006.\n2. Fornecer `backend/internal/modules/account/adapters/mail/memory.go`, a implementação SMTP de produção e o wiring `MailEnabled`/`ANPFUEL_MAIL_MODE` em `backend/cmd/api`, para fechar H-001.\n3. Fornecer `backend/internal/modules/admin/adapters/store.go`, a configuração de `MaxHeaderBytes`, a cadeia de middlewares do roteador principal e o código de renderização de trace_id do admin-web, para fechar H-002.\n4. Fornecer `infra/k8s/staging/services.yaml`, os composes e o Caddyfile, para determinar exposição da porta 8080 e tratamento de X-Forwarded-Proto (H-003) e o alcance de `/abastevo-dev-photos/*` (H-007).\n5. Fornecer a implementação Postgres de `TryIssueCode`/`TryCreateKeyAccount`, os handlers e middlewares de rate limit de `/v1/accounts/*`, para fechar H-005.\n6. Habilitar um laboratório dinâmico (disponível=false nesta rodada) para testar os cenários aprovados das hipóteses de controle de acesso e de admissão de contas.\n7. Ampliar a cobertura dos 71 entry points não analisados, priorizando admin, companysession/orgaccess, webhooks de pagamento e identidade de dispositivo.\n",
+  "source_bound_review": {
+    "audit_id": "AUD-ABASTEVO-20261114-1501",
+    "review_status": "COMPLETE",
+    "method": "independent_read_only_pinned_source_follow_up_reconciled_to_final_native_artifacts",
+    "limitations": [
+      "No target application, target tests, dynamic lab, production system or upstream source was executed or contacted by this review.",
+      "Native states and verdicts are preserved. Manual source dispositions are separate follow-up assessments, not retroactive engine decisions.",
+      "All four predeclared narrow review probes remain NOT_EXERCISED; absence of a finding is not proof of evaluation.",
+      "Abastevo has no authoritative known-flaw denominator here; no recall, precision or completeness claim is derived.",
+      "Reported context omissions identify follow-up retrieval opportunities without establishing general accuracy or causal improvement."
+    ],
+    "cases": [
+      {
+        "case_id": "NC-QUOTA",
+        "disposition": "NOT_EXERCISED",
+        "hypothesis_ids": [],
+        "finding_ids": [],
+        "review_notes": "No native hypothesis examined textual-IP canonicalization in HashIPSubject. H005 concerns intentional shared account-admission capacity, a different question. Absence of an IP-form bypass finding is not evidence that this predefined control was evaluated.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/identity/domain/quota.go#L70",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/identity/adapters/http/http.go#L154"
+        ]
+      },
+      {
+        "case_id": "NC-ACCOUNT",
+        "disposition": "NOT_EXERCISED",
+        "hypothesis_ids": [],
+        "finding_ids": [],
+        "review_notes": "No native hypothesis examined provider-link account derivation from ValidateAccess. H004 and H006 concern different claim/device ownership flows and are reviewed separately. Their outcomes do not establish exercise of this predeclared provider-link control.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/http/http.go#L377",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/accounts.go#L326"
+        ]
+      },
+      {
+        "case_id": "NC-JWKS",
+        "disposition": "NOT_EXERCISED",
+        "hypothesis_ids": [],
+        "finding_ids": [],
+        "review_notes": "No native hypothesis challenged the injected-client JWKS redirect refusal. Its presence in manually inspected source does not turn absence of a corresponding machine allegation into an evaluated test.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/oidc/jwks.go#L163"
+        ]
+      },
+      {
+        "case_id": "AB-STATIC-001",
+        "disposition": "NOT_EXERCISED",
+        "hypothesis_ids": [],
+        "finding_ids": [],
+        "review_notes": "The official-source encoded-path candidate was not independently recorded by the engine. H007 concerns a different development-storage proxy and different signature/routing boundaries. The original candidate, proposed ten-case patch and fixing-agent handoff remain manually authored and unverified by target execution.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/official/adapters/source/source.go#L75",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/official/adapters/source/fetch.go#L225"
+        ]
+      }
+    ],
+    "hypothesis_reviews": [
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-001",
+        "native_state": "INCONCLUSIVE",
+        "native_verdict": "inconclusive",
+        "source_disposition": "UNSUPPORTED_OR_MITIGATED",
+        "review_notes": "ValidEmail does accept internal CR/LF, tabs and additional at-signs, so stricter address validation is a legitimate hardening topic. The claimed outgoing SMTP/header-injection impact is unsupported at this source pin: the only configured MailSender is the bounded in-memory Outbox; MailEnabled is true only for memory mode, and configuration accepts off or memory only. SendCode records a struct in a 100-item ring and never constructs or transmits mail headers. A fake sender that merely captures the raw address would not establish header injection. Do not relabel this as a demonstrated outgoing mail exploit or assume a future SMTP adapter is current code.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/domain/account.go#L140",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/accounts.go#L143",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/accounts.go#L180",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L472",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L509",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/mail/memory.go#L50",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/config/config.go#L610"
+        ]
+      },
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-002",
+        "native_state": "INCONCLUSIVE",
+        "native_verdict": "inconclusive",
+        "source_disposition": "UNSUPPORTED_OR_MITIGATED",
+        "review_notes": "The actual API composition wraps the complete router in requestID before any route handler. Unsafe and oversized values are replaced, and the sanitized value overwrites the request header before the admin handler reads it. Thus the stated absence-of-global-validation precondition is false in the pinned composition. Error output is JSON and the admin audit UI uses textContent; request_id is not rendered by its audit row. Persistence itself exists but does not establish log injection or XSS.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L925",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L1569",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpserver/httpserver.go#L93",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpserver/httpserver.go#L202",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpserver/httpserver.go#L301",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpserver/request_id_security_test.go#L13",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/admin/adapters/store.go#L149",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/admin/admin.sql#L51",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpapi/respond.go#L30",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/admin-web/src/app.ts#L90",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/admin-web/src/app.ts#L901",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/telemetry/telemetry.go#L82"
+        ]
+      },
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-003",
+        "native_state": "INCONCLUSIVE",
+        "native_verdict": "inconclusive",
+        "source_disposition": "INCONCLUSIVE_NEEDS_MORE_SOURCE",
+        "review_notes": "The handler-level TLS-origin check at line45 does accept X-Forwarded-Proto=https without binding that assertion to a trusted peer, and production composition requests RequireTLS=true. This supports a conditional header-trust hardening concern, not the claimed capture of financial credentials or authenticated event injection. Configured credentials, a valid webhook token and matching merchant are independent gates. The production Compose template publishes no API host port, and Caddy replaces X-Forwarded-Proto with its observed scheme. The captured staging Kubernetes Service uses a parameterized API NodePort, but committed templates do not establish actual listener reachability, firewall/proxy provenance or current deployment selection. A direct synthetic HTTP request with a known fictitious token can test the handler guard; it cannot prove that a network attacker can obtain an unknown real token or reach a production listener. Final operational impact remains unverified.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/payments/adapters/http/asaas_webhook.go#L41",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/payments/adapters/http/asaas_webhook.go#L45",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/payments/adapters/http/asaas_webhook.go#L63",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/payments/adapters/http/asaas_webhook.go#L73",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/payments/adapters/http/asaas_webhook.go#L109",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/payments.go#L265",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/payments.go#L274",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/infra/compose.prod.yml#L67",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/infra/caddy/Caddyfile#L68",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/infra/k8s/staging/services.yaml#L15",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/infra/k8s/staging/README.md#L3"
+        ]
+      },
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-004",
+        "native_state": "DISMISSED",
+        "native_verdict": "dismissed",
+        "source_disposition": "UNSUPPORTED_OR_MITIGATED",
+        "review_notes": "The proposed cross-account claim update is refuted by the pinned source. Service.SetClaimProof locks the claim and rejects a different account before the cited second transaction. The concrete update independently filters by claim ID, the session-derived account ID, PENDING state and unexpired timestamp; generated SQL preserves those predicates. The release of the first lock does not remove the update-time checks. This independently supports the native dismissal and adds concrete adapter/SQL evidence that was absent from its supplied context. No target regression or dynamic result was executed.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/http/user.go#L17",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/http/user.go#L85",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L813",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/http/common.go#L79",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/accounts.go#L326",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/application/claims.go#L117",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/contributor/contributor.sql#L37",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/store.go#L159",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/domain/claim.go#L91",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/application/claims.go#L139",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/application/claims.go#L152",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/store.go#L170",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/contributor/contributor.sql#L40",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/contributor/contributor.sql.go#L728",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/store.go#L73",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/http/common.go#L45",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/contributor/adapters/application_integration_test.go#L231"
+        ]
+      },
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-005",
+        "native_state": "INCONCLUSIVE",
+        "native_verdict": "inconclusive",
+        "source_disposition": "INCONCLUSIVE_NEEDS_MORE_SOURCE",
+        "review_notes": "The shared rolling admission ceilings are real in both memory and PostgreSQL implementations, and key registration is intentionally anonymous. Therefore source supports possible consumption of the shared key-signup capacity; it does not establish a bypass of admission policy. The limits are explicitly frozen security controls added against unbounded durable growth. Removing or increasing them is not an authorized correction. Establishing whether capacity fairness is an unacceptable availability defect requires the applicable threat/availability policy and actual edge/deployment admission context, neither operationally tested here. Email issuance additionally returns before storage whenever MailEnabled is false; the pinned composition supports off or bounded-memory delivery, not SMTP. Preserve the native inconclusive verdict and record the intentional-policy tradeoff rather than treating the constants alone as a confirmed vulnerability.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/domain/policy.go#L25",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/accounts.go#L133",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/accounts.go#L171",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/pgstore.go#L197",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/pgstore.go#L253",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/keyaccounts.go#L20",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/http/http.go#L62",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/adapters/http/http.go#L260",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/docs/backend/evidence/community-safety/SEC01C_ATOMIC_ADMISSION.md#L8",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/account/application/signup_admission_test.go#L14"
+        ]
+      },
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-006",
+        "native_state": "INCONCLUSIVE",
+        "native_verdict": "inconclusive",
+        "source_disposition": "UNSUPPORTED_OR_MITIGATED",
+        "review_notes": "The proposed cross-account or revoked-device bypass is refuted for the traced cloud routes by downstream transaction controls. Store.Apply calls Store.device before processing. LockDevice binds the device to account, session family, contributor, signing key and origin, excludes revoked rows and revocation tombstones, and locks the matching row. Record reads and mutations are separately account-scoped. Related pull/snapshot/manifest/import/restore paths also call the device gate. Copying a body device_id into the principal is not the final authorization decision. This manual source result does not rewrite the native INCONCLUSIVE verdict, which lacked the concrete Store and SQL context. Existing target tests were inspected, not executed.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/http/http.go#L115",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/http/push.go#L12",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/http/http.go#L89",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L1002",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/commands.go#L96",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/store.go#L38",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L2",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/device.go#L74",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L47",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql.go#L848",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/commands.go#L206",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/commands.go#L273",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L20",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/commands.go#L185",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/device.go#L25",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L36",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/device.go#L100",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L50",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/feed.go#L24",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L136",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/snapshot.go#L24",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/backup.go#L16",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/import.go#L54",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/restore_preview.go#L31",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/snapshot_storage.go#L261",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/db/queries/cloudsync/records.sql#L163",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/restore_commit.go#L15",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/store_integration_test.go#L320",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/cloudsync/adapters/protocol_integration_test.go#L158"
+        ]
+      },
+      {
+        "hypothesis_id": "AUD-ABASTEVO-20261114-1501-H-007",
+        "native_state": "INCONCLUSIVE",
+        "native_verdict": "inconclusive",
+        "source_disposition": "INCONCLUSIVE_NEEDS_MORE_SOURCE",
+        "review_notes": "The proxy does use a decoded-path prefix test without canonicalization and forwards through NewSingleHostReverseProxy. Its signature-presence check is not the authentication boundary: the downstream private S3 service still validates presigned/client requests, and the proxy provides neither signing credentials nor an anonymous bucket policy. Composition mounts it only for the fixed development-photo bucket with the bounded preview configuration; production configuration rejects the preview and storage-service flags. The exact behavior of Caddy/Chi/MinIO path normalization and S3 signature verification for a crafted dot-segment path has not been established by this source review. An arbitrary AWS4-prefixed string or X-Amz-Signature value does not demonstrate accepted S3 authorization. The hypothesis also explicitly needs a valid target signature; obtaining or retargeting such a capability is unproven. Keep as a bounded development/owned-staging path-policy candidate, separate from AB-STATIC-001 in the official-source fetcher; do not claim cross-bucket disclosure/write or arbitrary-host proxying without a synthetic end-to-end proof.",
+        "source_references": [
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpapi/development_storage.go#L10",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpapi/development_storage.go#L27",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpapi/development_storage.go#L33",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/cmd/api/main.go#L1557",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/config/config.go#L680",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpapi/development_storage_forward_test.go#L11",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/platform/httpapi/development_storage_test.go#L9",
+          "https://github.com/AlexandreZanata/Abastevo/blob/018f2df18c8b029ec3e665fc98ba7318e6f076bc/backend/internal/modules/evidence/adapters/storage/presign.go#L82"
+        ]
+      }
+    ],
+    "finding_reviews": []
+  },
+  "task_manifest": "engine-tasks/MANIFEST.json",
+  "source_artifact_sha256": {
+    "audit.json": "622b8df85e1327d553553175097bbdc5f76ed038a819c747ee0c20e58b74aedc",
+    "report.md": "35001fe81ba5ff32c96faeba39e97d6e99b827836866bc0457467db94cdea6ed",
+    "hypotheses.json": "de4463078080e2dac7e83f7e424cff47c9dd981d106e4802d8871d6ec52e45da",
+    "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  }
+}

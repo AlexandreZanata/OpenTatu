@@ -24,3 +24,15 @@ licenses, ~2 GB, refreshed often).
 Phase 8: `lab.example.toml` documents the strict optional `LabsConfig` schema. Owner
 recipes use private `*.local.toml` files excluded from git. Images, fixture credentials
 and raw lab artifacts must stay outside version control. See `docs/LAB.md`.
+
+`models.toml` also holds the optional `[campaign]` pricing/context/output ceilings,
+researched in `docs/opencode-go.md`. They are used only when an owner explicitly supplies
+a campaign ledger and cap; prices are integer micro-USD per million tokens. A ledger's
+endpoint, token prices, input ceiling and aggregate cap cannot change when reopened.
+An output ceiling increase appends a synced transition; historical attempts retain their
+original ceilings and reserved charges. Output decreases are refused.
+
+Role-level `max_output_tokens` is an optional experimental generation cap, including
+reasoning; absent values preserve provider defaults and zero is invalid. The campaign
+guard applies the smaller cap while keeping its conservative billing reservation. Record
+identical role caps for baseline/candidate comparisons; these are not provider limits.

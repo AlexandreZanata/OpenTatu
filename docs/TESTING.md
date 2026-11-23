@@ -55,6 +55,7 @@ functions, so such files start with `#![allow(clippy::unwrap_used)]` and a comme
 | A task (db, reports) | `opentatu_db::tasks::tests::sample_task`, `opentatu_reports` `manifest::tests::task` |
 | A benchmark app, known flaws, a scored finding | `opentatu_benchmark` `app::tests::APP`, `score::tests::{expected, finding}` |
 | LLM call context | `CallContext::diagnostic("test", &timestamp)` |
+| Private campaign ledger (LLM tests) | `campaign::tests::Ledger::{new, path}` over workspace `tempfile::TempDir`; shared by admission, provider and diagnostic tests |
 | Dashboard router | `routes.rs` test helpers `app()`, `router_over(services)` |
 | A git repository | `opentatu_snapshots::testing::create_repo` (feature `test-support`) |
 | Scanners | `opentatu_scanners::testing::FakeSuite::clean().with(kind, FakeOutcome::...)` (feature `test-support`) |
@@ -81,6 +82,12 @@ Real end-to-end runs (real models and containers) use the owner's application **
 a mirror and snapshots only — never push to it; changes a test needs (e.g. a fix for the
 fix trail) are commits in a local clone in the session scratch area. The benchmark is the
 one exception: it measures against apps with known flaws.
+
+Q-043/ADR-0044 adds one explicit owner-authorized publication exception: the 2026-11-14
+Abastevo acceptance bundle may be published through a reviewable target PR. This does
+not authorize pushing planted flaws/fixes, running production tests, publishing secrets
+or exporting other applications' runtime history. Proposed target regression tests are
+clearly marked unexecuted until an authorized isolated executor actually runs them.
 
 ## Planned (when the features arrive)
 

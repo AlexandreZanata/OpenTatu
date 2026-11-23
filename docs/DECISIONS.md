@@ -1071,3 +1071,65 @@ Template:
   fixtures first and publish honest degraded/unknown outcomes on saturation. Q-019/Q-040
   retain independent outage/delivery requirements; passing a local benchmark cannot prove
   external delivery. Rollback removes this unconsumed proposal, not any runtime guard.
+
+## ADR-0044 — ARTEX-informed audit refinement and capped evaluation
+- **Date:** 2026-11-14 · **Status:** accepted (owner request; Q-043)
+- **Context:** the owner requested integration with ARTEX, new DeepSeek benchmarks with
+  an aggregate US$20 ceiling, and publication of Abastevo-only audit material and a fix
+  handoff. This is an Audit refinement slice, independent of gated Sentinel work.
+- **Reference:** [ARTEX](https://github.com/BaaRai/ARTEX/tree/ae792126dcfbf7292899bea2bd6fcdc32f7083da),
+  especially its [source-audit methodology](https://github.com/BaaRai/ARTEX/blob/ae792126dcfbf7292899bea2bd6fcdc32f7083da/skills/codeaudit/SKILL.md).
+  The reference repository is AGPL-3.0. OpenTatu implements the methodological ideas
+  independently in its existing Rust components; no ARTEX source, prompt text, daemon,
+  dependencies or runtime are incorporated. Existing source licenses are preserved.
+- **Method:** retain entry-point inventory, bounded forward context, verification and
+  skeptical review. Add explicit upstream registration/shared-defense context to the
+  investigator selection. Require source-to-sink reasoning, actual attacker control,
+  reachability and a concrete additional capability. Missing code and proposed tests
+  remain missing evidence. Context selection is heuristic, never a whole-repository
+  proof. Supplemental context does not expand INCREMENTAL finding scope.
+  Focused registration windows use at most 8KB each; supplemental packing reserves
+  25% of context with an 8KB floor, always capped by the actual total budget. Follow
+  actual handler imports and directly referenced controls rather than sweeping every
+  dependency of a composition root. Bound first/last reference metadata and merge
+  registration/control windows belonging to the same file. Preserve forward trace
+  semantics. The pinned Abastevo calibration and its initial unfavorable result are
+  retained in [the visibility method](../benchmark/acceptance/abastevo-20261114/METHOD.md).
+- **Accounting:** opt-in campaign admission lives in the existing LLM infrastructure.
+  One exclusively locked append-only ledger is shared across all evaluation runs.
+  Reserve a documented worst-case input/output charge before each transport attempt;
+  cap output, restrict the campaign to its configured model, and reconcile only valid
+  authoritative usage. Uncertain/error attempts retain their reservations. Restart
+  preserves reservations; corrupt history, changed billing policy and accounting failures
+  refuse further calls. The output ceiling may only increase through a durable appended
+  transition; earlier attempts keep their original reservations and charges. The monetary
+  cap, endpoint, model, input ceiling and rates cannot change. The campaign cap supplements
+  the existing per-audit budgets. No new
+  crate, SQL table, process, architecture edge or runtime dependency is introduced.
+- **Generation bounds:** per-role optional `max_output_tokens` is separate from the
+  campaign's financial envelope. A 32,768-token calibration clipped a map; a later
+  131,072-token hunter request reached the 900-second timeout. Trial limits are therefore
+  65,536 for cartography (54,983 output tokens observed), 32,768 for hunting/planning and
+  16,384 for verification/skeptical review/reporting. These are internal trial budgets,
+  not provider limits or a completion guarantee. Frozen baseline and candidate use the
+  same limits; the failed large-output run remains calibration. No unverified gateway
+  reasoning-control field is sent. Truncation/provider failure retains existing validation,
+  partial-coverage and uncertain-charge behavior.
+- **Metered empty replies:** an actual truncated empty hunter reply exposed a provider
+  parser boundary that discarded usage before role validation. Preserve valid response
+  metadata even for empty/null/whitespace content, account for it through the single LLM
+  call path, then apply the investigator's existing schema checks and two-retry limit.
+  Skip blank assistant turns while retaining correction feedback. Diagnostic JSON is
+  also checked after accounting. Unmetered/malformed envelopes remain conservative
+  unknowns; historical reservations are unchanged. The paired benchmark stays frozen at
+  its recorded revision; a separately identified acceptance binary exercises this fix.
+- **Evaluation:** freeze the original engine source and the target commit. Compare
+  baseline/candidate with the same provider, budgets, scanner configuration and campaign
+  gate. Juice Shop keeps marker-derived scoring. Abastevo is a real-source acceptance
+  review with explicit negative controls, not an invented recall denominator. Record
+  partial runs and limitations rather than treating them as passing accuracy results.
+- **Publication:** source changes and sanitized evaluation records go to OpenTatu;
+  Abastevo-specific report, use cases, proposed regression tests and fix-agent task go
+  through a reviewable Abastevo PR. Owner permission is specific to this public target;
+  raw runtime directories, secrets, unrelated application findings and production data
+  remain private. No production tests, deployment or target fixes are implied.

@@ -1,0 +1,81 @@
+diff --git a/backend/internal/modules/official/adapters/source/opentatu_canonicalization_test.go b/backend/internal/modules/official/adapters/source/opentatu_canonicalization_test.go
+new file mode 100644
+--- /dev/null
++++ b/backend/internal/modules/official/adapters/source/opentatu_canonicalization_test.go
+@@ -0,0 +1,76 @@
++package source
++
++import "testing"
++
++// TestOpenTatuAllowlistCanonicalization uses inert URL strings only. It never
++// fetches a resource or contacts the source host. These review regressions must
++// be run against the recorded source revision before claiming a reproduced bug.
++func TestOpenTatuAllowlistCanonicalization(t *testing.T) {
++	const prefix = "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/"
++	const workbook = "revendas_lpc_2026-06-07_2026-06-13.xlsx"
++	tests := []struct {
++		name string
++		url  string
++		kind string
++	}{
++		{
++			name: "documented listing remains allowed",
++			url:  prefix + "levantamento-de-precos-de-combustiveis-ultimas-semanas-pesquisadas",
++			kind: KindListing,
++		},
++		{
++			name: "documented workbook remains allowed",
++			url:  prefix + "arquivos-lpc/2026/" + workbook,
++			kind: KindStationDetail,
++		},
++		{
++			name: "literal forbidden file",
++			url:  prefix + "pwned.exe",
++		},
++		{
++			name: "encoded dot cannot disguise forbidden file",
++			url:  prefix + "pwned%2eexe",
++		},
++		{
++			name: "uppercase encoded dot cannot disguise forbidden file",
++			url:  prefix + "pwned%2Eexe",
++		},
++		{
++			name: "encoded dot segments cannot escape download prefix",
++			url:  prefix + "arquivos-lpc/%2e%2e/%2e%2e/%2e%2e/" + workbook,
++		},
++		{
++			name: "uppercase dot segments cannot escape download prefix",
++			url:  prefix + "arquivos-lpc/%2E%2E/%2E%2E/%2E%2E/" + workbook,
++		},
++		{
++			name: "mixed encoded dot segments cannot escape download prefix",
++			url:  prefix + "arquivos-lpc/.%2e/.%2e/.%2e/" + workbook,
++		},
++		{
++			name: "encoded separators cannot disguise traversal resource",
++			url:  prefix + "%2e%2e%2fprivate%2epem",
++		},
++		{
++			name: "malformed escape remains refused",
++			url:  prefix + "invalid%zz",
++		},
++	}
++	for _, tc := range tests {
++		t.Run(tc.name, func(t *testing.T) {
++			entry, err := Match(DefaultAllowlist(), tc.url)
++			if tc.kind == "" {
++				if err == nil {
++					t.Fatalf("URL accepted as %q: %s", entry.Kind, tc.url)
++				}
++				return
++			}
++			if err != nil {
++				t.Fatalf("documented URL refused: %v", err)
++			}
++			if entry.Kind != tc.kind {
++				t.Fatalf("kind = %q, want %q", entry.Kind, tc.kind)
++			}
++		})
++	}
++}

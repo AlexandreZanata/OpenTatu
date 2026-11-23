@@ -9,8 +9,14 @@ use crate::{Error, LlmClient, ModelRequest, ModelResponse};
 /// Returns scripted answers in order and records every request it receives.
 #[derive(Debug, Default)]
 pub struct FakeClient {
-    answers: Mutex<VecDeque<Result<String, Error>>>,
+    answers: Mutex<VecDeque<Result<Answer, Error>>>,
     requests: Mutex<Vec<ModelRequest>>,
+}
+
+#[derive(Debug)]
+enum Answer {
+    Content(String),
+    Response(ModelResponse),
 }
 
 impl FakeClient {
@@ -24,7 +30,15 @@ impl FakeClient {
         self.answers
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .push_back(Ok(content.into()));
+            .push_back(Ok(Answer::Content(content.into())));
+    }
+
+    /// Queues a full response, including billing metadata, for accounting tests.
+    pub fn push_response(&self, response: ModelResponse) {
+        self.answers
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push_back(Ok(Answer::Response(response)));
     }
 
     /// Queues an error.
@@ -58,6 +72,10 @@ impl LlmClient for FakeClient {
             .unwrap_or_else(PoisonError::into_inner)
             .pop_front()
             .unwrap_or(Err(Error::FakeExhausted))?;
+        let answer = match answer {
+            Answer::Response(response) => return Ok(response),
+            Answer::Content(content) => content,
+        };
         let output_tokens = u64::try_from(answer.len()).unwrap_or(u64::MAX);
         Ok(ModelResponse {
             content: answer,

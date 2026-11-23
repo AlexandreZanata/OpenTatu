@@ -216,12 +216,16 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `Llm::generate(&context, role, messages, schema)` | The single entry point for role calls (§D.2) |
 | `Llm::ping(&context, model)` | Minimal diagnostic call (`opentatu llm ping`) |
 | `Llm::with_recorder`, `Llm::with_retry_policy` | Usage accounting port; rate-limit backoff |
+| `CampaignBudget::{open, committed_usd}`, `Llm::with_campaign_budget` | Optional shared private durable USD ledger; reserve every HTTP attempt, preserve uncertainty and reconcile authoritative charges |
+| `CampaignPricing` | Researched per-model input/output ceiling and bounded response size; immutable within a campaign |
+| `RoleConfig::max_output_tokens` | Optional positive per-role generation bound, passed through the existing request and clamped by the campaign envelope |
 | `CallContext::{for_audit, diagnostic}` | Audit + provider session id of a call |
 | `RetryPolicy` | Capped exponential backoff for rate limits and transport failures (`Error::Transport`; timeouts are not retried) |
 | `UsageRecorder` (trait) | Where every call is recorded (implemented in the binary over services) |
-| `OpenCodeGoClient` | OpenCode Go Chat Completions client (auth, User-Agent, `x-opencode-session`) |
+| `OpenCodeGoClient` | OpenCode Go Chat Completions client (auth, User-Agent, `x-opencode-session`); preserves metered empty content for downstream validation |
 | `LlmClient` (trait) | Provider port (OpenCode Go today; a local model later) |
 | `FakeClient` | The only LLM test double: scripted answers, recorded requests |
+| `campaign::tests::Ledger` (test-only) | Reused private `TempDir` ledger fixture for accounting, HTTP and diagnostic tests; automatic cleanup |
 | `Message`, `MessageRole`, `ModelRequest`, `ModelResponse` | Chat and accounting types |
 | `ModelsConfig::{load, from_toml, validate, role_models, set_role_model, set_audit_budget}`, `ProviderConfig::{is_allowed, trains_on_prompts}` | Typed `config/models.toml` with allowlist and training guard; per-run overrides |
 
@@ -258,6 +262,7 @@ CSS blocks (`static/app.css`): `c-header`, `c-main`, `c-card`, `c-row`, `c-badge
 | `render_tree(files, max_lines)` | `<structure>` block |
 | `cartographer_code`, `cartographer_config` → `Selection { excerpts, left_out, bytes }` | Ranked, line-numbered `<code>` / `<config>` within `ContextBudget::CARTOGRAPHER` |
 | `entry_point_code(files, seeds: &[Seed], budget, per_file)` | Handler files + what they reach (imports, same package) up to depth 2 |
+| `investigation_code(files, seeds, budget, per_file)` | Preserved forward trace plus focused upstream bindings and referenced controls (`defenses.rs`, `registration.rs`); bounded first/last focus metadata and merged same-file windows; incremental dependency discovery unchanged |
 
 ## opentatu-investigator role execution (`crates/investigator`)
 
